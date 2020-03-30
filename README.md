@@ -57,7 +57,7 @@ Sorry for how verbose this mod description is. I feel that's it's necessary to d
 
 My Forum Account Name Is: Magicono43
 
-Main Forum Post: https://forums.dfworkshop.net/viewtopic.php?f=14&t=3506
+Main Forum Post: https://forums.dfworkshop.net/viewtopic.php?f=14&t=3557
 
 Github Repository: https://github.com/magicono43/DFU-Mod_Armor-Reduces-Damage-Taken-Instead-Of-Avoiding-Overhaul
 
