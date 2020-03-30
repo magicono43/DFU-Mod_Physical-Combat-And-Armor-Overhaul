@@ -59,7 +59,7 @@ My Forum Account Name Is: Magicono43
 
 Main Forum Post: https://forums.dfworkshop.net/viewtopic.php?f=14&t=3506
 
-Github Repository: https://github.com/magicono43/DFU-Mod_Believable-Equipment-Characteristics-And-Durability
+Github Repository: https://github.com/magicono43/DFU-Mod_Armor-Reduces-Damage-Taken-Instead-Of-Avoiding-Overhaul
 
 I hope to make more mods in this vein, "smaller" ones, as well as eventually larger ones as well.
 
