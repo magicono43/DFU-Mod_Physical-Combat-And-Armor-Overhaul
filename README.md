@@ -17,7 +17,8 @@ low value with under-armor of better value.
 
 -Minor change to the hit-odds of some of the body parts. Feet are now more likely to be hit than the head, and legs are more likely to be hit than the hands.
 
-WHAT DOES THIS MOD CHANGE AND WHY?
+
+WHAT DOES THIS MOD CHANGE AND WHY?:
 
 Armor has been changed from having the D&D "Armor Class" rule-set, where better armor would give the wearer a better AC, which would make them harder to hit. This mod changes this entire system, now better armor now instead REDUCES how much damage is taken when hit by a physical attack. Similar to more modern Elder Scrolls games, such as Oblivion, this has more detail than that system though.
 
