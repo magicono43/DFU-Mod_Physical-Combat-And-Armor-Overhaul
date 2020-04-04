@@ -1,6 +1,22 @@
 # DFU-Mod_Armor-Reduces-Damage-Taken-Instead-Of-Avoiding-Overhaul
 Second Mod I Made for the Daggerfall Unity Project.
 
+UPDATES:
+
+Version 1.10, 4/3/2020: 
+-Changed how shields work, now attacks against an entity with a shield equipped roll if the shield will be the piece of armor that 
+is doing the damage reduction, or if the armor under it does instead, the chances are much higher for parts of the body that the shield would normally cover, 
+but there is also a smaller chance for other body parts to be protected by the shield as well, a much lower chance, but still a chance. The chances of having 
+the shield reduce the damage are based on the stats of the character, Luck, Endurance, Strength, Willpower, and mostly Agility, and Speed, determine these odds.
+
+-With how this mods works, a shield could actually be a detriment for damage reduction, if the armor under said shield was actually "better" than the shield 
+doing the blocking. For example, a leather shield blocking an attack that would have otherwise been taken by a daedric helm would actually deal more damage than 
+if you did not have the shield at all. This issue has been fixed. Now if a piece of "under armor" has a better damage reduction value than the shield currently 
+equipped, the shield will be ignored, and the better under-armor piece will reduce the damage instead. So you will no longer be punished for using a shield of 
+low value with under-armor of better value.
+
+-Minor change to the hit-odds of some of the body parts. Feet are now more likely to be hit than the head, and legs are more likely to be hit than the hands.
+
 WHAT DOES THIS MOD CHANGE AND WHY?
 
 Armor has been changed from having the D&D "Armor Class" rule-set, where better armor would give the wearer a better AC, which would make them harder to hit. This mod changes this entire system, now better armor now instead REDUCES how much damage is taken when hit by a physical attack. Similar to more modern Elder Scrolls games, such as Oblivion, this has more detail than that system though.
@@ -57,12 +73,17 @@ Sorry for how verbose this mod description is. I feel that's it's necessary to d
 
 My Forum Account Name Is: Magicono43
 
-Main Forum Post: https://forums.dfworkshop.net/viewtopic.php?f=14&t=3557
+Main Forum Post: https://forums.dfworkshop.net/viewtopic.php?f=27&t=3557
 
-Github Repository: https://github.com/magicono43/DFU-Mod_Armor-Reduces-Damage-Taken-Instead-Of-Avoiding-Overhaul
+Github Repository: https://github.com/magicono43/DFU-Mod_Physical-Combat-And-Armor-Overhaul
 
 I hope to make more mods in this vein, "smaller" ones, as well as eventually larger ones as well.
 
+VERSION HISTORY:
+
+1.00 - Initial Release
+
+1.10 - Shield Blocking Reworked, Under-armor oversight fixed, Body part hit odds changed slightly
 
 COMPATIBILITY:
 
