@@ -1,4 +1,4 @@
-# DFU-Mod_Armor-Reduces-Damage-Taken-Instead-Of-Avoiding-Overhaul
+# DFU-Mod_Physical-Combat-And-Armor-Overhaul
 Second Mod I Made for the Daggerfall Unity Project.
 
 UPDATES:
