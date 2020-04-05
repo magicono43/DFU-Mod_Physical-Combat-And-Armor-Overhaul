@@ -42,7 +42,7 @@ Some monsters also have an innate damage reduction as well, this is to simulate 
 
 Shields now serve a much more effective purpose than before. Shields work the same way in that they protect a few parts of a characters body, but instead of adding a meager AC score like in classic, they now add a very significant damage reduction for the parts of the body they protect, and this damage reduction gets better and better as the MATERIAL of the shield improves. So you won't want to just use that leather tower-shield for long, because it will be vastly out-classed in terms of protection and durability by the higher tier materials. Now those Daedric shields actually have a purpose!
 
-Since shields are now much more powerful. It also seemed like a good idea to give 2-handed weapons a reason to be used. You now benefit double from the strength modifier for damage while using any 2-handed weapons that are not bows. Hand to Hand also gets this benefit.
+Since shields are now much more powerful. It also seemed like a good idea to give 2-handed weapons a reason to be used. You now benefit double from the strength modifier for damage while using any 2-handed weapons that are not bows.
 
 With the focus on skills and attributes effecting hit-chance in mind. Luck now has a slightly higher impact on avoiding being hit. Speed is now taken into account for both hitting and being hit, but at half the effect that agility now has.
 
