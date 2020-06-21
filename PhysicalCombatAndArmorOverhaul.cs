@@ -48,7 +48,7 @@ namespace PhysicalCombatAndArmorOverhaul
         {	
             ModSettings settings = mod.GetSettings();
             Mod roleplayRealism = ModManager.Instance.GetMod("RoleplayRealism");
-            Mod meanerMonsters = ModManager.Instance.GetMod("MeanerMonsters");
+            Mod meanerMonsters = ModManager.Instance.GetMod("Meaner Monsters");
             bool equipmentDamageEnhanced = settings.GetBool("Modules", "equipmentDamageEnhanced");
 			bool fixedStrengthDamageModifier = settings.GetBool("Modules", "fixedStrengthDamageModifier");
 			bool armorHitFormulaRedone = settings.GetBool("Modules", "armorHitFormulaRedone");
