@@ -47,12 +47,23 @@ namespace PhysicalCombatAndArmorOverhaul
         void Awake()
         {	
             ModSettings settings = mod.GetSettings();
+            Mod roleplayRealism = ModManager.Instance.GetMod("RoleplayRealism");
+            Mod meanerMonsters = ModManager.Instance.GetMod("Meaner Monsters");
             bool equipmentDamageEnhanced = settings.GetBool("Modules", "equipmentDamageEnhanced");
 			bool fixedStrengthDamageModifier = settings.GetBool("Modules", "fixedStrengthDamageModifier");
 			bool armorHitFormulaRedone = settings.GetBool("Modules", "armorHitFormulaRedone");
 			bool criticalStrikesIncreaseDamage = settings.GetBool("Modules", "criticalStrikesIncreaseDamage");
-			bool rolePlayRealismArcheryModule = settings.GetBool("Modules", "rolePlayRealismArcheryModule");
-			bool ralzarMeanerMonstersEdit = settings.GetBool("Modules", "ralzarMeanerMonstersEdit");
+            bool rolePlayRealismArcheryModule = false;
+            bool ralzarMeanerMonstersEdit = false;
+            if (roleplayRealism != null)
+            {
+                ModSettings rolePlayRealismSettings = roleplayRealism.GetSettings();
+                rolePlayRealismArcheryModule = rolePlayRealismSettings.GetBool("Modules", "advancedArchery");
+            }
+            if (meanerMonsters != null)
+            {
+                ralzarMeanerMonstersEdit = true;
+            }
 
             InitMod(equipmentDamageEnhanced, fixedStrengthDamageModifier, armorHitFormulaRedone, criticalStrikesIncreaseDamage, rolePlayRealismArcheryModule, ralzarMeanerMonstersEdit);
 
@@ -1565,7 +1576,7 @@ namespace PhysicalCombatAndArmorOverhaul
 				if (armor != null)
 				{
 					armorMaterial = ArmorMaterialIdentifier(armor);
-					
+
 					damage = PercentageReductionCalculationWithWeapon(armor, armorMaterial, atkStrength, damage, bluntWep, wepWeight, shieldBlockSuccess, naturalDamResist);
 				}
 				else // If the body part struck in 'naked' IE has no armor or shield protecting it.
@@ -2055,36 +2066,9 @@ namespace PhysicalCombatAndArmorOverhaul
 		// Finds the material that an armor item is made from, then returns the multiplier that will be used later based on this material check.
 		private static int ArmorMaterialIdentifier (DaggerfallUnityItem armor)
 		{
-			int itemMat = armor.NativeMaterialValue;
-			
-			if (itemMat == (int)ArmorMaterialTypes.Leather)
-				return 1;
-			else if (itemMat == (int)ArmorMaterialTypes.Chain)
-				return 2;
-			else if (itemMat == (int)ArmorMaterialTypes.Chain2)
-				return 2;
-			else if (itemMat == (int)ArmorMaterialTypes.Iron)
-				return 3;
-			else if (itemMat == (int)ArmorMaterialTypes.Steel)
-				return 4;
-			else if (itemMat == (int)ArmorMaterialTypes.Silver)
-				return 4;
-			else if (itemMat == (int)ArmorMaterialTypes.Elven)
-				return 5;
-			else if (itemMat == (int)ArmorMaterialTypes.Dwarven)
-				return 6;
-			else if (itemMat == (int)ArmorMaterialTypes.Mithril)
-				return 7;
-			else if (itemMat == (int)ArmorMaterialTypes.Adamantium)
-				return 7;
-			else if (itemMat == (int)ArmorMaterialTypes.Ebony)
-				return 8;
-			else if (itemMat == (int)ArmorMaterialTypes.Orcish)
-				return 9;
-			else if (itemMat == (int)ArmorMaterialTypes.Daedric)
-				return 10;
-			else
-				return 1;
+                int itemMat = armor.GetMaterialArmorValue();
+                itemMat /= 2 - (int)0.5;
+                return itemMat;
 		}
 		
 		// If the player has equipment that is below a certain percentage of condition, this will check if they should be warned with a pop-up message about said piece of equipment.

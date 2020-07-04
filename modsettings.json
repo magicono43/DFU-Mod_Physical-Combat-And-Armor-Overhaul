@@ -33,20 +33,6 @@
                     "Description": "Critical Strikes Increase Damage, not just hit-chance. !!!! This Module Is Dependent On Armor Hit Formula Redone",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
-                },
-                {
-                    "Value": true,
-                    "Name": "rolePlayRealismArcheryModule",
-                    "Description": "\"Roleplay Realism v0.9\" Archery Module, Enable if you want the Archery Module from Roleplay Realism v0.9 to function, with or without the RPR mod",
-                    "$version": "v1",
-                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
-                },
-                {
-                    "Value": true,
-                    "Name": "ralzarMeanerMonstersEdit",
-                    "Description": "Heavily Edited Version of Ralzar's 'Meaner Monsters' Mod. Changes Most Stats of All Enemies. Recommended if using Armor Hit Fomrula Redone",
-                    "$version": "v1",
-                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
                 }
             ],
             "$version": "v1"
