@@ -1,21 +1,20 @@
 {
     "ModTitle": "PhysicalCombatAndArmorOverhaul",
-    "ModVersion": "1.10",
+    "ModVersion": "1.15",
     "ModAuthor": "Kirk.O",
     "ContactInfo": "kirkoliveri@gmail.com",
-    "DFUnity_Version": "0.10.22",
+    "DFUnity_Version": "0.10.23",
     "ModDescription": "Armor Reduces Damage Taken Instead of Reducing Chances of Being Hit, Also Much More.",
     "GUID": "5a0317fc-6006-44f3-b269-09c77398ca70",
     "Files": [
-        "Assets/Game/Mods/PhysicalCombatAndArmorOverhaul.cs",
-        "Assets/Game/Mods/modsettings.json"
+        "Assets/Game/Mods/Mod Settings/modsettings.json",
+        "Assets/Game/Mods/PhysicalCombatAndArmorOverhaul.cs"
     ],
-    "Contributes": null,
     "Dependencies": [
         {
             "Name": "roleplayrealism",
             "IsOptional": true,
-            "IsPeer": false,
+            "IsPeer": false
         },
         {
             "Name": "meaner monsters",

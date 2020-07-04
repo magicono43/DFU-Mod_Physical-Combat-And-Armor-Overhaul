@@ -23,8 +23,7 @@ using DaggerfallWorkshop.Game.MagicAndEffects;
 using DaggerfallWorkshop.Game.MagicAndEffects.MagicEffects;
 using UnityEngine;
 using System;
-using System.Collections;
-
+using System.Collections.Generic;
 
 namespace PhysicalCombatAndArmorOverhaul
 {
@@ -32,7 +31,7 @@ namespace PhysicalCombatAndArmorOverhaul
     {
         static Mod mod;
 		public static bool archeryModuleCheck { get; set; }
-		public static bool critStrikeModuleCheck { get; set; }
+        public static bool critStrikeModuleCheck { get; set; }
 		public static bool armorHitFormulaModuleCheck { get; set; }
 		public static bool shieldBlockSuccess { get; set; }
 
@@ -945,7 +944,7 @@ namespace PhysicalCombatAndArmorOverhaul
 					if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
 						shieldStrongSpot = true;
 				}
-				shieldBlockSuccess = ShieldBlockChanceCalculation(target, shieldStrongSpot);
+				shieldBlockSuccess = ShieldBlockChanceCalculation(target, shieldStrongSpot, shield);
 				
 				if (shieldBlockSuccess)
 					shieldBlockSuccess = CompareShieldToUnderArmor(target, struckBodyPart, naturalDamResist);
@@ -959,29 +958,35 @@ namespace PhysicalCombatAndArmorOverhaul
 				
 				if(!monsterArmorCheck)
 				{
+					//Debug.Log("------------------------------------------------------------------------------------------");
 					//Debug.LogFormat("Here is damage value before Monster 'Natural' Damage reduction is applied = {0}", damage);
 
 					damage = PercentageReductionCalculationForMonsters(attacker, target, damage, bluntWep, naturalDamResist);
 					
 					//Debug.LogFormat("Here is damage value after Monster 'Natural' Damage reduction = {0}", damage);
+					//Debug.Log("------------------------------------------------------------------------------------------");
 				}
 				else
 				{
 					if (unarmedAttack)
 					{
+						//Debug.Log("------------------------------------------------------------------------------------------");
 						//Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
 
 						damage = CalculateArmorDamageReductionWithUnarmed(attacker, target, damage, struckBodyPart, naturalDamResist); // This will be the method call for armor reduction against unarmed.
 						
 						//Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
+						//Debug.Log("------------------------------------------------------------------------------------------");
 					}
 					else if (weaponAttack)
-					{	
+					{
+						//Debug.Log("------------------------------------------------------------------------------------------");
 						//Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
 
 						damage = CalculateArmorDamageReductionWithWeapon(attacker, target, damage, weapon, struckBodyPart, naturalDamResist); // This will be the method call for armor reduction against weapons.
 						
 						//Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
+						//Debug.Log("------------------------------------------------------------------------------------------");
 					}
 				}
 			}
@@ -989,20 +994,38 @@ namespace PhysicalCombatAndArmorOverhaul
 			{
 				if (unarmedAttack)
 				{
-					//Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
+                    Debug.Log("------------------------------------------------------------------------------------------");
+					Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
+                    int damBefore = damage;
 
 					damage = CalculateArmorDamageReductionWithUnarmed(attacker, target, damage, struckBodyPart, naturalDamResist); // This will be the method call for armor reduction against unarmed.
-					
-					//Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
-				}
+
+					int damAfter = damage;
+					Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
+					if (damBefore > 0)
+					{
+						int damReduPercent = ((100 * damAfter / damBefore) - 100) * -1;
+						Debug.LogFormat("Here is damage reduction percent = {0}%", damReduPercent);
+					}
+                    Debug.Log("------------------------------------------------------------------------------------------");
+                }
 				else if (weaponAttack)
 				{
-					//Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
+                    Debug.Log("------------------------------------------------------------------------------------------");
+                    Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
+                    int damBefore = damage;
 
-					damage = CalculateArmorDamageReductionWithWeapon(attacker, target, damage, weapon, struckBodyPart, naturalDamResist); // This will be the method call for armor reduction against weapons.
-					
-					//Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
-				}
+                    damage = CalculateArmorDamageReductionWithWeapon(attacker, target, damage, weapon, struckBodyPart, naturalDamResist); // This will be the method call for armor reduction against weapons.
+
+					int damAfter = damage;
+                    Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
+					if (damBefore > 0)
+					{
+						int damReduPercent = ((100 * damAfter / damBefore) - 100) * -1;
+						Debug.LogFormat("Here is damage reduction percent = {0}%", damReduPercent);
+					}
+                    Debug.Log("------------------------------------------------------------------------------------------");
+                }
 			}
 
             // Apply Ring of Namira effect
@@ -1022,6 +1045,7 @@ namespace PhysicalCombatAndArmorOverhaul
                     }
                 }
             }
+
             //Debug.LogFormat("Damage {0} applied, animTime={1}  ({2})", damage, weaponAnimTime, GameManager.Instance.WeaponManager.ScreenWeapon.WeaponState);
 
             return damage;
@@ -1587,7 +1611,6 @@ namespace PhysicalCombatAndArmorOverhaul
 			}
 			return damage;
 		}
-			// Make it so with my mod module active, shields of different types such as the round-shield and the kite-shield have more of a difference, because right now the round-shield is just better since it is lighter and covers the same spots. Well not entirely actually, Kite-shield has more base enchantment points and base durability, so that seems to be fair.
 			// Once I make it easier to add onto damage reduction values, I should take weapon weight into consideration and have it so heavier weapons do more damage resistance penetration, this would somewhat help in balancing out weapons that are just clearly better than others. Like the broadsword having less damage and weighing more than the longsword, that does not really make much sense to me, the broadsword does look a lot cooler at least.
 			// Possibly try and make it so getting hit in different parts of the body can do different things like bonus damage for the attack or something around that.
 			// If I do make it so the player hits monsters more often, I will want to also make it so knock-back is tweeked heavily so that enemies can't just be super easily stun-locked by any weapon.
@@ -1642,28 +1665,32 @@ namespace PhysicalCombatAndArmorOverhaul
 			}
 			else // Possibly add later on enemies/monsters that can more readily penetrate through damage reduction from armor and such, for now though, just do with this for now.
 			{
-				if (armorMaterial == 1) // leather
-					damage = (int)Mathf.Round(damage*(.90f - naturalDamResist));
-				else if (armorMaterial == 2) // chains 1 and 2
-					damage = (int)Mathf.Round(damage*(.84f - naturalDamResist));
-				else if (armorMaterial == 3) // iron
-					damage = (int)Mathf.Round(damage*(.80f - naturalDamResist));
-				else if (armorMaterial == 4) // steel and silver
-					damage = (int)Mathf.Round(damage*(.72f - naturalDamResist));
-				else if (armorMaterial == 5) // elven
-					damage = (int)Mathf.Round(damage*(.66f - naturalDamResist));
-				else if (armorMaterial == 6) // dwarven
-					damage = (int)Mathf.Round(damage*(.58f - naturalDamResist));
-				else if (armorMaterial == 7) // mithril and adamantium
-					damage = (int)Mathf.Round(damage*(.52f - naturalDamResist));
-				else if (armorMaterial == 8) // ebony
-					damage = (int)Mathf.Round(damage*(.46f - naturalDamResist));
-				else if (armorMaterial == 9) // orcish
-					damage = (int)Mathf.Round(damage*(.36f - naturalDamResist));
-				else if (armorMaterial == 10) // daedric
-					damage = (int)Mathf.Round(damage*(.30f - naturalDamResist));
+                switch (armorMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (.90f - naturalDamResist));
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (.84f - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (.80f - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (.72f - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (.66f - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (.52f - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (.46f - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (.36f - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (.30f - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist)); // May have to change this? Don't think so though.
+                }
 			}
-			return damage;
 		}
 		
 		/// Does most of the calculations determining how much an attack gets reduced by a piece of armor, if a weapon is being used to attack with.
@@ -1681,51 +1708,60 @@ namespace PhysicalCombatAndArmorOverhaul
 			{
 				if (bluntWep)
 				{
-					if (armorMaterial == 1) // leather
-						damage = (int)Mathf.Round(damage*(.72f - naturalDamResist)); // Made it so blunt weapons do 4% more damage to plate armors (most of them) compared to other weapons.
-					else if (armorMaterial == 2) // chains 1 and 2
-						damage = (int)Mathf.Round(damage*(.88f - naturalDamResist));
-					else if (armorMaterial == 3) // iron
-						damage = (int)Mathf.Round(damage*(.92f - naturalDamResist));
-					else if (armorMaterial == 4) // steel and silver
-						damage = (int)Mathf.Round(damage*(.84f - naturalDamResist));
-					else if (armorMaterial == 5) // elven
-						damage = (int)Mathf.Round(damage*(.80f - naturalDamResist));
-					else if (armorMaterial == 6) // dwarven
-						damage = (int)Mathf.Round(damage*(.72f - naturalDamResist));
-					else if (armorMaterial == 7) // mithril and adamantium
-						damage = (int)Mathf.Round(damage*(.64f - naturalDamResist));
-					else if (armorMaterial == 8) // ebony
-						damage = (int)Mathf.Round(damage*(.56f - naturalDamResist));
-					else if (armorMaterial == 9) // orcish
-						damage = (int)Mathf.Round(damage*(.48f - naturalDamResist));
-					else if (armorMaterial == 10) // daedric
-						damage = (int)Mathf.Round(damage*(.40f - naturalDamResist));
-				}
+                    switch (armorMaterial)
+                    {
+                        case 1: // leather
+                            return (int)Mathf.Round(damage * (.72f - naturalDamResist)); // Made it so blunt weapons do 4% more damage to plate armors (most of them) compared to other weapons.
+                        case 2: // chains 1 and 2
+                            return (int)Mathf.Round(damage * (.88f - naturalDamResist));
+                        case 3: // iron
+                            return (int)Mathf.Round(damage * (.92f - naturalDamResist));
+                        case 4: // steel and silver
+                            return (int)Mathf.Round(damage * (.84f - naturalDamResist));
+                        case 5: // elven
+                            return (int)Mathf.Round(damage * (.80f - naturalDamResist));
+                        case 6: // dwarven
+                            return (int)Mathf.Round(damage * (.72f - naturalDamResist));
+                        case 7: // mithril and adamantium
+                            return (int)Mathf.Round(damage * (.64f - naturalDamResist));
+                        case 8: // ebony
+                            return (int)Mathf.Round(damage * (.56f - naturalDamResist));
+                        case 9: // orcish
+                            return (int)Mathf.Round(damage * (.48f - naturalDamResist));
+                        case 10: // daedric
+                            return (int)Mathf.Round(damage * (.40f - naturalDamResist));
+                        default:
+                            return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                    }
+                }
 				else
 				{
-					if (armorMaterial == 1) // leather
-						damage = (int)Mathf.Round(damage*(.88f - naturalDamResist));
-					else if (armorMaterial == 2) // chains 1 and 2
-						damage = (int)Mathf.Round(damage*(.72f - naturalDamResist));
-					else if (armorMaterial == 3) // iron
-						damage = (int)Mathf.Round(damage*(.86f - naturalDamResist));
-					else if (armorMaterial == 4) // steel and silver
-						damage = (int)Mathf.Round(damage*(.78f - naturalDamResist));
-					else if (armorMaterial == 5) // elven
-						damage = (int)Mathf.Round(damage*(.74f - naturalDamResist));
-					else if (armorMaterial == 6) // dwarven
-						damage = (int)Mathf.Round(damage*(.66f - naturalDamResist));
-					else if (armorMaterial == 7) // mithril and adamantium
-						damage = (int)Mathf.Round(damage*(.58f - naturalDamResist));
-					else if (armorMaterial == 8) // ebony
-						damage = (int)Mathf.Round(damage*(.50f - naturalDamResist));
-					else if (armorMaterial == 9) // orcish
-						damage = (int)Mathf.Round(damage*(.42f - naturalDamResist));
-					else if (armorMaterial == 10) // daedric
-						damage = (int)Mathf.Round(damage*(.34f - naturalDamResist));
-				}
-				return damage;
+                    switch (armorMaterial)
+                    {
+                        case 1: // leather
+                            return (int)Mathf.Round(damage * (.88f - naturalDamResist));
+                        case 2: // chains 1 and 2
+                            return (int)Mathf.Round(damage * (.72f - naturalDamResist));
+                        case 3: // iron
+                            return (int)Mathf.Round(damage * (.86f - naturalDamResist));
+                        case 4: // steel and silver
+                            return (int)Mathf.Round(damage * (.78f - naturalDamResist));
+                        case 5: // elven
+                            return (int)Mathf.Round(damage * (.74f - naturalDamResist));
+                        case 6: // dwarven
+                            return (int)Mathf.Round(damage * (.66f - naturalDamResist));
+                        case 7: // mithril and adamantium
+                            return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                        case 8: // ebony
+                            return (int)Mathf.Round(damage * (.50f - naturalDamResist));
+                        case 9: // orcish
+                            return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                        case 10: // daedric
+                            return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                        default:
+                            return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                    }
+                }
 			}
 		}
 		
@@ -1734,74 +1770,88 @@ namespace PhysicalCombatAndArmorOverhaul
 			// So I want to expand on this more later on, but for right now, I think i'm just going to go with something fairly basic. That being that shields, no matter what the type will have a large damage reduction, but this reduction will increase with the material type of the shield. Like I said, want to a lot more with this, but have to think more about it and learn more about actually doing it before I wrack my head on it.
 			if (unarmedCheck)
 			{
-				if (shieldMaterial == 1) // leather
-					damage = (int)Mathf.Round(damage*(.59f - naturalDamResist));
-				else if (shieldMaterial == 2) // chains 1 and 2
-					damage = (int)Mathf.Round(damage*(.55f - naturalDamResist));
-				else if (shieldMaterial == 3) // iron
-					damage = (int)Mathf.Round(damage*(.49f - naturalDamResist));
-				else if (shieldMaterial == 4) // steel and silver
-					damage = (int)Mathf.Round(damage*(.45f - naturalDamResist));
-				else if (shieldMaterial == 5) // elven
-					damage = (int)Mathf.Round(damage*(.43f - naturalDamResist));
-				else if (shieldMaterial == 6) // dwarven
-					damage = (int)Mathf.Round(damage*(.39f - naturalDamResist));
-				else if (shieldMaterial == 7) // mithril and adamantium
-					damage = (int)Mathf.Round(damage*(.35f - naturalDamResist));
-				else if (shieldMaterial == 8) // ebony
-					damage = (int)Mathf.Round(damage*(.33f - naturalDamResist));
-				else if (shieldMaterial == 9) // orcish
-					damage = (int)Mathf.Round(damage*(.29f - naturalDamResist));
-				else if (shieldMaterial == 10) // daedric
-					damage = (int)Mathf.Round(damage*(.25f - naturalDamResist));
-			}
+                switch (shieldMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (.59f - naturalDamResist));
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (.55f - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (.49f - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (.45f - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (.43f - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (.39f - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (.35f - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (.33f - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (.29f - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (.25f - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                }
+            }
 			else if (bluntWep)
 			{
-				if (shieldMaterial == 1) // leather
-					damage = (int)Mathf.Round(damage*(.74f - naturalDamResist)); // Blunt does slightly more damage to shields, overall.
-				else if (shieldMaterial == 2) // chains 1 and 2
-					damage = (int)Mathf.Round(damage*(.70f - naturalDamResist));
-				else if (shieldMaterial == 3) // iron
-					damage = (int)Mathf.Round(damage*(.64f - naturalDamResist));
-				else if (shieldMaterial == 4) // steel and silver
-					damage = (int)Mathf.Round(damage*(.58f - naturalDamResist));
-				else if (shieldMaterial == 5) // elven
-					damage = (int)Mathf.Round(damage*(.54f - naturalDamResist));
-				else if (shieldMaterial == 6) // dwarven
-					damage = (int)Mathf.Round(damage*(.50f - naturalDamResist));
-				else if (shieldMaterial == 7) // mithril and adamantium
-					damage = (int)Mathf.Round(damage*(.46f - naturalDamResist));
-				else if (shieldMaterial == 8) // ebony
-					damage = (int)Mathf.Round(damage*(.42f - naturalDamResist));
-				else if (shieldMaterial == 9) // orcish
-					damage = (int)Mathf.Round(damage*(.38f - naturalDamResist));
-				else if (shieldMaterial == 10) // daedric
-					damage = (int)Mathf.Round(damage*(.34f - naturalDamResist));
-			}
+                switch (shieldMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (.74f - naturalDamResist)); // Blunt does slightly more damage to shields, overall.
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (.70f - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (.64f - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (.54f - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (.50f - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (.46f - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (.38f - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                }
+            }
 			else
 			{
-				if (shieldMaterial == 1) // leather
-					damage = (int)Mathf.Round(damage*(.70f - naturalDamResist)); // You get a very good damage reduction from any type of shield, it gets slightly better as the material of the shield gets better.
-				else if (shieldMaterial == 2) // chains 1 and 2
-					damage = (int)Mathf.Round(damage*(.66f - naturalDamResist));
-				else if (shieldMaterial == 3) // iron
-					damage = (int)Mathf.Round(damage*(.60f - naturalDamResist));
-				else if (shieldMaterial == 4) // steel and silver
-					damage = (int)Mathf.Round(damage*(.54f - naturalDamResist));
-				else if (shieldMaterial == 5) // elven
-					damage = (int)Mathf.Round(damage*(.50f - naturalDamResist));
-				else if (shieldMaterial == 6) // dwarven
-					damage = (int)Mathf.Round(damage*(.46f - naturalDamResist));
-				else if (shieldMaterial == 7) // mithril and adamantium
-					damage = (int)Mathf.Round(damage*(.42f - naturalDamResist));
-				else if (shieldMaterial == 8) // ebony
-					damage = (int)Mathf.Round(damage*(.38f - naturalDamResist));
-				else if (shieldMaterial == 9) // orcish
-					damage = (int)Mathf.Round(damage*(.34f - naturalDamResist));
-				else if (shieldMaterial == 10) // daedric
-					damage = (int)Mathf.Round(damage*(.30f - naturalDamResist));
-			}
-			return damage;
+                switch (shieldMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (.70f - naturalDamResist)); // You get a very good damage reduction from any type of shield, it gets slightly better as the material of the shield gets better.
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (.66f - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (.60f - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (.54f - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (.50f - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (.46f - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (.38f - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (.30f - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                }
+            }
 		}
 		
 		// This will be the main section of where various groups of enemies will have their 'Natural' damage reduction calculated.
@@ -1809,79 +1859,69 @@ namespace PhysicalCombatAndArmorOverhaul
 		{
 			EnemyEntity AITarget = null;
             AITarget = target as EnemyEntity;
-			
-			if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Animals)
-			{
-				damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-			}
-			else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Undead) // Did not know that, humanoids don't effect "human" enemies, but humanoid like monsters like orcs, etc.
-			{
-				if (AITarget.CareerIndex == (int)MonsterCareers.SkeletalWarrior) // Logic here being that the skeleton warrior clearly has a shield.
-					damage = (int)Mathf.Round(damage*(.80f - naturalDamResist));
-				else
-					damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-			}
-            else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Humanoid)
-			{
-				if (AITarget.CareerIndex == (int)MonsterCareers.Gargoyle) // Logic here being that the gargoyle is made of some pretty hard material. Have blunt do bonus damage to these.
-				{
-					if (bluntWep)
-						damage = (int)Mathf.Round(damage*(1.21f - naturalDamResist));
-					else
-						damage = (int)Mathf.Round(damage*(.71f - naturalDamResist));
-				}
-				else if (AITarget.CareerIndex == (int)MonsterCareers.Spriggan) // Logic here being that the spriggan has bark skin. Take more from non-blunt.
-				{
-					if (bluntWep)
-						damage = (int)Mathf.Round(damage*(.66f - naturalDamResist));
-					else
-						damage = (int)Mathf.Round(damage*(1.26f - naturalDamResist));
-				}
-				else
-					damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-			}
-			else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Daedra)
-			{
-				if (AITarget.CareerIndex == (int)MonsterCareers.Daedroth) // Logic here being that the daedroth is wearing some armor, as well as has a scaly exterior skin.
-					damage = (int)Mathf.Round(damage*(.95f - naturalDamResist));
-				else if (AITarget.CareerIndex == (int)MonsterCareers.FireDaedra) // Logic here being that the fire daedra is wearing some armor.
-					damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-				else if (AITarget.CareerIndex == (int)MonsterCareers.FrostDaedra) // Logic here being that the frost daedra is wearing some armor, also colder, thus harder, increase damage from blunt.
-				{
-					if (bluntWep)
-						damage = (int)Mathf.Round(damage*(1.04f - naturalDamResist));
-					else
-						damage = (int)Mathf.Round(damage*(.84f - naturalDamResist));
-				}
-				else if (AITarget.CareerIndex == (int)MonsterCareers.DaedraLord) // Logic here being that the daedra lord is wearing some armor.
-					damage = (int)Mathf.Round(damage*(.95f - naturalDamResist));
-				else
-					damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-			}
-			else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.None)
-			{
-				if (AITarget.CareerIndex == (int)MonsterCareers.IceAtronach) // Logic here being that the ice atronach is made of fairly hard ice, increased damage from blunt.
-				{
-					if (bluntWep)
-						damage = (int)Mathf.Round(damage*(1.4f - naturalDamResist));
-					else
-						damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-				}
-				else if (AITarget.CareerIndex == (int)MonsterCareers.IronAtronach) // Logic here being that the iron atronach is a construct of pure metal, pretty tough. Less damage from blunt.
-				{
-					if (bluntWep)
-						damage = (int)Mathf.Round(damage*(.60f - naturalDamResist));
-					else
-						damage = (int)Mathf.Round(damage*(.90f - naturalDamResist));
-				}
-				else
-					damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-			}
-			else
-			{
-				damage = (int)Mathf.Round(damage*(1f - naturalDamResist));
-			}
-			return damage;
+
+            switch (AITarget.GetEnemyGroup())
+            {
+                case DFCareer.EnemyGroups.Animals:
+                    return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                case DFCareer.EnemyGroups.Undead: // Did not know that, humanoids don't effect "human" enemies, but humanoid like monsters like orcs, etc.
+                    if (AITarget.CareerIndex == (int)MonsterCareers.SkeletalWarrior) // Logic here being that the skeleton warrior clearly has a shield.
+                        return (int)Mathf.Round(damage * (.80f - naturalDamResist));
+                    else
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                case DFCareer.EnemyGroups.Humanoid:
+                    if (AITarget.CareerIndex == (int)MonsterCareers.Gargoyle) // Logic here being that the gargoyle is made of some pretty hard material. Have blunt do bonus damage to these.
+                    {
+                        if (bluntWep)
+                            return (int)Mathf.Round(damage * (1.21f - naturalDamResist));
+                        else
+                            return (int)Mathf.Round(damage * (.71f - naturalDamResist));
+                    }
+                    else if (AITarget.CareerIndex == (int)MonsterCareers.Spriggan) // Logic here being that the spriggan has bark skin. Take more from non-blunt.
+                    {
+                        if (bluntWep)
+                            return (int)Mathf.Round(damage * (.66f - naturalDamResist));
+                        else
+                            return (int)Mathf.Round(damage * (1.26f - naturalDamResist));
+                    }
+                    else
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                case DFCareer.EnemyGroups.Daedra:
+                    if (AITarget.CareerIndex == (int)MonsterCareers.Daedroth) // Logic here being that the daedroth is wearing some armor, as well as has a scaly exterior skin.
+                        return (int)Mathf.Round(damage * (.95f - naturalDamResist));
+                    else if (AITarget.CareerIndex == (int)MonsterCareers.FireDaedra) // Logic here being that the fire daedra is wearing some armor.
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                    else if (AITarget.CareerIndex == (int)MonsterCareers.FrostDaedra) // Logic here being that the frost daedra is wearing some armor, also colder, thus harder, increase damage from blunt.
+                    {
+                        if (bluntWep)
+                            return (int)Mathf.Round(damage * (1.04f - naturalDamResist));
+                        else
+                            return (int)Mathf.Round(damage * (.84f - naturalDamResist));
+                    }
+                    else if (AITarget.CareerIndex == (int)MonsterCareers.DaedraLord) // Logic here being that the daedra lord is wearing some armor.
+                        return (int)Mathf.Round(damage * (.95f - naturalDamResist));
+                    else
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                case DFCareer.EnemyGroups.None:
+                    if (AITarget.CareerIndex == (int)MonsterCareers.IceAtronach) // Logic here being that the ice atronach is made of fairly hard ice, increased damage from blunt.
+                    {
+                        if (bluntWep)
+                            return (int)Mathf.Round(damage * (1.4f - naturalDamResist));
+                        else
+                            return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                    }
+                    else if (AITarget.CareerIndex == (int)MonsterCareers.IronAtronach) // Logic here being that the iron atronach is a construct of pure metal, pretty tough. Less damage from blunt.
+                    {
+                        if (bluntWep)
+                            return (int)Mathf.Round(damage * (.60f - naturalDamResist));
+                        else
+                            return (int)Mathf.Round(damage * (.90f - naturalDamResist));
+                    }
+                    else
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                default:
+                    return (int)Mathf.Round(damage * (1f - naturalDamResist));
+            }
 		}
 		
 		/// Does most of the calculations determining how much a material/piece of equipment should be taking damage from something hitting it.
@@ -1994,8 +2034,8 @@ namespace PhysicalCombatAndArmorOverhaul
                 int amount = item.IsShield ? damage * 2: damage * 4;
                 item.LowerCondition(amount, owner);
 				
-				int percentChange = 100 * amount / item.maxCondition;
-                /*if (owner == GameManager.Instance.PlayerEntity){
+				/*int percentChange = 100 * amount / item.maxCondition;
+                if (owner == GameManager.Instance.PlayerEntity){
                     Debug.LogFormat("Target Had {0} Damaged by {1}, cond={2}", item.LongName, amount, item.currentCondition);
 					Debug.LogFormat("Had {0} Damaged by {1}%, of Total Maximum. There Remains {2}% of Max Cond.", item.LongName, percentChange, item.ConditionPercentage);} // Percentage Change */
             }
@@ -2028,8 +2068,8 @@ namespace PhysicalCombatAndArmorOverhaul
                 int amount = item.IsShield ? damage: damage * 2;
                 item.LowerCondition(amount, owner);
 				
-				int percentChange = 100 * amount / item.maxCondition;
-                /*if (owner == GameManager.Instance.PlayerEntity){
+				/*int percentChange = 100 * amount / item.maxCondition;
+                if (owner == GameManager.Instance.PlayerEntity){
                     Debug.LogFormat("Target Had {0} Damaged by {1}, cond={2}", item.LongName, amount, item.currentCondition);
 					Debug.LogFormat("Had {0} Damaged by {1}%, of Total Maximum. There Remains {2}% of Max Cond.", item.LongName, percentChange, item.ConditionPercentage);} // Percentage Change */
 			}
@@ -2065,11 +2105,46 @@ namespace PhysicalCombatAndArmorOverhaul
 		
 		// Finds the material that an armor item is made from, then returns the multiplier that will be used later based on this material check.
 		private static int ArmorMaterialIdentifier (DaggerfallUnityItem armor)
-		{
+        {
+            if (!armor.IsShield)
+            {
                 int itemMat = armor.GetMaterialArmorValue();
                 itemMat /= 2 - (int)0.5;
                 return itemMat;
-		}
+            }
+            else
+            {
+                int itemMat = armor.NativeMaterialValue;
+
+                switch (itemMat)
+                {
+                    case (int)ArmorMaterialTypes.Leather:
+                        return 1;
+                    case (int)ArmorMaterialTypes.Chain:
+                    case (int)ArmorMaterialTypes.Chain2:
+                        return 2;
+                    case (int)ArmorMaterialTypes.Iron:
+                        return 3;
+                    case (int)ArmorMaterialTypes.Steel:
+                    case (int)ArmorMaterialTypes.Silver:
+                        return 4;
+                    case (int)ArmorMaterialTypes.Elven:
+                        return 5;
+                    case (int)ArmorMaterialTypes.Dwarven:
+                        return 6;
+                    case (int)ArmorMaterialTypes.Mithril:
+                    case (int)ArmorMaterialTypes.Adamantium:
+                        return 7;
+                    case (int)ArmorMaterialTypes.Ebony:
+                        return 8;
+                    case (int)ArmorMaterialTypes.Orcish:
+                        return 9;
+                    case (int)ArmorMaterialTypes.Daedric:
+                        return 10;
+                }
+            }
+            return 1;
+        }
 		
 		// If the player has equipment that is below a certain percentage of condition, this will check if they should be warned with a pop-up message about said piece of equipment.
 		private static void WarningMessagePlayerEquipmentCondition(DaggerfallUnityItem item)
@@ -2091,8 +2166,8 @@ namespace PhysicalCombatAndArmorOverhaul
 				}
 				else if (item.GetWeaponSkillIDAsShort() == 32) // Blunt Weapoons Text
 				{
-					roughItemMessage = String.Format("My {0} Is Full Of Dings And Dents", item.shortName);
-					damagedItemMessage = String.Format("My {0} Looks About Ready To Crumble To Dust", item.shortName);
+					roughItemMessage = String.Format("My {0}'s Shaft Has Some Small Cracks", item.shortName);
+					damagedItemMessage = String.Format("My {0}'s Shaft Is Nearly Split In Two", item.shortName);
 				}
 				else if (item.GetWeaponSkillIDAsShort() == 33) // Archery Weapons Text
 				{
@@ -2119,59 +2194,57 @@ namespace PhysicalCombatAndArmorOverhaul
 			
 			if (itemMat <= 9 && itemMat >= 0) // Checks if the item material is for weapons, and leather armor.
 			{
-				if (itemMat == (int)ArmorMaterialTypes.Leather)
-					return 1;
-				else if (itemMat == (int)WeaponMaterialTypes.Iron)
-					return 1;
-				else if (itemMat == (int)WeaponMaterialTypes.Steel)
-					return 1;
-				else if (itemMat == (int)WeaponMaterialTypes.Silver)
-					return 1;
-				else if (itemMat == (int)WeaponMaterialTypes.Elven)
-					return 2;
-				else if (itemMat == (int)WeaponMaterialTypes.Dwarven)
-					return 3;
-				else if (itemMat == (int)WeaponMaterialTypes.Mithril)
-					return 4;
-				else if (itemMat == (int)WeaponMaterialTypes.Adamantium)
-					return 5;
-				else if (itemMat == (int)WeaponMaterialTypes.Ebony)
-					return 6;
-				else if (itemMat == (int)WeaponMaterialTypes.Orcish)
-					return 7;
-				else if (itemMat == (int)WeaponMaterialTypes.Daedric)
-					return 8;
-				else
-					return 1;
+                switch (itemMat)
+                {
+                    case (int)WeaponMaterialTypes.Iron:
+                    case (int)WeaponMaterialTypes.Steel:
+                    case (int)WeaponMaterialTypes.Silver:
+                        return 1;
+                    case (int)WeaponMaterialTypes.Elven:
+                        return 2;
+                    case (int)WeaponMaterialTypes.Dwarven:
+                        return 3;
+                    case (int)WeaponMaterialTypes.Mithril:
+                        return 4;
+                    case (int)WeaponMaterialTypes.Adamantium:
+                        return 5;
+                    case (int)WeaponMaterialTypes.Ebony:
+                        return 6;
+                    case (int)WeaponMaterialTypes.Orcish:
+                        return 7;
+                    case (int)WeaponMaterialTypes.Daedric:
+                        return 8;
+                    default:
+                        return 1; // Leather should default to this.
+                }
 			}
 			else if (itemMat <= 521 && itemMat >= 256) // Checks if the item material is for armors.
 			{
-				if (itemMat == (int)ArmorMaterialTypes.Chain)
-					return 1;
-				else if (itemMat == (int)ArmorMaterialTypes.Chain2)
-					return 1;
-				else if (itemMat == (int)ArmorMaterialTypes.Iron)
-					return 1;
-				else if (itemMat == (int)ArmorMaterialTypes.Steel)
-					return 1;
-				else if (itemMat == (int)ArmorMaterialTypes.Silver)
-					return 1;
-				else if (itemMat == (int)ArmorMaterialTypes.Elven)
-					return 2;
-				else if (itemMat == (int)ArmorMaterialTypes.Dwarven)
-					return 3;
-				else if (itemMat == (int)ArmorMaterialTypes.Mithril)
-					return 4;
-				else if (itemMat == (int)ArmorMaterialTypes.Adamantium)
-					return 5;
-				else if (itemMat == (int)ArmorMaterialTypes.Ebony)
-					return 6;
-				else if (itemMat == (int)ArmorMaterialTypes.Orcish)
-					return 7;
-				else if (itemMat == (int)ArmorMaterialTypes.Daedric)
-					return 8;
-				else
-					return 1;
+                switch (itemMat)
+                {
+                    case (int)ArmorMaterialTypes.Chain:
+                    case (int)ArmorMaterialTypes.Chain2:
+                    case (int)ArmorMaterialTypes.Iron:
+                    case (int)ArmorMaterialTypes.Steel:
+                    case (int)ArmorMaterialTypes.Silver:
+                        return 1;
+                    case (int)ArmorMaterialTypes.Elven:
+                        return 2;
+                    case (int)ArmorMaterialTypes.Dwarven:
+                        return 3;
+                    case (int)ArmorMaterialTypes.Mithril:
+                        return 4;
+                    case (int)ArmorMaterialTypes.Adamantium:
+                        return 5;
+                    case (int)ArmorMaterialTypes.Ebony:
+                        return 6;
+                    case (int)ArmorMaterialTypes.Orcish:
+                        return 7;
+                    case (int)ArmorMaterialTypes.Daedric:
+                        return 8;
+                    default:
+                        return 1;
+                }
 			}
 			else
 				return 1;
@@ -2181,35 +2254,33 @@ namespace PhysicalCombatAndArmorOverhaul
 		private static int ArmorMaterialModifierFinder (DaggerfallUnityItem armor)
 		{
 			int itemMat = armor.NativeMaterialValue;
-			
-			if (itemMat == (int)ArmorMaterialTypes.Leather)
-				return 1;
-			else if (itemMat == (int)ArmorMaterialTypes.Chain)
-				return 2;
-			else if (itemMat == (int)ArmorMaterialTypes.Chain2)
-				return 2;
-			else if (itemMat == (int)ArmorMaterialTypes.Iron)
-				return 2;
-			else if (itemMat == (int)ArmorMaterialTypes.Steel)
-				return 3;
-			else if (itemMat == (int)ArmorMaterialTypes.Silver)
-				return 3;
-			else if (itemMat == (int)ArmorMaterialTypes.Elven)
-				return 4;
-			else if (itemMat == (int)ArmorMaterialTypes.Dwarven)
-				return 5;
-			else if (itemMat == (int)ArmorMaterialTypes.Mithril)
-				return 5;
-			else if (itemMat == (int)ArmorMaterialTypes.Adamantium)
-				return 5;
-			else if (itemMat == (int)ArmorMaterialTypes.Ebony)
-				return 6;
-			else if (itemMat == (int)ArmorMaterialTypes.Orcish)
-				return 7;
-			else if (itemMat == (int)ArmorMaterialTypes.Daedric)
-				return 8;
-			else
-				return 1;
+
+            switch (itemMat)
+            {
+                case (int)ArmorMaterialTypes.Leather:
+                    return 1;
+                case (int)ArmorMaterialTypes.Chain:
+                case (int)ArmorMaterialTypes.Chain2:
+                case (int)ArmorMaterialTypes.Iron:
+                    return 2;
+                case (int)ArmorMaterialTypes.Steel:
+                case (int)ArmorMaterialTypes.Silver:
+                    return 3;
+                case (int)ArmorMaterialTypes.Elven:
+                    return 4;
+                case (int)ArmorMaterialTypes.Dwarven:
+                case (int)ArmorMaterialTypes.Mithril:
+                case (int)ArmorMaterialTypes.Adamantium:
+                    return 5;
+                case (int)ArmorMaterialTypes.Ebony:
+                    return 6;
+                case (int)ArmorMaterialTypes.Orcish:
+                    return 7;
+                case (int)ArmorMaterialTypes.Daedric:
+                    return 8;
+                default:
+                    return 1;
+            }
 		}
 		
 		// For dealing with special cases of specific weapons in terms of condition damage amount.
@@ -2250,28 +2321,52 @@ namespace PhysicalCombatAndArmorOverhaul
 		}
 		
 		// Checks for if a shield block was successful and returns true if so, false if not.
-		private static bool ShieldBlockChanceCalculation(DaggerfallEntity target, bool shieldStrongSpot)
+		private static bool ShieldBlockChanceCalculation(DaggerfallEntity target, bool shieldStrongSpot, DaggerfallUnityItem shield)
 		{
-			float blockChance = 0f;
-			int targetAgili = target.Stats.LiveAgility - 50;
+			float hardBlockChance = 0f;
+            float softBlockChance = 0f;
+            int targetAgili = target.Stats.LiveAgility - 50;
 			int targetSpeed = target.Stats.LiveSpeed - 50;
 			int targetStren = target.Stats.LiveStrength - 50;
-			int targetEndur = target.Stats.LiveEndurance - 50; // First bug i'm seeing, sometimes this gets ran 2-3 times in a single attack, this makes sense since a bunch of times this method is called, problem is that the result for the roll is different every run.
+			int targetEndur = target.Stats.LiveEndurance - 50;
 			int targetWillp = target.Stats.LiveWillpower - 50;
 			int targetLuck = target.Stats.LiveLuck - 50;
+
+            switch (shield.TemplateIndex)
+            {
+                case (int)Armor.Buckler:
+                    hardBlockChance = 30f;
+                    softBlockChance = 20f;
+                    break;
+                case (int)Armor.Round_Shield:
+                    hardBlockChance = 35f;
+                    softBlockChance = 10f;
+                    break;
+                case (int)Armor.Kite_Shield:
+                    hardBlockChance = 45f;
+                    softBlockChance = 5f;
+                    break;
+                case (int)Armor.Tower_Shield:
+                    hardBlockChance = 55f;
+                    softBlockChance = -5f;
+                    break;
+                default:
+                    hardBlockChance = 40f;
+                    softBlockChance = 0f;
+                    break;
+            }
 			
 			if (shieldStrongSpot)
 			{
-				blockChance = 40f; // A base 40% chance of a block added to body parts covered by the shield, might expand on this later.
-				blockChance += (targetAgili*.3f);
-				blockChance += (targetSpeed*.3f);
-				blockChance += (targetStren*.3f);
-				blockChance += (targetEndur*.2f);
-				blockChance += (targetWillp*.1f);
-				blockChance += (targetLuck*.1f);
+                hardBlockChance += (targetAgili*.3f);
+                hardBlockChance += (targetSpeed*.3f);
+                hardBlockChance += (targetStren*.3f);
+                hardBlockChance += (targetEndur*.2f);
+                hardBlockChance += (targetWillp*.1f);
+                hardBlockChance += (targetLuck*.1f);
 				
-				Mathf.Clamp(blockChance, 7f, 95f);
-				int blockChanceInt = (int)Mathf.Round(blockChance);
+				Mathf.Clamp(hardBlockChance, 7f, 95f);
+				int blockChanceInt = (int)Mathf.Round(hardBlockChance);
 				
 				if (Dice100.SuccessRoll(blockChanceInt))
 				{
@@ -2286,15 +2381,15 @@ namespace PhysicalCombatAndArmorOverhaul
 			}
 			else
 			{
-				blockChance = (targetAgili*.2f);
-				blockChance += (targetSpeed*.2f);
-				blockChance += (targetStren*.2f);
-				blockChance += (targetEndur*.1f);
-				blockChance += (targetWillp*.1f);
-				blockChance += (targetLuck*.1f);
+                softBlockChance += (targetAgili*.3f);
+                softBlockChance += (targetSpeed*.2f);
+                softBlockChance += (targetStren*.2f);
+                softBlockChance += (targetEndur*.1f);
+                softBlockChance += (targetWillp*.1f);
+                softBlockChance += (targetLuck*.1f);
 				
-				Mathf.Clamp(blockChance, 0f, 35f);
-				int blockChanceInt = (int)Mathf.Round(blockChance);
+				Mathf.Clamp(softBlockChance, 0f, 50f);
+				int blockChanceInt = (int)Mathf.Round(softBlockChance);
 				
 				if (Dice100.SuccessRoll(blockChanceInt))
 				{
@@ -2354,53 +2449,59 @@ namespace PhysicalCombatAndArmorOverhaul
 		{
 			if (shieldQuickCheck)
 			{
-				if (armorMaterial == 1) // leather
-					damage = (int)Mathf.Round(damage*(.68f - naturalDamResist));
-				else if (armorMaterial == 2) // chains 1 and 2
-					damage = (int)Mathf.Round(damage*(.64f - naturalDamResist));
-				else if (armorMaterial == 3) // iron
-					damage = (int)Mathf.Round(damage*(.58f - naturalDamResist));
-				else if (armorMaterial == 4) // steel and silver
-					damage = (int)Mathf.Round(damage*(.52f - naturalDamResist));
-				else if (armorMaterial == 5) // elven
-					damage = (int)Mathf.Round(damage*(.49f - naturalDamResist));
-				else if (armorMaterial == 6) // dwarven
-					damage = (int)Mathf.Round(damage*(.45f - naturalDamResist));
-				else if (armorMaterial == 7) // mithril and adamantium
-					damage = (int)Mathf.Round(damage*(.41f - naturalDamResist));
-				else if (armorMaterial == 8) // ebony
-					damage = (int)Mathf.Round(damage*(.38f - naturalDamResist));
-				else if (armorMaterial == 9) // orcish
-					damage = (int)Mathf.Round(damage*(.34f - naturalDamResist));
-				else if (armorMaterial == 10) // daedric
-					damage = (int)Mathf.Round(damage*(.30f - naturalDamResist));
-				
-				return damage;
+                switch (armorMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (.68f - naturalDamResist));
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (.64f - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (.52f - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (.49f - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (.45f - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (.41f - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (.38f - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (.30f - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                }
 			}
 			else
 			{
-				if (armorMaterial == 1) // leather
-					damage = (int)Mathf.Round(damage*(.83f - naturalDamResist));
-				else if (armorMaterial == 2) // chains 1 and 2
-					damage = (int)Mathf.Round(damage*(.81f - naturalDamResist));
-				else if (armorMaterial == 3) // iron
-					damage = (int)Mathf.Round(damage*(.86f - naturalDamResist));
-				else if (armorMaterial == 4) // steel and silver
-					damage = (int)Mathf.Round(damage*(.78f - naturalDamResist));
-				else if (armorMaterial == 5) // elven
-					damage = (int)Mathf.Round(damage*(.73f - naturalDamResist));
-				else if (armorMaterial == 6) // dwarven
-					damage = (int)Mathf.Round(damage*(.65f - naturalDamResist));
-				else if (armorMaterial == 7) // mithril and adamantium
-					damage = (int)Mathf.Round(damage*(.58f - naturalDamResist));
-				else if (armorMaterial == 8) // ebony
-					damage = (int)Mathf.Round(damage*(.51f - naturalDamResist));
-				else if (armorMaterial == 9) // orcish
-					damage = (int)Mathf.Round(damage*(.42f - naturalDamResist));
-				else if (armorMaterial == 10) // daedric
-					damage = (int)Mathf.Round(damage*(.35f - naturalDamResist));
-					
-				return damage;
+                switch (armorMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (.83f - naturalDamResist));
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (.81f - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (.86f - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (.78f - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (.73f - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (.65f - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (.51f - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (.35f - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                }
 			}
 		}
 		
@@ -2447,6 +2548,9 @@ namespace PhysicalCombatAndArmorOverhaul
         {
             if (attacker == null || AITarget == null)
                 return 0;
+            int attackerWillpMod = (int)Mathf.Round((attacker.Stats.LiveWillpower - 50) / 5);
+            int confidenceMod = Mathf.Max(10 + ((attackerWillpMod - AITarget.Level) / 2), 0);
+            int courageMod = Mathf.Max(AITarget.Level - attackerWillpMod, 0);
 
             int damage = 0;
             // Apply bonus or penalty by opponent type.
@@ -2455,50 +2559,49 @@ namespace PhysicalCombatAndArmorOverhaul
             {
                 if (((int)attacker.Career.UndeadAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
-                    damage += attacker.Level;
+                    damage += confidenceMod;
                 }
                 if (((int)attacker.Career.UndeadAttackModifier & (int)DFCareer.AttackModifier.Phobia) != 0)
                 {
-                    damage -= attacker.Level;
+                    damage -= courageMod;
                 }
             }
             else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Daedra)
             {
                 if (((int)attacker.Career.DaedraAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
-                    damage += attacker.Level;
+                    damage += confidenceMod;
                 }
                 if (((int)attacker.Career.DaedraAttackModifier & (int)DFCareer.AttackModifier.Phobia) != 0)
                 {
-                    damage -= attacker.Level;
+                    damage -= courageMod;
                 }
             }
-            else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Humanoid)
+            else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Humanoid || AITarget.EntityType == EntityTypes.EnemyClass)
             {
                 if (((int)attacker.Career.HumanoidAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
-                    damage += attacker.Level;
+                    damage += confidenceMod;
                 }
                 if (((int)attacker.Career.HumanoidAttackModifier & (int)DFCareer.AttackModifier.Phobia) != 0)
                 {
-                    damage -= attacker.Level;
+                    damage -= courageMod;
                 }
             }
             else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Animals)
             {
                 if (((int)attacker.Career.AnimalsAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
-                    damage += attacker.Level;
+                    damage += confidenceMod;
                 }
                 if (((int)attacker.Career.AnimalsAttackModifier & (int)DFCareer.AttackModifier.Phobia) != 0)
                 {
-                    damage -= attacker.Level;
+                    damage -= courageMod;
                 }
             }
-
             return damage;
         }
-		
-		#endregion
+
+        #endregion
     }
 }
