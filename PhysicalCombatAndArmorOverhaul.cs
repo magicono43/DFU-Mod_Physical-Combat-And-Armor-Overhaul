@@ -764,7 +764,8 @@ namespace PhysicalCombatAndArmorOverhaul
 			bool unarmedAttack = false;
 			bool weaponAttack = false;
 			bool bluntWep = false;
-			bool monsterArmorCheck = false;
+            bool specialMonsterWeapon = false;
+            bool monsterArmorCheck = false;
 			bool critSuccess = false;
 			float critDamMulti = 1f;
 			int critHitAddi = 0;
@@ -897,8 +898,17 @@ namespace PhysicalCombatAndArmorOverhaul
                 }
                 else if (AIAttacker != null) // attacker is a monster
                 {
+                    specialMonsterWeapon = SpecialWeaponCheckForMonsters(attacker);
+
+                    if (specialMonsterWeapon)
+                    {
+                        unarmedAttack = false;
+                        weaponAttack = true;
+                        weapon = MonsterWeaponAssign(attacker);
+                    }
+
                     // Handle multiple attacks by AI
-					int minBaseDamage = 0;
+                    int minBaseDamage = 0;
                     int maxBaseDamage = 0;
                     int attackNumber = 0;
                     while (attackNumber < 3) // Classic supports up to 5 attacks but no monster has more than 3
@@ -1001,7 +1011,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			}
 			
 			DamageEquipment(attacker, target, damage, weapon, struckBodyPart); // Might alter this later so that equipment damage is only calculated with the amount that was reduced, not the whole initial amount, will see.
-			
+			// I could fairly easily make worn/damaged equipment be less effective based on the current condition. Just alter the final damage based on the current condition percentage, simple. I'll keep this in mind after I finish working on this current enemies with weapons thing.
 			if(((target != player) && (AITarget.EntityType == EntityTypes.EnemyMonster)))
 			{
 				monsterArmorCheck = ArmorStruckVerification(target, struckBodyPart); // Check for if a monster has a piece of armor/shield hit by an attack, returns true if so.
@@ -1101,7 +1111,7 @@ namespace PhysicalCombatAndArmorOverhaul
             return damage;
 		}
 		
-		private static ToHitAndDamageMods CalculateSwingModifiers(FPSWeapon onscreenWeapon)
+		private static ToHitAndDamageMods CalculateSwingModifiers(FPSWeapon onscreenWeapon) // Make this a setting option obviously. Possibly modify this swing mod formula, so that is works in a similar way to Morrowind, where the attack direction "types" are not universal like here, but each weapon type has a different amount of attacks that are "better" or worse depending. Like a dagger having better damage with a thrusting attacking, rather than slashing, and the same for other weapon types. Possibly as well, make the different attack types depending on the weapon, have some degree of "resistance penetration" or something, like thrusting doing increased damage resistance penatration.
 		{
 			ToHitAndDamageMods mods = new ToHitAndDamageMods();
             if (onscreenWeapon != null)
@@ -1412,15 +1422,15 @@ namespace PhysicalCombatAndArmorOverhaul
 			int atkStrength = attacker.Stats.LiveStrength;
 			int tarMatMod = 0;
 			int matDifference = 0;
-			bool bluntWep = false;
+            bool bluntWep = false;
 			bool shtbladeWep = false;
 			bool missileWep = false;
-			int wepEqualize = 1;
+            int wepEqualize = 1;
 			int wepWeight = 1;
 			float wepDamResist = 1f;
 			float armorDamResist = 1f;
-			
-			if (!armorHitFormulaModuleCheck) // Uses the regular shield formula if the "armorHitFormula" Module is disabled in settings, but the equipment damage module is still active.
+
+            if (!armorHitFormulaModuleCheck) // Uses the regular shield formula if the "armorHitFormula" Module is disabled in settings, but the equipment damage module is still active.
 			{
 				DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
 				shieldBlockSuccess = false;
@@ -1973,9 +1983,80 @@ namespace PhysicalCombatAndArmorOverhaul
                     return (int)Mathf.Round(damage * (1f - naturalDamResist));
             }
 		}
-		
-		/// Does most of the calculations determining how much a material/piece of equipment should be taking damage from something hitting it.
-		private static int MaterialDifferenceDamageCalculation(DaggerfallUnityItem item, int matDifference, int atkStrength, int damage, bool bluntWep, int wepWeight, bool shieldCheck)
+
+        // This is where specific monsters will be given a true or false, depending on if said monster is clearly holding a type of weapon in their sprite.
+        private static bool SpecialWeaponCheckForMonsters(DaggerfallEntity attacker)
+        {
+            EnemyEntity AIAttacker = null;
+            AIAttacker = attacker as EnemyEntity;
+
+            switch (AIAttacker.CareerIndex)
+            {
+                case (int)MonsterCareers.Centaur:
+                case (int)MonsterCareers.Giant:
+                case (int)MonsterCareers.Gargoyle:
+                case (int)MonsterCareers.Orc:
+                case (int)MonsterCareers.OrcSergeant:
+                case (int)MonsterCareers.OrcShaman:
+                case (int)MonsterCareers.OrcWarlord:
+                case (int)MonsterCareers.IronAtronach:
+                case (int)MonsterCareers.SkeletalWarrior:
+                case (int)MonsterCareers.Wraith:
+                case (int)MonsterCareers.Lich:
+                case (int)MonsterCareers.AncientLich:
+                case (int)MonsterCareers.FrostDaedra:
+                case (int)MonsterCareers.FireDaedra:
+                case (int)MonsterCareers.Daedroth:
+                case (int)MonsterCareers.DaedraLord:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+		// This is where specific monsters will be given a pre-defined weapon object for purposes of the rest of the formula, based on their level and sprite weapon appearance.
+        private static DaggerfallUnityItem MonsterWeaponAssign(DaggerfallEntity attacker)
+        {
+            EnemyEntity AIAttacker = null;
+            AIAttacker = attacker as EnemyEntity;
+
+            switch (AIAttacker.CareerIndex)
+            {
+                case (int)MonsterCareers.SkeletalWarrior:
+                    return ItemBuilder.CreateWeapon(Weapons.War_Axe, WeaponMaterialTypes.Steel);
+                case (int)MonsterCareers.Orc:
+                    return ItemBuilder.CreateWeapon(Weapons.Saber, WeaponMaterialTypes.Steel);
+                case (int)MonsterCareers.OrcSergeant:
+                    return ItemBuilder.CreateWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Dwarven);
+                case (int)MonsterCareers.OrcWarlord:
+                case (int)MonsterCareers.Daedroth:
+                    return ItemBuilder.CreateWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Orcish);
+                case (int)MonsterCareers.OrcShaman:
+                case (int)MonsterCareers.Lich:
+                case (int)MonsterCareers.AncientLich:
+                    return ItemBuilder.CreateWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium);
+                case (int)MonsterCareers.Centaur:
+                    return ItemBuilder.CreateWeapon(Weapons.Claymore, WeaponMaterialTypes.Elven);
+                case (int)MonsterCareers.Giant:
+                    return ItemBuilder.CreateWeapon(Weapons.Warhammer, WeaponMaterialTypes.Steel);
+                case (int)MonsterCareers.Gargoyle:
+                    return ItemBuilder.CreateWeapon(Weapons.Flail, WeaponMaterialTypes.Steel);
+                case (int)MonsterCareers.IronAtronach:
+                    return ItemBuilder.CreateWeapon(Weapons.Mace, WeaponMaterialTypes.Steel);
+                case (int)MonsterCareers.Wraith:
+                    return ItemBuilder.CreateWeapon(Weapons.Longsword, WeaponMaterialTypes.Mithril);
+                case (int)MonsterCareers.FrostDaedra:
+                    return ItemBuilder.CreateWeapon(Weapons.Warhammer, WeaponMaterialTypes.Daedric);
+                case (int)MonsterCareers.FireDaedra:
+                case (int)MonsterCareers.DaedraLord:
+                    return ItemBuilder.CreateWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric);
+                default:
+                    return null;
+            }
+        }
+
+        /// Does most of the calculations determining how much a material/piece of equipment should be taking damage from something hitting it.
+        private static int MaterialDifferenceDamageCalculation(DaggerfallUnityItem item, int matDifference, int atkStrength, int damage, bool bluntWep, int wepWeight, bool shieldCheck)
 		{
 			int itemMat = item.NativeMaterialValue;
 
@@ -2091,19 +2172,19 @@ namespace PhysicalCombatAndArmorOverhaul
             }
 			else // Attacker gets their weapon damaged, if they are using one, otherwise this method is not called.
 			{
-				int amount = (10 * damage) / 50;
-				if ((amount == 0) && Dice100.SuccessRoll(40))
-					amount = 1;
-					
-				if (missileWep)
-					amount = SpecificWeaponConditionDamage(item, amount, wepEqualize);
+                int amount = (10 * damage) / 50;
+                if ((amount == 0) && Dice100.SuccessRoll(40))
+                    amount = 1;
 
-				item.LowerCondition(amount, owner);
-				
-				/*int percentChange = 100 * amount / item.maxCondition;
-				if (owner == GameManager.Instance.PlayerEntity){
-					Debug.LogFormat("Attacker Damaged {0} by {1}, cond={2}", item.LongName, amount, item.currentCondition);
-					Debug.LogFormat("Had {0} Damaged by {1}%, of Total Maximum. There Remains {2}% of Max Cond.", item.LongName, percentChange, item.ConditionPercentage);} // Percentage Change */
+                if (missileWep)
+                    amount = SpecificWeaponConditionDamage(item, amount, wepEqualize);
+
+                item.LowerCondition(amount, owner);
+
+                /*int percentChange = 100 * amount / item.maxCondition;
+                if (owner == GameManager.Instance.PlayerEntity){
+                    Debug.LogFormat("Attacker Damaged {0} by {1}, cond={2}", item.LongName, amount, item.currentCondition);
+                    Debug.LogFormat("Had {0} Damaged by {1}%, of Total Maximum. There Remains {2}% of Max Cond.", item.LongName, percentChange, item.ConditionPercentage);} // Percentage Change */
 			}
         }
 		
@@ -2233,7 +2314,7 @@ namespace PhysicalCombatAndArmorOverhaul
 				if (item.ConditionPercentage <= 49 && item.ConditionPercentage >= 47) // 49 & 45 // This will work for now, until I find a more elegant solution.
 					DaggerfallUI.AddHUDText(roughItemMessage, 2.00f); // Possibly make a random between a few of these lines to mix it up or something.				
 				else if (item.ConditionPercentage <= 16 && item.ConditionPercentage >= 14) // 16 & 12
-					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f);
+					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f); // I need to change this so it has different text for magic items, otherwise the name gets sort of messed up. Also with that, likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff. Also, before my next version release, make MM a "dependency" in the settings so the user gets a warning about needing MM to be installed along side mine "optionally."
 			}
 		}
 		
