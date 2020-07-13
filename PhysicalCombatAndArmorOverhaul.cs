@@ -1429,6 +1429,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			int wepWeight = 1;
 			float wepDamResist = 1f;
 			float armorDamResist = 1f;
+            int startItemCondPer = 0;
 
             if (!armorHitFormulaModuleCheck) // Uses the regular shield formula if the "armorHitFormula" Module is disabled in settings, but the equipment damage module is still active.
 			{
@@ -1461,8 +1462,9 @@ namespace PhysicalCombatAndArmorOverhaul
 					wepDam = (int)Mathf.Ceil(wepDam/wepDamResist);
 					bluntWep = true;
 					wepWeight = (int)Mathf.Ceil(weapon.EffectiveUnitWeightInKg());
-					
-					ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+
+                    startItemCondPer = weapon.ConditionPercentage;
+                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
 				}
 				else if (weapon.GetWeaponSkillIDAsShort() == 28) // Checks if the weapon being used is in the Short Blade category, then sets a bool value to true.
 				{
@@ -1480,26 +1482,29 @@ namespace PhysicalCombatAndArmorOverhaul
 						wepDam = (int)Mathf.Ceil(wepDam/wepDamResist);
 						shtbladeWep = true;
 					}
-					
-					ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+
+                    startItemCondPer = weapon.ConditionPercentage;
+                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
 				}
 				else if (weapon.GetWeaponSkillIDAsShort() == 33) // Checks if the weapon being used is in the Missile Weapon category, then sets a bool value to true.
 				{
 					missileWep = true;
-					
-					ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+
+                    startItemCondPer = weapon.ConditionPercentage;
+                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
 				}
 				else // If all other weapons categories have not been found, it defaults to this, which currently includes long blades and axes.
 				{
 					wepDam += (atkStrength / 10);
 					wepDamResist = (wepEqualize*.20f) + 1;
 					wepDam = (int)Mathf.Ceil(wepDam/wepDamResist);
-					
-					ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+
+                    startItemCondPer = weapon.ConditionPercentage;
+                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
 				}
 
 				if (attacker == GameManager.Instance.PlayerEntity)
-					WarningMessagePlayerEquipmentCondition(weapon);
+					WarningMessagePlayerEquipmentCondition(weapon, startItemCondPer);
 
 				if (shieldBlockSuccess)
 				{
@@ -1509,11 +1514,12 @@ namespace PhysicalCombatAndArmorOverhaul
 					tarMatMod = ArmorMaterialModifierFinder(shield);
 					matDifference = tarMatMod - atkMatMod;
 					damage = MaterialDifferenceDamageCalculation(shield, matDifference, atkStrength, damage, bluntWep, wepWeight, shieldBlockSuccess);
-					
-					ApplyConditionDamageThroughWeaponDamage(shield, target, damage, bluntWep, shtbladeWep, missileWep, wepEqualize);
+
+                    startItemCondPer = shield.ConditionPercentage;
+                    ApplyConditionDamageThroughWeaponDamage(shield, target, damage, bluntWep, shtbladeWep, missileWep, wepEqualize);
 					
 					if (target == GameManager.Instance.PlayerEntity)
-						WarningMessagePlayerEquipmentCondition(shield);
+						WarningMessagePlayerEquipmentCondition(shield, startItemCondPer);
 				}
 				else
 				{
@@ -1526,11 +1532,12 @@ namespace PhysicalCombatAndArmorOverhaul
 						tarMatMod = ArmorMaterialModifierFinder(armor);
 						matDifference = tarMatMod - atkMatMod;
 						damage = MaterialDifferenceDamageCalculation(armor, matDifference, atkStrength, damage, bluntWep, wepWeight, shieldBlockSuccess);
-						
-						ApplyConditionDamageThroughWeaponDamage(armor, target, damage, bluntWep, shtbladeWep, missileWep, wepEqualize);
+
+                        startItemCondPer = armor.ConditionPercentage;
+                        ApplyConditionDamageThroughWeaponDamage(armor, target, damage, bluntWep, shtbladeWep, missileWep, wepEqualize);
 						
 						if (target == GameManager.Instance.PlayerEntity)
-							WarningMessagePlayerEquipmentCondition(armor);
+							WarningMessagePlayerEquipmentCondition(armor, startItemCondPer);
 					}
 				}
 				return false;
@@ -1546,11 +1553,12 @@ namespace PhysicalCombatAndArmorOverhaul
 					atkStrength /= 5;
 					armorDamResist = (tarMatMod*.40f) + 1;
 					damage = (int)Mathf.Ceil((damage + atkStrength)/armorDamResist);
-					
-					ApplyConditionDamageThroughUnarmedDamage(shield, target, damage);
+
+                    startItemCondPer = shield.ConditionPercentage;
+                    ApplyConditionDamageThroughUnarmedDamage(shield, target, damage);
 					
 					if (target == GameManager.Instance.PlayerEntity)
-						WarningMessagePlayerEquipmentCondition(shield);
+						WarningMessagePlayerEquipmentCondition(shield, startItemCondPer);
 				}
 				else
 				{
@@ -1564,11 +1572,12 @@ namespace PhysicalCombatAndArmorOverhaul
 						atkStrength /= 5;
 						armorDamResist = (tarMatMod*.20f) + 1;
 						damage = (int)Mathf.Ceil((damage + atkStrength)/armorDamResist);
-						
-						ApplyConditionDamageThroughUnarmedDamage(armor, target, damage);
+
+                        startItemCondPer = armor.ConditionPercentage;
+                        ApplyConditionDamageThroughUnarmedDamage(armor, target, damage);
 						
 						if (target == GameManager.Instance.PlayerEntity)				
-							WarningMessagePlayerEquipmentCondition(armor);
+							WarningMessagePlayerEquipmentCondition(armor, startItemCondPer);
 					}
 				}
 				return false;
@@ -2164,8 +2173,8 @@ namespace PhysicalCombatAndArmorOverhaul
             {
                 int amount = item.IsShield ? damage * 2: damage * 4;
                 item.LowerCondition(amount, owner);
-				
-				/*int percentChange = 100 * amount / item.maxCondition;
+
+                /*int percentChange = 100 * amount / item.maxCondition;
                 if (owner == GameManager.Instance.PlayerEntity){
                     Debug.LogFormat("Target Had {0} Damaged by {1}, cond={2}", item.LongName, amount, item.currentCondition);
 					Debug.LogFormat("Had {0} Damaged by {1}%, of Total Maximum. There Remains {2}% of Max Cond.", item.LongName, percentChange, item.ConditionPercentage);} // Percentage Change */
@@ -2185,7 +2194,7 @@ namespace PhysicalCombatAndArmorOverhaul
                 if (owner == GameManager.Instance.PlayerEntity){
                     Debug.LogFormat("Attacker Damaged {0} by {1}, cond={2}", item.LongName, amount, item.currentCondition);
                     Debug.LogFormat("Had {0} Damaged by {1}%, of Total Maximum. There Remains {2}% of Max Cond.", item.LongName, percentChange, item.ConditionPercentage);} // Percentage Change */
-			}
+            }
         }
 		
 		/// Applies condition damage to an item based on physical hit damage. Specifically for unarmed attacks.
@@ -2198,12 +2207,12 @@ namespace PhysicalCombatAndArmorOverhaul
             {
                 int amount = item.IsShield ? damage: damage * 2;
                 item.LowerCondition(amount, owner);
-				
-				/*int percentChange = 100 * amount / item.maxCondition;
+
+                /*int percentChange = 100 * amount / item.maxCondition;
                 if (owner == GameManager.Instance.PlayerEntity){
                     Debug.LogFormat("Target Had {0} Damaged by {1}, cond={2}", item.LongName, amount, item.currentCondition);
 					Debug.LogFormat("Had {0} Damaged by {1}%, of Total Maximum. There Remains {2}% of Max Cond.", item.LongName, percentChange, item.ConditionPercentage);} // Percentage Change */
-			}
+            }
 		}
 		
 		/// Does a roll for based on the critical strike chance of the attacker, if this roll is successful critSuccess is returned as 'true'.
@@ -2278,44 +2287,93 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 		
 		// If the player has equipment that is below a certain percentage of condition, this will check if they should be warned with a pop-up message about said piece of equipment.
-		private static void WarningMessagePlayerEquipmentCondition(DaggerfallUnityItem item)
+		private static void WarningMessagePlayerEquipmentCondition(DaggerfallUnityItem item, int startItemCondPer)
 		{
 			string roughItemMessage = "";
 			string damagedItemMessage = "";
+            string majorDamageItemMessage = "";
+            int condDiff = startItemCondPer - item.ConditionPercentage;
 			
-			if (item.ConditionPercentage <= 49)
+			if (item.ConditionPercentage <= 49 || condDiff >= 12)
 			{
-				if (item.TemplateIndex == (int)Armor.Boots || item.TemplateIndex == (int)Armor.Gauntlets || item.TemplateIndex == (int)Armor.Greaves) // Armor With Plural Names Text
-				{
-					roughItemMessage = String.Format("My {0} Are In Rough Shape", item.shortName);
-					damagedItemMessage = String.Format("My {0} Are Falling Apart", item.shortName);
-				}
-				else if (item.GetWeaponSkillIDAsShort() == 29 || item.GetWeaponSkillIDAsShort() == 28 || item.GetWeaponSkillIDAsShort() == 31) // Bladed Weapons Text
-				{
-					roughItemMessage = String.Format("My {0} Could Use A Sharpening", item.shortName);
-					damagedItemMessage = String.Format("My {0} Looks As Dull As A Butter Knife", item.shortName);
-				}
-				else if (item.GetWeaponSkillIDAsShort() == 32) // Blunt Weapoons Text
-				{
-					roughItemMessage = String.Format("My {0}'s Shaft Has Some Small Cracks", item.shortName);
-					damagedItemMessage = String.Format("My {0}'s Shaft Is Nearly Split In Two", item.shortName);
-				}
-				else if (item.GetWeaponSkillIDAsShort() == 33) // Archery Weapons Text
-				{
-					roughItemMessage = String.Format("The Bowstring On My {0} Is Losing Its Twang", item.shortName);
-					damagedItemMessage = String.Format("The Bowstring On My {0} Looks Ready To Snap", item.shortName);
-				}
-				else // Text for any other Valid Items
-				{
-					roughItemMessage = String.Format("My {0} Is In Rough Shape", item.shortName);
-					damagedItemMessage = String.Format("My {0} Is Falling Apart", item.shortName);
-				}
+                if (item.IsEnchanted) // All Magically Enchanted Items Text? // Add a testing "clock" earlier on to test for attacks per second from enemies to balance.
+                {
+                    if (item.customMagic != null)
+                    {
+                        string shortMagicItemName = item.shortName;
+                        roughItemMessage = String.Format("My {0} Is Flickering Slightly", shortMagicItemName);
+                        damagedItemMessage = String.Format("My {0} Is Going In And Out Of Existence", shortMagicItemName);
+                        majorDamageItemMessage = String.Format("My {0} Was Drained Significantly By That", shortMagicItemName);
+                    }
+                    else
+                    {
+                        string longMagicItemName = item.LongName;
+                        roughItemMessage = String.Format("My {0} Is Flickering Slightly", longMagicItemName);
+                        damagedItemMessage = String.Format("My {0} Is Going In And Out Of Existence", longMagicItemName);
+                        majorDamageItemMessage = String.Format("My {0} Was Drained Significantly By That", longMagicItemName);
+                    }
+                }
+                else
+                {
+                    string shortItemName = item.shortName;
+                    switch (item.TemplateIndex)
+                    {
+                        case (int)Armor.Boots:
+                        case (int)Armor.Gauntlets:  // Armor With Plural Names Text
+                        case (int)Armor.Greaves:
+                        case 516:                   // RPR:I, Chausses Index Value
+                        case 519:                   // RPR:I, Sollerets Index Value
+                            roughItemMessage = String.Format("My {0} Are In Rough Shape", shortItemName);
+                            damagedItemMessage = String.Format("My {0} Are Falling Apart", shortItemName);
+                            majorDamageItemMessage = String.Format("My {0} Were Shredded Heavily By That", shortItemName);
+                            break;
+                        case (int)Weapons.Broadsword:
+                        case (int)Weapons.Claymore:
+                        case (int)Weapons.Dai_Katana:
+                        case (int)Weapons.Katana:
+                        case (int)Weapons.Longsword:
+                        case (int)Weapons.Saber:    // Bladed Weapons Text
+                        case (int)Weapons.Dagger:
+                        case (int)Weapons.Shortsword:
+                        case (int)Weapons.Tanto:
+                        case (int)Weapons.Wakazashi:
+                        case (int)Weapons.Battle_Axe:
+                        case (int)Weapons.War_Axe:
+                        case 513:                   // RPR:I, Archer's Axe Index Value
+                            roughItemMessage = String.Format("My {0} Could Use A Sharpening", shortItemName);
+                            damagedItemMessage = String.Format("My {0} Looks As Dull As A Butter Knife", shortItemName);
+                            majorDamageItemMessage = String.Format("My {0} Lost A lot Of Edge From That Swipe", shortItemName);
+                            break;
+                        case (int)Weapons.Flail:
+                        case (int)Weapons.Mace:     // Blunt Weapoons Text
+                        case (int)Weapons.Staff:
+                        case (int)Weapons.Warhammer:
+                        case 514:                   // RPR:I, Light Flail Index Value
+                            roughItemMessage = String.Format("My {0}'s Shaft Has Some Small Cracks", shortItemName);
+                            damagedItemMessage = String.Format("My {0}'s Shaft Is Nearly Split In Two", shortItemName);
+                            majorDamageItemMessage = String.Format("My {0} Shaft Was Cracked By That Swing", shortItemName);
+                            break;
+                        case (int)Weapons.Long_Bow: // Archery Weapons Text
+                        case (int)Weapons.Short_Bow:
+                            roughItemMessage = String.Format("The Bowstring On My {0} Is Losing Its Twang", shortItemName);
+                            damagedItemMessage = String.Format("The Bowstring On My {0} Looks Ready To Snap", shortItemName);
+                            majorDamageItemMessage = String.Format("The Bowstring On My {0} Nearly Snapped From That", shortItemName);
+                            break;
+                        default:                    // Text for any other Valid Items
+                            roughItemMessage = String.Format("My {0} Is In Rough Shape", shortItemName);
+                            damagedItemMessage = String.Format("My {0} Is Falling Apart", shortItemName);
+                            majorDamageItemMessage = String.Format("My {0} Was Shredded Heavily By That", shortItemName);
+                            break;
+                    }
+                }
 				
-				if (item.ConditionPercentage <= 49 && item.ConditionPercentage >= 47) // 49 & 45 // This will work for now, until I find a more elegant solution.
+				if (item.ConditionPercentage == 48) // 49 & 45 // This will work for now, until I find a more elegant solution.
 					DaggerfallUI.AddHUDText(roughItemMessage, 2.00f); // Possibly make a random between a few of these lines to mix it up or something.				
-				else if (item.ConditionPercentage <= 16 && item.ConditionPercentage >= 14) // 16 & 12
-					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f); // I need to change this so it has different text for magic items, otherwise the name gets sort of messed up. Also with that, likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff. Also, before my next version release, make MM a "dependency" in the settings so the user gets a warning about needing MM to be installed along side mine "optionally."
-			}
+				else if (item.ConditionPercentage == 15) // 16 & 12
+					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f); // I need to change this so it has different text for magic items, otherwise the name gets sort of messed up. Also with that, likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff. Also, before my next version release, make MM a "dependency" in the settings so the user gets a warning about needing MM to be installed along side mine "optionally." I also probably need to "nerf" the min and max damage of the higher level enemies that have very high speed stats, their attacks are way too quick for how much damage they can deal each attack.
+                else if (condDiff >= 12)
+                    DaggerfallUI.AddHUDText(majorDamageItemMessage, 2.00f);
+            }
 		}
 		
 		// Retrieves the multiplier based on the condition modifier of a material, the idea being that items will take around the same amount of damage as other items in that category.
