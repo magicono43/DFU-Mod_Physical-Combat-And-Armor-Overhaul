@@ -34,7 +34,7 @@ namespace PhysicalCombatAndArmorOverhaul
         public static bool critStrikeModuleCheck { get; set; }
 		public static bool armorHitFormulaModuleCheck { get; set; }
 		public static bool shieldBlockSuccess { get; set; }
-        public static bool ralzarRacesRedoneEdit = false;
+        public static bool ralzarRacesRedoneModifiers = false;
 
         [Invoke(StateManager.StateTypes.Start, 0)]
         public static void Init(InitParams initParams)
@@ -68,7 +68,8 @@ namespace PhysicalCombatAndArmorOverhaul
             }
             if (racesRedone != null)
             {
-                ralzarRacesRedoneEdit = true;
+                ModSettings ralzarRacesRedoneSettings = racesRedone.GetSettings();
+                ralzarRacesRedoneModifiers = (ralzarRacesRedoneSettings.GetInt("Features", "Rules") == 1);
             }
 
             InitMod(equipmentDamageEnhanced, fixedStrengthDamageModifier, armorHitFormulaRedone, criticalStrikesIncreaseDamage, rolePlayRealismArcheryModule, ralzarMeanerMonstersEdit);
@@ -695,7 +696,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			else
 				Debug.Log("PhysicalCombatAndArmorOverhaul: Ralzar's Meaner Monsters Edited Module Disabled");
 
-            if (ralzarRacesRedoneEdit)
+            if (ralzarRacesRedoneModifiers)
                 Debug.Log("PhysicalCombatAndArmorOverhaul: Ralzar's Races Redone CalculateRacialModifiers Override Active");
             else
                 Debug.Log("PhysicalCombatAndArmorOverhaul: Ralzar's Races Redone CalculateRacialModifiers Override Disabled");
@@ -1118,7 +1119,7 @@ namespace PhysicalCombatAndArmorOverhaul
 		public static ToHitAndDamageMods CalculateRacialModifiers(DaggerfallEntity attacker, DaggerfallUnityItem weapon, PlayerEntity player)
 		{
 			ToHitAndDamageMods mods = new ToHitAndDamageMods();
-            if (ralzarRacesRedoneEdit)
+            if (ralzarRacesRedoneModifiers)
             {
                 mods.damageMod = RacesRedone.RacesRedone.RacesRedone_DamageMod(attacker, weapon, player);
                 mods.toHitMod = RacesRedone.RacesRedone.RacesRedone_ToHitMod(attacker, weapon, player);
