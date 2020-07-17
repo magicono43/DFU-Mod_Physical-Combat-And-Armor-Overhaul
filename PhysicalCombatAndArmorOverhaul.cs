@@ -34,6 +34,7 @@ namespace PhysicalCombatAndArmorOverhaul
         public static bool critStrikeModuleCheck { get; set; }
 		public static bool armorHitFormulaModuleCheck { get; set; }
 		public static bool shieldBlockSuccess { get; set; }
+        public static bool ralzarRacesRedoneModifiers = false;
 
         [Invoke(StateManager.StateTypes.Start, 0)]
         public static void Init(InitParams initParams)
@@ -48,12 +49,14 @@ namespace PhysicalCombatAndArmorOverhaul
             ModSettings settings = mod.GetSettings();
             Mod roleplayRealism = ModManager.Instance.GetMod("RoleplayRealism");
             Mod meanerMonsters = ModManager.Instance.GetMod("Meaner Monsters");
+            Mod racesRedone = ModManager.Instance.GetMod("Races Redone");
             bool equipmentDamageEnhanced = settings.GetBool("Modules", "equipmentDamageEnhanced");
 			bool fixedStrengthDamageModifier = settings.GetBool("Modules", "fixedStrengthDamageModifier");
 			bool armorHitFormulaRedone = settings.GetBool("Modules", "armorHitFormulaRedone");
 			bool criticalStrikesIncreaseDamage = settings.GetBool("Modules", "criticalStrikesIncreaseDamage");
             bool rolePlayRealismArcheryModule = false;
             bool ralzarMeanerMonstersEdit = false;
+
             if (roleplayRealism != null)
             {
                 ModSettings rolePlayRealismSettings = roleplayRealism.GetSettings();
@@ -62,6 +65,11 @@ namespace PhysicalCombatAndArmorOverhaul
             if (meanerMonsters != null)
             {
                 ralzarMeanerMonstersEdit = true;
+            }
+            if (racesRedone != null)
+            {
+                ModSettings ralzarRacesRedoneSettings = racesRedone.GetSettings();
+                ralzarRacesRedoneModifiers = (ralzarRacesRedoneSettings.GetInt("Features", "Rules") == 1);
             }
 
             InitMod(equipmentDamageEnhanced, fixedStrengthDamageModifier, armorHitFormulaRedone, criticalStrikesIncreaseDamage, rolePlayRealismArcheryModule, ralzarMeanerMonstersEdit);
@@ -688,6 +696,11 @@ namespace PhysicalCombatAndArmorOverhaul
 			else
 				Debug.Log("PhysicalCombatAndArmorOverhaul: Ralzar's Meaner Monsters Edited Module Disabled");
 
+            if (ralzarRacesRedoneModifiers)
+                Debug.Log("PhysicalCombatAndArmorOverhaul: Ralzar's Races Redone CalculateRacialModifiers Override Active");
+            else
+                Debug.Log("PhysicalCombatAndArmorOverhaul: Ralzar's Races Redone CalculateRacialModifiers Override Disabled");
+
             Debug.Log("Finished mod init: PhysicalCombatAndArmorOverhaul");
         }
 		
@@ -1106,25 +1119,33 @@ namespace PhysicalCombatAndArmorOverhaul
 		public static ToHitAndDamageMods CalculateRacialModifiers(DaggerfallEntity attacker, DaggerfallUnityItem weapon, PlayerEntity player)
 		{
 			ToHitAndDamageMods mods = new ToHitAndDamageMods();
-            if (weapon != null)
+            if (ralzarRacesRedoneModifiers)
             {
-                if (player.RaceTemplate.ID == (int)Races.DarkElf)
+                mods.damageMod = RacesRedone.RacesRedone.RacesRedone_DamageMod(attacker, weapon, player);
+                mods.toHitMod = RacesRedone.RacesRedone.RacesRedone_ToHitMod(attacker, weapon, player);
+            }
+            else
+            {
+                if (weapon != null)
                 {
-                    mods.damageMod = attacker.Level / 2; // Buffed Racial Mod from /4 to /2
-                    mods.toHitMod = attacker.Level / 2; // Buffed Racial Mod from /4 to /2
-                }
-                else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.Archery)
-                {
-                    if (player.RaceTemplate.ID == (int)Races.WoodElf)
+                    if (player.RaceTemplate.ID == (int)Races.DarkElf)
+                    {
+                        mods.damageMod = attacker.Level / 2; // Buffed Racial Mod from /4 to /2
+                        mods.toHitMod = attacker.Level / 2; // Buffed Racial Mod from /4 to /2
+                    }
+                    else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.Archery)
+                    {
+                        if (player.RaceTemplate.ID == (int)Races.WoodElf)
+                        {
+                            mods.damageMod = attacker.Level / 3;
+                            mods.toHitMod = attacker.Level / 1; // Buffed Racial Mod from /3 to /1
+                        }
+                    }
+                    else if (player.RaceTemplate.ID == (int)Races.Redguard)
                     {
                         mods.damageMod = attacker.Level / 3;
                         mods.toHitMod = attacker.Level / 1; // Buffed Racial Mod from /3 to /1
                     }
-                }
-                else if (player.RaceTemplate.ID == (int)Races.Redguard)
-                {
-                    mods.damageMod = attacker.Level / 3;
-                    mods.toHitMod = attacker.Level / 1; // Buffed Racial Mod from /3 to /1
                 }
             }
             return mods;

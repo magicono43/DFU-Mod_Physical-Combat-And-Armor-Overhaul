@@ -20,6 +20,16 @@
             "Name": "meaner monsters",
             "IsOptional": true,
             "IsPeer": false
+        },
+        {
+            "Name": "races redone",
+            "IsOptional": true,
+            "IsPeer": false
+        },
+        {
+            "Name": "levelup adjuster",
+            "IsOptional": true,
+            "IsPeer": false
         }
     ]
 }
