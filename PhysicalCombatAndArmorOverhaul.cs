@@ -3,8 +3,8 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    3/17/2020, 6:30 PM
-// Last Edit:		4/3/2020, 10:40 PM
-// Version:			1.10
+// Last Edit:		7/19/2020, 9:45 PM
+// Version:			1.15
 // Special Thanks:  Hazelnut and Ralzar
 // Modifier:		
 
@@ -162,7 +162,7 @@ namespace PhysicalCombatAndArmorOverhaul
 				FormulaHelper.RegisterOverride(mod, "CalculateStruckBodyPart", (Func<int>)CalculateStruckBodyPart);
 				FormulaHelper.RegisterOverride(mod, "CalculateBackstabChance", (Func<PlayerEntity, DaggerfallEntity, int, int>)CalculateBackstabChance);
 				FormulaHelper.RegisterOverride(mod, "CalculateBackstabDamage", (Func<int, int, int>)CalculateBackstabDamage);
-				FormulaHelper.RegisterOverride(mod, "GetBonusOrPenaltyByEnemyType", (Func<DaggerfallEntity, EnemyEntity, int>)GetBonusOrPenaltyByEnemyType);
+				//FormulaHelper.RegisterOverride(mod, "GetBonusOrPenaltyByEnemyType", (Func<DaggerfallEntity, EnemyEntity, int>)GetBonusOrPenaltyByEnemyType);
 				
 				Debug.Log("PhysicalCombatAndArmorOverhaul: Armor Hit Formula Redone Module Active");
 				
@@ -220,8 +220,8 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Rat
 				EnemyBasics.Enemies[0].MinDamage = 1;
 				EnemyBasics.Enemies[0].MaxDamage = 3;
-				EnemyBasics.Enemies[0].MinHealth = 15;
-				EnemyBasics.Enemies[0].MaxHealth = 30;
+				EnemyBasics.Enemies[0].MinHealth = 15;            // One attack per animation
+				EnemyBasics.Enemies[0].MaxHealth = 35;
 				EnemyBasics.Enemies[0].Level = 1;
 				EnemyBasics.Enemies[0].ArmorValue = 6;
 				// Estimated Avoidance Modifier (Lower means harder to hit): [(ArmorValue * 5) - (Enemy_dodge_skill/2)]: 30 - (35/2) = 12.5
@@ -232,8 +232,8 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Giant Bat
 				EnemyBasics.Enemies[3].MinDamage = 1;
 				EnemyBasics.Enemies[3].MaxDamage = 4;
-				EnemyBasics.Enemies[3].MinHealth = 5;
-				EnemyBasics.Enemies[3].MaxHealth = 12;
+				EnemyBasics.Enemies[3].MinHealth = 5;             // One attack per animation
+				EnemyBasics.Enemies[3].MaxHealth = 13;
 				EnemyBasics.Enemies[3].Level = 2;
 				EnemyBasics.Enemies[3].ArmorValue = 2;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 15 - (40/2) = -10
@@ -244,9 +244,9 @@ namespace PhysicalCombatAndArmorOverhaul
 				EnemyBasics.Enemies[4].MinDamage = 4;
 				EnemyBasics.Enemies[4].MaxDamage = 8;
 				EnemyBasics.Enemies[4].MinDamage2 = 6;
-				EnemyBasics.Enemies[4].MaxDamage2 = 10;
-				EnemyBasics.Enemies[4].MinDamage3 = 8;
-				EnemyBasics.Enemies[4].MaxDamage3 = 12;
+				EnemyBasics.Enemies[4].MaxDamage2 = 8;
+				EnemyBasics.Enemies[4].MinDamage3 = 6;            // One attack per animation
+				EnemyBasics.Enemies[4].MaxDamage3 = 10;
 				EnemyBasics.Enemies[4].MinHealth = 55;
 				EnemyBasics.Enemies[4].MaxHealth = 110;
 				EnemyBasics.Enemies[4].Level = 4;
@@ -258,10 +258,10 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Sabertooth Tiger		
 				EnemyBasics.Enemies[5].MinDamage = 6;
 				EnemyBasics.Enemies[5].MaxDamage = 12;
-				EnemyBasics.Enemies[5].MinDamage2 = 8;
-				EnemyBasics.Enemies[5].MaxDamage2 = 14;
-				EnemyBasics.Enemies[5].MinDamage3 = 10;
-				EnemyBasics.Enemies[5].MaxDamage3 = 20;
+				EnemyBasics.Enemies[5].MinDamage2 = 6;
+				EnemyBasics.Enemies[5].MaxDamage2 = 10;
+				EnemyBasics.Enemies[5].MinDamage3 = 8;           // One attack per animation
+				EnemyBasics.Enemies[5].MaxDamage3 = 14;
 				EnemyBasics.Enemies[5].MinHealth = 35;
 				EnemyBasics.Enemies[5].MaxHealth = 60;
 				EnemyBasics.Enemies[5].Level = 4;
@@ -273,7 +273,7 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Spider		
 				EnemyBasics.Enemies[6].MinDamage = 3;
 				EnemyBasics.Enemies[6].MaxDamage = 9;
-				EnemyBasics.Enemies[6].MinHealth = 12;
+				EnemyBasics.Enemies[6].MinHealth = 12;            // One attack per animation, Can Paralyze
 				EnemyBasics.Enemies[6].MaxHealth = 28;
 				EnemyBasics.Enemies[6].Level = 2;
 				EnemyBasics.Enemies[6].ArmorValue = 4;
@@ -282,12 +282,12 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-16) = 97%
 				
 				// Slaughterfish
-				EnemyBasics.Enemies[11].MinDamage = 3;
+				EnemyBasics.Enemies[11].MinDamage = 4;
 				EnemyBasics.Enemies[11].MaxDamage = 12;
-				EnemyBasics.Enemies[11].MinHealth = 20;
+				EnemyBasics.Enemies[11].MinHealth = 25;           // 1. Animation with one attack. 2. Animation with two attacks. 3. Animation with three attacks.
 				EnemyBasics.Enemies[11].MaxHealth = 50;
 				EnemyBasics.Enemies[11].Level = 7;
-				EnemyBasics.Enemies[11].ArmorValue = 5;
+				EnemyBasics.Enemies[11].ArmorValue = 4;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 30 - (65/2) = -7.5
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-2) + (-20.25) = 26.75%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-20.25) = 92.75%
@@ -295,8 +295,8 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Giant Scorpion		
 				EnemyBasics.Enemies[20].MinDamage = 7;
 				EnemyBasics.Enemies[20].MaxDamage = 16;
-				EnemyBasics.Enemies[20].MinHealth = 22;
-				EnemyBasics.Enemies[20].MaxHealth = 48;
+				EnemyBasics.Enemies[20].MinHealth = 22;           // One attack per animation, Can Paralyze
+				EnemyBasics.Enemies[20].MaxHealth = 40;
 				EnemyBasics.Enemies[20].Level = 4;
 				EnemyBasics.Enemies[20].ArmorValue = 5;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 25 - (50/2) = 0
@@ -310,8 +310,8 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Imp
 				EnemyBasics.Enemies[1].MinDamage = 2;
 				EnemyBasics.Enemies[1].MaxDamage = 13;
-				EnemyBasics.Enemies[1].MinHealth = 10;
-				EnemyBasics.Enemies[1].MaxHealth = 18;
+				EnemyBasics.Enemies[1].MinHealth = 10;            // One attack per animation
+				EnemyBasics.Enemies[1].MaxHealth = 20;
 				EnemyBasics.Enemies[1].Level = 2;
 				EnemyBasics.Enemies[1].ArmorValue = 3;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 15 - (40/2) = -5
@@ -319,14 +319,14 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-17) = 97%
 				
 				// Spriggan
-				EnemyBasics.Enemies[2].MinDamage = 1;
+				EnemyBasics.Enemies[2].MinDamage = 2;
 				EnemyBasics.Enemies[2].MaxDamage = 8;
-				EnemyBasics.Enemies[2].MinDamage2 = 1;
-				EnemyBasics.Enemies[2].MaxDamage2 = 8;
-				EnemyBasics.Enemies[2].MinDamage3 = 1;
-				EnemyBasics.Enemies[2].MaxDamage3 = 10;
-				EnemyBasics.Enemies[2].MinHealth = 18;
-				EnemyBasics.Enemies[2].MaxHealth = 36;
+				EnemyBasics.Enemies[2].MinDamage2 = 2;
+				EnemyBasics.Enemies[2].MaxDamage2 = 6;
+				EnemyBasics.Enemies[2].MinDamage3 = 3;            // One attack per animation
+				EnemyBasics.Enemies[2].MaxDamage3 = 7;
+				EnemyBasics.Enemies[2].MinHealth = 25;
+				EnemyBasics.Enemies[2].MaxHealth = 40;
 				EnemyBasics.Enemies[2].Level = 3;
 				EnemyBasics.Enemies[2].ArmorValue = -2;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -10 - (45/2) = -32.5
@@ -334,9 +334,9 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (3) + (-25.25) = 90.75%
 				
 				// Centaur
-				EnemyBasics.Enemies[8].MinDamage = 10;
-				EnemyBasics.Enemies[8].MaxDamage = 22;
-				EnemyBasics.Enemies[8].MinHealth = 30;
+				EnemyBasics.Enemies[8].MinDamage = 7;
+				EnemyBasics.Enemies[8].MaxDamage = 16;
+				EnemyBasics.Enemies[8].MinHealth = 35;            // 1. Animation with one attack. 2. Animation with two attacks.
 				EnemyBasics.Enemies[8].MaxHealth = 65;
 				EnemyBasics.Enemies[8].Level = 5;
 				EnemyBasics.Enemies[8].ArmorValue = 7;
@@ -345,9 +345,9 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-15.25) = 97.75%
 				
 				// Nymph
-				EnemyBasics.Enemies[10].MinDamage = 1;
-				EnemyBasics.Enemies[10].MaxDamage = 7;
-				EnemyBasics.Enemies[10].MinHealth = 20;
+				EnemyBasics.Enemies[10].MinDamage = 2;
+				EnemyBasics.Enemies[10].MaxDamage = 8;
+				EnemyBasics.Enemies[10].MinHealth = 25;           // One attack per animation
 				EnemyBasics.Enemies[10].MaxHealth = 45;
 				EnemyBasics.Enemies[10].Level = 6;
 				EnemyBasics.Enemies[10].ArmorValue = 0;
@@ -357,19 +357,19 @@ namespace PhysicalCombatAndArmorOverhaul
 				
 				// Harpy
 				EnemyBasics.Enemies[13].MinDamage = 7;
-				EnemyBasics.Enemies[13].MaxDamage = 12;
-				EnemyBasics.Enemies[13].MinHealth = 25;
+				EnemyBasics.Enemies[13].MaxDamage = 13;
+				EnemyBasics.Enemies[13].MinHealth = 25;           // One attack per animation
 				EnemyBasics.Enemies[13].MaxHealth = 60;
 				EnemyBasics.Enemies[13].Level = 8;
-				EnemyBasics.Enemies[13].ArmorValue = 3;
+				EnemyBasics.Enemies[13].ArmorValue = 4;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 15 - (70/2) = -20
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-2) + (-25.5) = 21.5%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-25.5) = 87.5%
 				
 				// Giant		
-				EnemyBasics.Enemies[16].MinDamage = 10;
-				EnemyBasics.Enemies[16].MaxDamage = 35;
-				EnemyBasics.Enemies[16].MinHealth = 70;
+				EnemyBasics.Enemies[16].MinDamage = 8;
+				EnemyBasics.Enemies[16].MaxDamage = 18;
+				EnemyBasics.Enemies[16].MinHealth = 70;           // Two attacks per animation
 				EnemyBasics.Enemies[16].MaxHealth = 110;
 				EnemyBasics.Enemies[16].Level = 10;
 				EnemyBasics.Enemies[16].ArmorValue = 10;
@@ -378,9 +378,9 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (1) + (-22) = 92%
 				
 				// Gargoyle
-				EnemyBasics.Enemies[22].MinDamage = 15;
-				EnemyBasics.Enemies[22].MaxDamage = 40;
-				EnemyBasics.Enemies[22].MinHealth = 50;
+				EnemyBasics.Enemies[22].MinDamage = 16;
+				EnemyBasics.Enemies[22].MaxDamage = 32;
+				EnemyBasics.Enemies[22].MinHealth = 50;           // One attack per animation
 				EnemyBasics.Enemies[22].MaxHealth = 100;
 				EnemyBasics.Enemies[22].Level = 14;
 				EnemyBasics.Enemies[22].ArmorValue = 2;
@@ -389,32 +389,32 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-35) = 78%
 				
 				// Dragonling
-				EnemyBasics.Enemies[34].MinDamage = 15;
-				EnemyBasics.Enemies[34].MaxDamage = 25;
-				EnemyBasics.Enemies[34].MinHealth = 35;
-				EnemyBasics.Enemies[34].MaxHealth = 70;
+				EnemyBasics.Enemies[34].MinDamage = 12;
+				EnemyBasics.Enemies[34].MaxDamage = 24;
+				EnemyBasics.Enemies[34].MinHealth = 35;           // One attack per animation
+				EnemyBasics.Enemies[34].MaxHealth = 60;
 				EnemyBasics.Enemies[34].Level = 16;
-				EnemyBasics.Enemies[34].ArmorValue = 5;
+				EnemyBasics.Enemies[34].ArmorValue = 0;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 25 - (100/2) = -25
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-3) + (-29) = 17%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-29) = 83%
 				
-				// Dragonling [Quest Specific Dragonling? Has 500,000 Soul Point Value]
-				EnemyBasics.Enemies[40].MinDamage = 15;
-				EnemyBasics.Enemies[40].MaxDamage = 25;
-				EnemyBasics.Enemies[40].MinHealth = 35;
-				EnemyBasics.Enemies[40].MaxHealth = 70;
-				EnemyBasics.Enemies[40].Level = 16;
-				EnemyBasics.Enemies[40].ArmorValue = 5;
+				// Large Dragonling [Quest Specific Dragonling? Has 500,000 Soul Point Value]
+				EnemyBasics.Enemies[40].MinDamage = 35;
+				EnemyBasics.Enemies[40].MaxDamage = 95;
+				EnemyBasics.Enemies[40].MinHealth = 125;           // One attack per animation
+				EnemyBasics.Enemies[40].MaxHealth = 230;
+				EnemyBasics.Enemies[40].Level = 21;
+				EnemyBasics.Enemies[40].ArmorValue = -2;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 25 - (100/2) = -25
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-3) + (-29) = 17%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-29) = 83%
 				
 				// Dreugh
-				EnemyBasics.Enemies[41].MinDamage = 10;
-				EnemyBasics.Enemies[41].MaxDamage = 18;
-				EnemyBasics.Enemies[41].MinHealth = 40;
-				EnemyBasics.Enemies[41].MaxHealth = 80;
+				EnemyBasics.Enemies[41].MinDamage = 6;
+				EnemyBasics.Enemies[41].MaxDamage = 16;
+				EnemyBasics.Enemies[41].MinHealth = 45;           // 1. Animation with one attack. 2. Animation with one attack. 3. Animation with two attacks.
+				EnemyBasics.Enemies[41].MaxHealth = 90;
 				EnemyBasics.Enemies[41].Level = 16;
 				EnemyBasics.Enemies[41].ArmorValue = 4;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 20 - (100/2) = -30
@@ -422,12 +422,12 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-29) = 83%
 				
 				// Lamia
-				EnemyBasics.Enemies[42].MinDamage = 6;
-				EnemyBasics.Enemies[42].MaxDamage = 12;
-				EnemyBasics.Enemies[42].MinHealth = 30;
+				EnemyBasics.Enemies[42].MinDamage = 5;
+				EnemyBasics.Enemies[42].MaxDamage = 13;
+				EnemyBasics.Enemies[42].MinHealth = 35;           // 1. Animation with one attack. 2. Animation with two attacks. 3. Animation with three attacks.
 				EnemyBasics.Enemies[42].MaxHealth = 65;
 				EnemyBasics.Enemies[42].Level = 16;
-				EnemyBasics.Enemies[42].ArmorValue = 3;
+				EnemyBasics.Enemies[42].ArmorValue = 2;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 15 - (100/2) = -35
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-3) + (-29) = 17%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-29) = 83%
@@ -443,45 +443,45 @@ namespace PhysicalCombatAndArmorOverhaul
 				//-------------------- Orcs -------------------------------------
 				
 				// Orc		
-				EnemyBasics.Enemies[7].MinDamage = 8;
-				EnemyBasics.Enemies[7].MaxDamage = 20;
-				EnemyBasics.Enemies[7].MinHealth = 40;
+				EnemyBasics.Enemies[7].MinDamage = 6;
+				EnemyBasics.Enemies[7].MaxDamage = 13;
+				EnemyBasics.Enemies[7].MinHealth = 40;            // 1. Animation with one attack. 2. Animation with two attacks.
 				EnemyBasics.Enemies[7].MaxHealth = 70;
 				EnemyBasics.Enemies[7].Level = 6;
-				EnemyBasics.Enemies[7].ArmorValue = 7;
+				EnemyBasics.Enemies[7].ArmorValue = 8;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 35 - (60/2) = 5
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (1) + (-19) = 31%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (3) + (-19) = 97%
 				
 				// Orc Sergeant		
-				EnemyBasics.Enemies[12].MinDamage = 15;
-				EnemyBasics.Enemies[12].MaxDamage = 30;
-				EnemyBasics.Enemies[12].MinHealth = 50;
+				EnemyBasics.Enemies[12].MinDamage = 8;
+				EnemyBasics.Enemies[12].MaxDamage = 18;
+				EnemyBasics.Enemies[12].MinHealth = 50;           // 1. Animation with one attack. 2. Animation with two attacks.
 				EnemyBasics.Enemies[12].MaxHealth = 85;
 				EnemyBasics.Enemies[12].Level = 9;
-				EnemyBasics.Enemies[12].ArmorValue = 4;
+				EnemyBasics.Enemies[12].ArmorValue = 6;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 20 - (75/2) = -17.5
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (1) + (-24.75) = 25.25%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (3) + (-24.75) = 91.25%
 
 				// Orc Shaman		
-				EnemyBasics.Enemies[21].MinDamage = 10;
-				EnemyBasics.Enemies[21].MaxDamage = 22;
-				EnemyBasics.Enemies[21].MinHealth = 45;
-				EnemyBasics.Enemies[21].MaxHealth = 80;
+				EnemyBasics.Enemies[21].MinDamage = 7;
+				EnemyBasics.Enemies[21].MaxDamage = 15;
+				EnemyBasics.Enemies[21].MinHealth = 45;           // 1. Animation with one attack. 2. Animation with one attack. 3. Animation with two attacks. 4. Animation with two attacks. 5. Animation with two attacks.
+				EnemyBasics.Enemies[21].MaxHealth = 70;
 				EnemyBasics.Enemies[21].Level = 15;
-				EnemyBasics.Enemies[21].ArmorValue = 3;
+				EnemyBasics.Enemies[21].ArmorValue = 4;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 15 - (100/2) = -35
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (1) + (-29) = 21%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (3) + (-29) = 87%
 
 				// Orc Warlord		
-				EnemyBasics.Enemies[24].MinDamage = 25;
-				EnemyBasics.Enemies[24].MaxDamage = 45;
-				EnemyBasics.Enemies[24].MinHealth = 70;
-				EnemyBasics.Enemies[24].MaxHealth = 110;
+				EnemyBasics.Enemies[24].MinDamage = 20;
+				EnemyBasics.Enemies[24].MaxDamage = 36;
+				EnemyBasics.Enemies[24].MinHealth = 80;           // 1. Animation with one attack. 2. Animation with two attacks. 3. Animation with two attacks.
+				EnemyBasics.Enemies[24].MaxHealth = 125;
 				EnemyBasics.Enemies[24].Level = 19;
-				EnemyBasics.Enemies[24].ArmorValue = 0;
+				EnemyBasics.Enemies[24].ArmorValue = 2;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 0 - (100/2) = -50
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (1) + (-37) = 13%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (3) + (-37) = 79%
@@ -491,31 +491,31 @@ namespace PhysicalCombatAndArmorOverhaul
 				//-------------------- Lycanthropes -------------------------------------
 				
 				// Werewolf		
-				EnemyBasics.Enemies[9].MinDamage = 6;
-				EnemyBasics.Enemies[9].MaxDamage = 10;
-				EnemyBasics.Enemies[9].MinDamage2 = 8;
-				EnemyBasics.Enemies[9].MaxDamage2 = 12;
-				EnemyBasics.Enemies[9].MinDamage3 = 10;
-				EnemyBasics.Enemies[9].MaxDamage3 = 20;
-				EnemyBasics.Enemies[9].MinHealth = 35;
-				EnemyBasics.Enemies[9].MaxHealth = 60;
+				EnemyBasics.Enemies[9].MinDamage = 4;
+				EnemyBasics.Enemies[9].MaxDamage = 8;
+				EnemyBasics.Enemies[9].MinDamage2 = 6;
+				EnemyBasics.Enemies[9].MaxDamage2 = 8;
+				EnemyBasics.Enemies[9].MinDamage3 = 6;           // Two attacks per animation
+				EnemyBasics.Enemies[9].MaxDamage3 = 10;
+				EnemyBasics.Enemies[9].MinHealth = 30;
+				EnemyBasics.Enemies[9].MaxHealth = 55;
 				EnemyBasics.Enemies[9].Level = 8;
-				EnemyBasics.Enemies[9].ArmorValue = 2;
+				EnemyBasics.Enemies[9].ArmorValue = 3;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 10 - (70/2) = -25
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-2) + (-25.5) = 21.5%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-25.5) = 87.5%
 
 				// Wereboar		
-				EnemyBasics.Enemies[14].MinDamage = 5;
-				EnemyBasics.Enemies[14].MaxDamage = 8;
-				EnemyBasics.Enemies[14].MinDamage2 = 8;
-				EnemyBasics.Enemies[14].MaxDamage2 = 10;
-				EnemyBasics.Enemies[14].MinDamage3 = 10;
-				EnemyBasics.Enemies[14].MaxDamage3 = 22;
-				EnemyBasics.Enemies[14].MinHealth = 55;
-				EnemyBasics.Enemies[14].MaxHealth = 90;
+				EnemyBasics.Enemies[14].MinDamage = 6;
+				EnemyBasics.Enemies[14].MaxDamage = 10;
+				EnemyBasics.Enemies[14].MinDamage2 = 6;
+				EnemyBasics.Enemies[14].MaxDamage2 = 12;
+				EnemyBasics.Enemies[14].MinDamage3 = 8;          // One attack per animation
+				EnemyBasics.Enemies[14].MaxDamage3 = 16;
+				EnemyBasics.Enemies[14].MinHealth = 65;
+				EnemyBasics.Enemies[14].MaxHealth = 95;
 				EnemyBasics.Enemies[14].Level = 8;
-				EnemyBasics.Enemies[14].ArmorValue = 4;
+				EnemyBasics.Enemies[14].ArmorValue = 5;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 20 - (70/2) = -15
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-1) + (-22.5) = 25.5%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (1) + (-22.5) = 91.5%
@@ -525,21 +525,21 @@ namespace PhysicalCombatAndArmorOverhaul
 				//-------------------- Atronachs -------------------------------------
 				
 				// Fire Atronach		
-				EnemyBasics.Enemies[35].MinDamage = 20;
-				EnemyBasics.Enemies[35].MaxDamage = 30;
-				EnemyBasics.Enemies[35].MinHealth = 40;
-				EnemyBasics.Enemies[35].MaxHealth = 65;
+				EnemyBasics.Enemies[35].MinDamage = 9;
+				EnemyBasics.Enemies[35].MaxDamage = 17;
+				EnemyBasics.Enemies[35].MinHealth = 40;           // One attack per animation
+				EnemyBasics.Enemies[35].MaxHealth = 60;
 				EnemyBasics.Enemies[35].Level = 16;
-				EnemyBasics.Enemies[35].ArmorValue = 2;
+				EnemyBasics.Enemies[35].ArmorValue = 3;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 10 - (100/2) = -40
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-3) + (-33) = 13%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-33) = 79%
 
 				// Iron Atronach		
-				EnemyBasics.Enemies[36].MinDamage = 30;
-				EnemyBasics.Enemies[36].MaxDamage = 55;
-				EnemyBasics.Enemies[36].MinHealth = 80;
-				EnemyBasics.Enemies[36].MaxHealth = 150;
+				EnemyBasics.Enemies[36].MinDamage = 13;
+				EnemyBasics.Enemies[36].MaxDamage = 24;
+				EnemyBasics.Enemies[36].MinHealth = 95;           // One attack per animation
+				EnemyBasics.Enemies[36].MaxHealth = 155;
 				EnemyBasics.Enemies[36].Level = 21;
 				EnemyBasics.Enemies[36].ArmorValue = 4;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 20 - (100/2) = -30
@@ -547,23 +547,23 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-32) = 80%
 
 				// Flesh Atronach		
-				EnemyBasics.Enemies[37].MinDamage = 7;
-				EnemyBasics.Enemies[37].MaxDamage = 15;
-				EnemyBasics.Enemies[37].MinHealth = 130;
-				EnemyBasics.Enemies[37].MaxHealth = 260;
+				EnemyBasics.Enemies[37].MinDamage = 3;
+				EnemyBasics.Enemies[37].MaxDamage = 8;
+				EnemyBasics.Enemies[37].MinHealth = 120;          // One attack per animation
+				EnemyBasics.Enemies[37].MaxHealth = 245;
 				EnemyBasics.Enemies[37].Level = 16;
-				EnemyBasics.Enemies[37].ArmorValue = 8;
+				EnemyBasics.Enemies[37].ArmorValue = 9;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 40 - (100/2) = -10
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-3.5) + (-26) = 19.5%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1.5) + (-26) = 85.5%
 
 				// Ice Atronach		
-				EnemyBasics.Enemies[38].MinDamage = 15;
-				EnemyBasics.Enemies[38].MaxDamage = 25;
-				EnemyBasics.Enemies[38].MinHealth = 60;
+				EnemyBasics.Enemies[38].MinDamage = 5;
+				EnemyBasics.Enemies[38].MaxDamage = 13;
+				EnemyBasics.Enemies[38].MinHealth = 70;           // 1. Animation with one attack. 2. Animation with one attack.
 				EnemyBasics.Enemies[38].MaxHealth = 110;
 				EnemyBasics.Enemies[38].Level = 16;
-				EnemyBasics.Enemies[38].ArmorValue = 6;
+				EnemyBasics.Enemies[38].ArmorValue = 5;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 30 - (100/2) = -20
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-4) + (-32) = 13%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-2) + (-32) = 79%
@@ -573,10 +573,10 @@ namespace PhysicalCombatAndArmorOverhaul
 				//-------------------- Undead -------------------------------------
 				
 				// Skeletal Warrior
-				EnemyBasics.Enemies[15].MinDamage = 8;
-				EnemyBasics.Enemies[15].MaxDamage = 16;
-				EnemyBasics.Enemies[15].MinHealth = 25;
-				EnemyBasics.Enemies[15].MaxHealth = 75;
+				EnemyBasics.Enemies[15].MinDamage = 7;
+				EnemyBasics.Enemies[15].MaxDamage = 15;
+				EnemyBasics.Enemies[15].MinHealth = 30;           // One attack per animation
+				EnemyBasics.Enemies[15].MaxHealth = 55;
 				EnemyBasics.Enemies[15].Level = 9;
 				EnemyBasics.Enemies[15].ArmorValue = 4;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 20 - (75/2) = -17.5
@@ -585,42 +585,42 @@ namespace PhysicalCombatAndArmorOverhaul
 				
 				// Zombie		
 				EnemyBasics.Enemies[17].MinDamage = 4;
-				EnemyBasics.Enemies[17].MaxDamage = 9;
-				EnemyBasics.Enemies[17].MinHealth = 70;
-				EnemyBasics.Enemies[17].MaxHealth = 120;
+				EnemyBasics.Enemies[17].MaxDamage = 8;
+				EnemyBasics.Enemies[17].MinHealth = 65;           // 1. Animation with one attack. 2. Animation with one attack.
+				EnemyBasics.Enemies[17].MaxHealth = 125;
 				EnemyBasics.Enemies[17].Level = 5;
-				EnemyBasics.Enemies[17].ArmorValue = 8;
+				EnemyBasics.Enemies[17].ArmorValue = 9;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 40 - (55/2) = 12.5
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-2) + (-16.75) = 30.25%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-16.75) = 96.25%
 				
 				// Ghost
-				EnemyBasics.Enemies[18].MinDamage = 10;
-				EnemyBasics.Enemies[18].MaxDamage = 25;
-				EnemyBasics.Enemies[18].MinHealth = 20;
-				EnemyBasics.Enemies[18].MaxHealth = 55;
+				EnemyBasics.Enemies[18].MinDamage = 7;
+				EnemyBasics.Enemies[18].MaxDamage = 14;
+				EnemyBasics.Enemies[18].MinHealth = 20;           // One attack per animation, Can Cast Paralyze
+				EnemyBasics.Enemies[18].MaxHealth = 40;
 				EnemyBasics.Enemies[18].Level = 11;
-				EnemyBasics.Enemies[18].ArmorValue = 0;
+				EnemyBasics.Enemies[18].ArmorValue = 1;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 0 - (85/2) = -42.5
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-2) + (-31.25) = 15.75%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-31.25) = 81.75%
 
 				// Mummy		
-				EnemyBasics.Enemies[19].MinDamage = 7;
-				EnemyBasics.Enemies[19].MaxDamage = 23;
-				EnemyBasics.Enemies[19].MinHealth = 60;
-				EnemyBasics.Enemies[19].MaxHealth = 135;
+				EnemyBasics.Enemies[19].MinDamage = 6;
+				EnemyBasics.Enemies[19].MaxDamage = 14;
+				EnemyBasics.Enemies[19].MinHealth = 75;           // One attack per animation
+				EnemyBasics.Enemies[19].MaxHealth = 110;
 				EnemyBasics.Enemies[19].Level = 15;
-				EnemyBasics.Enemies[19].ArmorValue = 0;
+				EnemyBasics.Enemies[19].ArmorValue = 3;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 0 - (100/2) = -50
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-2) + (-40) = 7%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-40) = 73%
 				
 				// Wraith
-				EnemyBasics.Enemies[23].MinDamage = 15;
-				EnemyBasics.Enemies[23].MaxDamage = 35;
-				EnemyBasics.Enemies[23].MinHealth = 35;
-				EnemyBasics.Enemies[23].MaxHealth = 65;
+				EnemyBasics.Enemies[23].MinDamage = 16;
+				EnemyBasics.Enemies[23].MaxDamage = 32;
+				EnemyBasics.Enemies[23].MinHealth = 30;           // One attack per animation
+				EnemyBasics.Enemies[23].MaxHealth = 50;
 				EnemyBasics.Enemies[23].Level = 15;
 				EnemyBasics.Enemies[23].ArmorValue = 0;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 0 - (100/2) = -50
@@ -629,21 +629,21 @@ namespace PhysicalCombatAndArmorOverhaul
 				
 				
 				// Vampire
-				EnemyBasics.Enemies[28].MinDamage = 20;
-				EnemyBasics.Enemies[28].MaxDamage = 40;
-				EnemyBasics.Enemies[28].MinHealth = 65;
-				EnemyBasics.Enemies[28].MaxHealth = 100;
-				EnemyBasics.Enemies[28].Level = 19;
-				EnemyBasics.Enemies[28].ArmorValue = -2;
+				EnemyBasics.Enemies[28].MinDamage = 15;
+				EnemyBasics.Enemies[28].MaxDamage = 32;
+				EnemyBasics.Enemies[28].MinHealth = 70;           // One attack per animation
+				EnemyBasics.Enemies[28].MaxHealth = 105;
+				EnemyBasics.Enemies[28].Level = 17;
+				EnemyBasics.Enemies[28].ArmorValue = -3;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -10 - (100/2) = -60
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-4) + (-37) = 8%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-2) + (-37) = 74%
 
 				// Vampire Ancient		
-				EnemyBasics.Enemies[30].MinDamage = 30;
-				EnemyBasics.Enemies[30].MaxDamage = 50;
-				EnemyBasics.Enemies[30].MinHealth = 95;
-				EnemyBasics.Enemies[30].MaxHealth = 150;
+				EnemyBasics.Enemies[30].MinDamage = 18;
+				EnemyBasics.Enemies[30].MaxDamage = 35;
+				EnemyBasics.Enemies[30].MinHealth = 85;           // One attack per animation
+				EnemyBasics.Enemies[30].MaxHealth = 140;
 				EnemyBasics.Enemies[30].Level = 20;
 				EnemyBasics.Enemies[30].ArmorValue = -7;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -35 - (100/2) = -85
@@ -651,23 +651,23 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-41) = 71%
 				
 				// Lich		
-				EnemyBasics.Enemies[32].MinDamage = 35;
-				EnemyBasics.Enemies[32].MaxDamage = 60;
-				EnemyBasics.Enemies[32].MinHealth = 80;
+				EnemyBasics.Enemies[32].MinDamage = 25;
+				EnemyBasics.Enemies[32].MaxDamage = 45;
+				EnemyBasics.Enemies[32].MinHealth = 85;           // One attack per animation
 				EnemyBasics.Enemies[32].MaxHealth = 135;
 				EnemyBasics.Enemies[32].Level = 20;
-				EnemyBasics.Enemies[32].ArmorValue = -5;
+				EnemyBasics.Enemies[32].ArmorValue = -2;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -25 - (100/2) = -75
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-3) + (-42) = 4%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-42) = 70%
 
 				// Ancient Lich		
-				EnemyBasics.Enemies[33].MinDamage = 40;
-				EnemyBasics.Enemies[33].MaxDamage = 70;
-				EnemyBasics.Enemies[33].MinHealth = 105;
-				EnemyBasics.Enemies[33].MaxHealth = 185;
+				EnemyBasics.Enemies[33].MinDamage = 35;
+				EnemyBasics.Enemies[33].MaxDamage = 55;
+				EnemyBasics.Enemies[33].MinHealth = 115;          // One attack per animation
+				EnemyBasics.Enemies[33].MaxHealth = 195;
 				EnemyBasics.Enemies[33].Level = 21;
-				EnemyBasics.Enemies[33].ArmorValue = -8;
+				EnemyBasics.Enemies[33].ArmorValue = -4;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -40 - (100/2) = -90
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-3) + (-45) = 1%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-1) + (-45) = 67%
@@ -677,43 +677,43 @@ namespace PhysicalCombatAndArmorOverhaul
 				//-------------------- Daedra -------------------------------------
 
 				// Frost Daedra
-				EnemyBasics.Enemies[25].MinDamage = 30;
-				EnemyBasics.Enemies[25].MaxDamage = 55;
-				EnemyBasics.Enemies[25].MinHealth = 85;
-				EnemyBasics.Enemies[25].MaxHealth = 155;
+				EnemyBasics.Enemies[25].MinDamage = 25;
+				EnemyBasics.Enemies[25].MaxDamage = 40;
+				EnemyBasics.Enemies[25].MinHealth = 90;           // 1. Animation with one attack. 2. Animation with two attacks.
+				EnemyBasics.Enemies[25].MaxHealth = 160;
 				EnemyBasics.Enemies[25].Level = 17;
-				EnemyBasics.Enemies[25].ArmorValue = -5;
+				EnemyBasics.Enemies[25].ArmorValue = -6;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -25 - (100/2) = -75
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-2) + (-40) = 7%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (0) + (-40) = 73%
 				
 				// Fire Daedra
-				EnemyBasics.Enemies[26].MinDamage = 60;
-				EnemyBasics.Enemies[26].MaxDamage = 85;
-				EnemyBasics.Enemies[26].MinHealth = 55;
-				EnemyBasics.Enemies[26].MaxHealth = 95;
+				EnemyBasics.Enemies[26].MinDamage = 35;
+				EnemyBasics.Enemies[26].MaxDamage = 55;
+				EnemyBasics.Enemies[26].MinHealth = 60;           // 1. Animation with one attack. 2. Animation with two attacks.
+				EnemyBasics.Enemies[26].MaxHealth = 100;
 				EnemyBasics.Enemies[26].Level = 17;
-				EnemyBasics.Enemies[26].ArmorValue = 0;
+				EnemyBasics.Enemies[26].ArmorValue = -3;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 0 - (100/2) = -40
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-4) + (-34) = 11%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-2) + (-34) = 77%
 				
 				// Daedroth
-				EnemyBasics.Enemies[27].MinDamage = 35;
-				EnemyBasics.Enemies[27].MaxDamage = 75;
-				EnemyBasics.Enemies[27].MinHealth = 65;
-				EnemyBasics.Enemies[27].MaxHealth = 95;
+				EnemyBasics.Enemies[27].MinDamage = 20;
+				EnemyBasics.Enemies[27].MaxDamage = 32;
+				EnemyBasics.Enemies[27].MinHealth = 70;           // 1. Animation with one attack. 2. Animation with two attacks. 3. Animation with three attacks.
+				EnemyBasics.Enemies[27].MaxHealth = 120;
 				EnemyBasics.Enemies[27].Level = 18;
-				EnemyBasics.Enemies[27].ArmorValue = 4;
+				EnemyBasics.Enemies[27].ArmorValue = -1;
 				// Estimated Avoidance Modifier (Lower means harder to hit): 20 - (100/2) = -30
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-4) + (-34) = 11%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-2) + (-34) = 77%
 				
 				// Daedra Seducer
-				EnemyBasics.Enemies[29].MinDamage = 35;
-				EnemyBasics.Enemies[29].MaxDamage = 75;
-				EnemyBasics.Enemies[29].MinHealth = 70;
-				EnemyBasics.Enemies[29].MaxHealth = 100;
+				EnemyBasics.Enemies[29].MinDamage = 30;
+				EnemyBasics.Enemies[29].MaxDamage = 60;
+				EnemyBasics.Enemies[29].MinHealth = 70;           // One attack per animation, seems to only melee attack in flying form, not in "human" form.
+				EnemyBasics.Enemies[29].MaxHealth = 95;
 				EnemyBasics.Enemies[29].Level = 19;
 				EnemyBasics.Enemies[29].ArmorValue = -8;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -40 - (100/2) = -90
@@ -721,12 +721,12 @@ namespace PhysicalCombatAndArmorOverhaul
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-2) + (-34) = 77%
 				
 				// Daedra Lord		
-				EnemyBasics.Enemies[31].MinDamage = 55;
-				EnemyBasics.Enemies[31].MaxDamage = 110;
-				EnemyBasics.Enemies[31].MinHealth = 175;
-				EnemyBasics.Enemies[31].MaxHealth = 275;
+				EnemyBasics.Enemies[31].MinDamage = 26;
+				EnemyBasics.Enemies[31].MaxDamage = 42;
+				EnemyBasics.Enemies[31].MinHealth = 170;          // 1. Animation with two attacks. 2. Animation with two attacks. 3. Animation with four attacks.
+				EnemyBasics.Enemies[31].MaxHealth = 285;
 				EnemyBasics.Enemies[31].Level = 21;
-				EnemyBasics.Enemies[31].ArmorValue = -12;
+				EnemyBasics.Enemies[31].ArmorValue = -9;
 				// Estimated Avoidance Modifier (Lower means harder to hit): -60 - (100/2) = -110
 				// Lvl. 1 Player Example: [Breton, Elven Wep, 35 wep skill, 60 agi, 50 luck, 30 crit skill]: (49) + (-4) + (-48) = -3%
 				// Lvl.14 Player Example: [Breton, Ebony Wep, 65 wep skill, 80 agi, 50 luck, 50 crit skill]: (113) + (-2) + (-48) = 63%
@@ -747,7 +747,7 @@ namespace PhysicalCombatAndArmorOverhaul
 		
 		public static int DamageModifier(int strength) // Fixes the inconsistency with Unity and Classic, changes the 5 to a 10 divider.
         {
-            return (int)Mathf.Floor((float)(strength - 50) / 10f);
+            return (int)Mathf.Floor((strength - 50) / 10f);
         }
 		
 		private static int CalculateAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, int enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -784,7 +784,6 @@ namespace PhysicalCombatAndArmorOverhaul
             {
                 int weaponAverage = (weapon.GetBaseDamageMin() + weapon.GetBaseDamageMax()) / 2;
                 int noWeaponAverage = (AIAttacker.MobileEnemy.MinDamage + AIAttacker.MobileEnemy.MaxDamage) / 2;
-
                 if (noWeaponAverage > weaponAverage)
                 {
                     // Use hand-to-hand
@@ -891,7 +890,7 @@ namespace PhysicalCombatAndArmorOverhaul
                 {
                     if (CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
                     {
-                        damage = FormulaHelper.CalculateHandToHandAttackDamage(attacker, target, damageModifiers, attacker == player);
+                        damage = CalculateHandToHandAttackDamage(attacker, target, damageModifiers, attacker == player); // Added my own, non-overriden version of this method for modification.
 						
                         damage = CalculateBackstabDamage(damage, backstabChance);
                     }
@@ -942,6 +941,8 @@ namespace PhysicalCombatAndArmorOverhaul
                         }
                         ++attackNumber;
                     }
+                    if (damage >= 1)
+                        damage = CalculateHandToHandAttackDamage(attacker, target, damage, attacker == player); // Added my own, non-overriden version of this method for modification.
                 }
             }
             // Handle weapon attacks
@@ -1243,10 +1244,11 @@ namespace PhysicalCombatAndArmorOverhaul
             if (damage < 1)
                 damage = 0;
 
-            damage += GetBonusOrPenaltyByEnemyType(attacker, AITarget);
-			
-			// Mod hook for adjusting final damage. (is a no-op in DFU)
-			if (archeryModuleCheck)
+            if (damage >= 1)
+                damage += GetBonusOrPenaltyByEnemyType(attacker, target); // Added my own, non-overriden version of this method for modification.
+
+            // Mod hook for adjusting final damage. (is a no-op in DFU)
+            if (archeryModuleCheck)
 				damage = AdjustWeaponAttackDamage(attacker, target, damage, weaponAnimTime, weapon);
 
             return damage;
@@ -1926,8 +1928,7 @@ namespace PhysicalCombatAndArmorOverhaul
 		// This will be the main section of where various groups of enemies will have their 'Natural' damage reduction calculated.
 		private static int PercentageReductionCalculationForMonsters(DaggerfallEntity attacker, DaggerfallEntity target, int damage, bool bluntWep, float naturalDamResist)
 		{
-			EnemyEntity AITarget = null;
-            AITarget = target as EnemyEntity;
+            EnemyEntity AITarget = target as EnemyEntity;
 
             switch (AITarget.GetEnemyGroup())
             {
@@ -2009,6 +2010,7 @@ namespace PhysicalCombatAndArmorOverhaul
                 case (int)MonsterCareers.OrcShaman:
                 case (int)MonsterCareers.OrcWarlord:
                 case (int)MonsterCareers.IronAtronach:
+                case (int)MonsterCareers.IceAtronach:
                 case (int)MonsterCareers.SkeletalWarrior:
                 case (int)MonsterCareers.Wraith:
                 case (int)MonsterCareers.Lich:
@@ -2052,8 +2054,10 @@ namespace PhysicalCombatAndArmorOverhaul
                     return ItemBuilder.CreateWeapon(Weapons.Flail, WeaponMaterialTypes.Steel);
                 case (int)MonsterCareers.IronAtronach:
                     return ItemBuilder.CreateWeapon(Weapons.Mace, WeaponMaterialTypes.Steel);
+                case (int)MonsterCareers.IceAtronach:
+                    return ItemBuilder.CreateWeapon(Weapons.Katana, WeaponMaterialTypes.Elven);
                 case (int)MonsterCareers.Wraith:
-                    return ItemBuilder.CreateWeapon(Weapons.Longsword, WeaponMaterialTypes.Mithril);
+                    return ItemBuilder.CreateWeapon(Weapons.Saber, WeaponMaterialTypes.Mithril);
                 case (int)MonsterCareers.FrostDaedra:
                     return ItemBuilder.CreateWeapon(Weapons.Warhammer, WeaponMaterialTypes.Daedric);
                 case (int)MonsterCareers.FireDaedra:
@@ -2296,7 +2300,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			
 			if (item.ConditionPercentage <= 49 || condDiff >= 12)
 			{
-                if (item.IsEnchanted) // All Magically Enchanted Items Text? // Add a testing "clock" earlier on to test for attacks per second from enemies to balance.
+                if (item.IsEnchanted) // All Magically Enchanted Items Text // Add a testing "clock" earlier on to test for attacks per second from enemies to balance.
                 {
                     if (item.customMagic != null)
                     {
@@ -2370,7 +2374,7 @@ namespace PhysicalCombatAndArmorOverhaul
 				if (item.ConditionPercentage == 48) // 49 & 45 // This will work for now, until I find a more elegant solution.
 					DaggerfallUI.AddHUDText(roughItemMessage, 2.00f); // Possibly make a random between a few of these lines to mix it up or something.				
 				else if (item.ConditionPercentage == 15) // 16 & 12
-					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f); // I need to change this so it has different text for magic items, otherwise the name gets sort of messed up. Also with that, likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff. Also, before my next version release, make MM a "dependency" in the settings so the user gets a warning about needing MM to be installed along side mine "optionally." I also probably need to "nerf" the min and max damage of the higher level enemies that have very high speed stats, their attacks are way too quick for how much damage they can deal each attack.
+					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f); // Also with that, likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff. I also probably need to "nerf" the min and max damage of the higher level enemies that have very high speed stats, their attacks are way too quick for how much damage they can deal each attack. Also as a note, now that many enemies are technically using weapons, some of the higher level enemies COMPLETELY SHRED through armor durability, it is pretty crazy, will have to tweek this.
                 else if (condDiff >= 12)
                     DaggerfallUI.AddHUDText(majorDamageItemMessage, 2.00f);
             }
@@ -2732,19 +2736,72 @@ namespace PhysicalCombatAndArmorOverhaul
             }
             return damage;
         }
-		
-		static int GetBonusOrPenaltyByEnemyType(DaggerfallEntity attacker, EnemyEntity AITarget)
+
+        public static int CalculateHandToHandAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, int damageModifier, bool player)
         {
-            if (attacker == null || AITarget == null)
-                return 0;
-            int attackerWillpMod = (int)Mathf.Round((attacker.Stats.LiveWillpower - 50) / 5);
-            int confidenceMod = Mathf.Max(10 + ((attackerWillpMod - AITarget.Level) / 2), 0);
-            int courageMod = Mathf.Max(AITarget.Level - attackerWillpMod, 0);
+            int damage = 0;
+
+            if (player)
+            {
+                int minBaseDamage = FormulaHelper.CalculateHandToHandMinDamage(attacker.Skills.GetLiveSkillValue(DFCareer.Skills.HandToHand));
+                int maxBaseDamage = FormulaHelper.CalculateHandToHandMaxDamage(attacker.Skills.GetLiveSkillValue(DFCareer.Skills.HandToHand));
+                damage = UnityEngine.Random.Range(minBaseDamage, maxBaseDamage + 1);
+
+                // Apply damage modifiers.
+                damage += damageModifier;
+
+                // Apply strength modifier for players. It is not applied in classic despite what the in-game description for the Strength attribute says.
+                damage += DamageModifier(attacker.Stats.LiveStrength);
+            }
+            else
+                damage += damageModifier;
+
+            if (damage < 1)
+                damage = 0;
+
+            if (damage >= 1)
+                damage += GetBonusOrPenaltyByEnemyType(attacker, target); // Added my own, non-overriden version of this method for modification.
+
+            return damage;
+        }
+
+        static int GetBonusOrPenaltyByEnemyType(DaggerfallEntity attacker, DaggerfallEntity target)
+        {
+            if (attacker == null || target == null) // I think i'm happy with the stat changes I made so far, so onto the next part I think. So I think I will consider changing // Better balance the durability damage against higher level enemies possibly. I could do something more interesting with the proficiencies actually, that being making each "type" of weapon proficiency do something different than the others, something like that.
+                return 0; // the racial proficiencies and bonuses to not be based on player level, but some other factors of some kind, similar to how I just changed the bonus and phobia system here. After that, something more to hopefully make enemies more difficult to "cheese", that being either increasing their weight values, or more likely, making the knock-back less and determined primarily by weapon weight used, as well as attacker strength and other factors, also add some random factor to those values for variety if possible. 
+
+            int attackerWillpMod = 0;
+            int confidenceMod = 0;
+            int courageMod = 0;
+            EnemyEntity AITarget = null;
+            PlayerEntity player = GameManager.Instance.PlayerEntity;
+
+            if (target != player)
+                AITarget = target as EnemyEntity;
+            else
+                player = target as PlayerEntity;
+
+            if (player == attacker) // When attacker is the player
+            {
+                attackerWillpMod = (int)Mathf.Round((attacker.Stats.LiveWillpower - 50) / 5);
+                confidenceMod = Mathf.Max(10 + attackerWillpMod - (target.Level / 2), 0);
+                courageMod = Mathf.Max((target.Level / 2) - attackerWillpMod, 0);
+
+                confidenceMod = UnityEngine.Random.Range(0, confidenceMod);
+            }
+            else // When attacker is anything other than the player // Apparently "32" is the maximum possible level cap for the player without cheating.
+            {
+                attackerWillpMod = (int)Mathf.Round((attacker.Stats.LiveWillpower - 50) / 5);
+                confidenceMod = Mathf.Max(5 + attackerWillpMod + (attacker.Level / 4), 0);
+                courageMod = Mathf.Max(target.Level - (attacker.Level + attackerWillpMod), 0);
+
+                confidenceMod = UnityEngine.Random.Range(0, confidenceMod);
+            }
 
             int damage = 0;
             // Apply bonus or penalty by opponent type.
             // In classic this is broken and only works if the attack is done with a weapon that has the maximum number of enchantments.
-            if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Undead)
+            if (AITarget != null && AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Undead)
             {
                 if (((int)attacker.Career.UndeadAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
@@ -2755,7 +2812,7 @@ namespace PhysicalCombatAndArmorOverhaul
                     damage -= courageMod;
                 }
             }
-            else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Daedra)
+            else if (AITarget != null && AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Daedra)
             {
                 if (((int)attacker.Career.DaedraAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
@@ -2766,7 +2823,7 @@ namespace PhysicalCombatAndArmorOverhaul
                     damage -= courageMod;
                 }
             }
-            else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Humanoid || AITarget.EntityType == EntityTypes.EnemyClass)
+            else if ((AITarget != null && AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Humanoid) || player == target) // Apparently human npcs already are in the humanoid career, so "|| AITarget.EntityType == EntityTypes.EnemyClass" is unneeded.
             {
                 if (((int)attacker.Career.HumanoidAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
@@ -2777,7 +2834,7 @@ namespace PhysicalCombatAndArmorOverhaul
                     damage -= courageMod;
                 }
             }
-            else if (AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Animals)
+            else if (AITarget != null && AITarget.GetEnemyGroup() == DFCareer.EnemyGroups.Animals)
             {
                 if (((int)attacker.Career.AnimalsAttackModifier & (int)DFCareer.AttackModifier.Bonus) != 0)
                 {
