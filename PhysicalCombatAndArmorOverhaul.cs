@@ -1055,37 +1055,37 @@ namespace PhysicalCombatAndArmorOverhaul
 			{
 				if (unarmedAttack)
 				{
-                    Debug.Log("------------------------------------------------------------------------------------------");
-					Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
+                    //Debug.Log("------------------------------------------------------------------------------------------");
+					//Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
                     int damBefore = damage;
 
 					damage = CalculateArmorDamageReductionWithUnarmed(attacker, target, damage, struckBodyPart, naturalDamResist); // This will be the method call for armor reduction against unarmed.
 
 					int damAfter = damage;
-					Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
+					//Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
 					if (damBefore > 0)
 					{
 						int damReduPercent = ((100 * damAfter / damBefore) - 100) * -1;
-						Debug.LogFormat("Here is damage reduction percent = {0}%", damReduPercent);
+						//Debug.LogFormat("Here is damage reduction percent = {0}%", damReduPercent);
 					}
-                    Debug.Log("------------------------------------------------------------------------------------------");
+                    //Debug.Log("------------------------------------------------------------------------------------------");
                 }
 				else if (weaponAttack)
 				{
-                    Debug.Log("------------------------------------------------------------------------------------------");
-                    Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
+                    //Debug.Log("------------------------------------------------------------------------------------------");
+                    //Debug.LogFormat("Here is damage value before armor reduction is applied = {0}", damage);
                     int damBefore = damage;
 
                     damage = CalculateArmorDamageReductionWithWeapon(attacker, target, damage, weapon, struckBodyPart, naturalDamResist); // This will be the method call for armor reduction against weapons.
 
 					int damAfter = damage;
-                    Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
+                    //Debug.LogFormat("Here is damage value after armor reduction = {0}", damage);
 					if (damBefore > 0)
 					{
 						int damReduPercent = ((100 * damAfter / damBefore) - 100) * -1;
-						Debug.LogFormat("Here is damage reduction percent = {0}%", damReduPercent);
+						//Debug.LogFormat("Here is damage reduction percent = {0}%", damReduPercent);
 					}
-                    Debug.Log("------------------------------------------------------------------------------------------");
+                    //Debug.Log("------------------------------------------------------------------------------------------");
                 }
 			}
 
@@ -1151,16 +1151,41 @@ namespace PhysicalCombatAndArmorOverhaul
                 // Apply weapon proficiency
                 if (((int)attacker.Career.ExpertProficiencies & weapon.GetWeaponSkillUsed()) != 0)
                 {
-                    mods.damageMod = (attacker.Level / 2) + 1; // Buffed from /3 to /2
-                    mods.toHitMod = attacker.Level;
+                    switch (weapon.GetWeaponSkillIDAsShort())
+                    {
+                        case (short)DFCareer.Skills.Archery:
+                            mods.damageMod = (attacker.Stats.LiveStrength / 25) + (attacker.Stats.LiveAgility / 25) + 1; //9
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 8) + (attacker.Stats.LiveSpeed / 20) + (attacker.Stats.LiveLuck / 20); //22.5
+                            break;
+                        case (short)DFCareer.Skills.Axe:
+                            mods.damageMod = (attacker.Stats.LiveStrength / 20) + (attacker.Stats.LiveAgility / 33) + 1; //9
+                            mods.toHitMod = (attacker.Stats.LiveStrength / 11) + (attacker.Stats.LiveAgility / 11) + (attacker.Stats.LiveLuck / 22); //22.5
+                            break;
+                        case (short)DFCareer.Skills.BluntWeapon:
+                            mods.damageMod = (attacker.Stats.LiveStrength / 20) + (attacker.Stats.LiveEndurance / 33) + 1; //9
+                            mods.toHitMod = (attacker.Stats.LiveStrength / 10) + (attacker.Stats.LiveAgility / 16) + (attacker.Stats.LiveLuck / 16); //22.5
+                            break;
+                        case (short)DFCareer.Skills.LongBlade:
+                            mods.damageMod = (attacker.Stats.LiveAgility / 20) + (attacker.Stats.LiveStrength / 33) + 1; //9
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 8) + (attacker.Stats.LiveSpeed / 20) + (attacker.Stats.LiveLuck / 20); //22.5
+                            break;
+                        case (short)DFCareer.Skills.ShortBlade:
+                            mods.damageMod = (attacker.Stats.LiveAgility / 25) + (attacker.Stats.LiveSpeed / 25) + 1; //9
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 10) + (attacker.Stats.LiveSpeed / 14) + (attacker.Stats.LiveLuck / 18); //22.5
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             // Apply hand-to-hand proficiency. Hand-to-hand proficiency is not applied in classic.
             else if (((int)attacker.Career.ExpertProficiencies & (int)DFCareer.ProficiencyFlags.HandToHand) != 0)
             {
-                mods.damageMod = (attacker.Level / 2) + 1; // Buffed from /3 to /2
-                mods.toHitMod = attacker.Level;
+                mods.damageMod = (attacker.Stats.LiveStrength / 50) + (attacker.Stats.LiveEndurance / 50) + (attacker.Stats.LiveAgility / 50) + (attacker.Stats.LiveSpeed / 50) + 1; //9
+                mods.toHitMod = (attacker.Stats.LiveAgility / 22) + (attacker.Stats.LiveSpeed / 22) + (attacker.Stats.LiveStrength / 22) + (attacker.Stats.LiveEndurance / 22) + (attacker.Stats.LiveLuck / 22); //22.5
             }
+            //Debug.LogFormat("Here is the damage modifier for this proficiency = {0}", mods.damageMod);
+            //Debug.LogFormat("Here is the accuracy modifier for this proficiency = {0}", mods.toHitMod);
             return mods;
 		}
 		
