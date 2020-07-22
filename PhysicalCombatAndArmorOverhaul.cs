@@ -1145,7 +1145,7 @@ namespace PhysicalCombatAndArmorOverhaul
 		
 		public static ToHitAndDamageMods CalculateProficiencyModifiers(DaggerfallEntity attacker, DaggerfallUnityItem weapon)
 		{
-			ToHitAndDamageMods mods = new ToHitAndDamageMods();
+			ToHitAndDamageMods mods = new ToHitAndDamageMods(); // If I feel that 50 starting points is too much for a level 1 character, I could always make the benefits only start past that 50 mark or something, maybe 40.
             if (weapon != null)
             {
                 // Apply weapon proficiency
@@ -1194,25 +1194,98 @@ namespace PhysicalCombatAndArmorOverhaul
 			ToHitAndDamageMods mods = new ToHitAndDamageMods();
             if (weapon != null)
             {
-                if (player.RaceTemplate.ID == (int)Races.DarkElf)
+                switch (player.RaceTemplate.ID)
                 {
-                    mods.damageMod = attacker.Level / 2; // Buffed Racial Mod from /4 to /2
-                    mods.toHitMod = attacker.Level / 2; // Buffed Racial Mod from /4 to /2
-                }
-                else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.Archery)
-                {
-                    if (player.RaceTemplate.ID == (int)Races.WoodElf)
-                    {
-                        mods.damageMod = attacker.Level / 3;
-                        mods.toHitMod = attacker.Level / 1; // Buffed Racial Mod from /3 to /1
-                    }
-                }
-                else if (player.RaceTemplate.ID == (int)Races.Redguard)
-                {
-                    mods.damageMod = attacker.Level / 3;
-                    mods.toHitMod = attacker.Level / 1; // Buffed Racial Mod from /3 to /1
+                    case (int)Races.Argonian:
+                        if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.ShortBlade)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveSpeed / 33); //6
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 16) + (attacker.Stats.LiveSpeed / 33) + (attacker.Stats.LiveLuck / 33); //12
+                        }
+                        break;
+                    case (int)Races.DarkElf:
+                        if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.LongBlade)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveAgility / 25) + (attacker.Stats.LiveStrength / 25); //8
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 25) + (attacker.Stats.LiveSpeed / 33) + (attacker.Stats.LiveLuck / 33); //10
+                        }
+                        else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.ShortBlade)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveAgility / 50) + (attacker.Stats.LiveSpeed / 50); //4
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveSpeed / 33) + (attacker.Stats.LiveLuck / 33); //9
+                        }
+                        break;
+                    case (int)Races.Khajiit:
+                        if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.ShortBlade)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveSpeed / 50); //5
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 20) + (attacker.Stats.LiveSpeed / 33) + (attacker.Stats.LiveLuck / 50); //10
+                        }
+                        break;
+                    case (int)Races.Nord:
+                        if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.Axe)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveStrength / 16) + (attacker.Stats.LiveAgility / 33); //9
+                            mods.toHitMod = (attacker.Stats.LiveStrength / 33) + (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveLuck / 33); //9
+                        }
+                        else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.BluntWeapon)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveStrength / 25) + (attacker.Stats.LiveEndurance / 25); //8
+                            mods.toHitMod = (attacker.Stats.LiveStrength / 25) + (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveLuck / 33); //10
+                        }
+                        break;
+                    case (int)Races.Redguard:
+                        if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.LongBlade)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveStrength / 50); //5
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 10) + (attacker.Stats.LiveSpeed / 25) + (attacker.Stats.LiveLuck / 25); //18
+                        }
+                        else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.BluntWeapon)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveStrength / 33) + (attacker.Stats.LiveEndurance / 33); //6
+                            mods.toHitMod = (attacker.Stats.LiveStrength / 20) + (attacker.Stats.LiveAgility / 25) + (attacker.Stats.LiveLuck / 33); //12
+                        }
+                        else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.Axe)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveStrength / 16) + (attacker.Stats.LiveAgility / 33); //6
+                            mods.toHitMod = (attacker.Stats.LiveStrength / 33) + (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveLuck / 33); //12
+                        }
+                        else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.Archery)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveStrength / 50) + (attacker.Stats.LiveAgility / 50); //4
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 25) + (attacker.Stats.LiveSpeed / 33) + (attacker.Stats.LiveLuck / 33); //10
+                        }
+                        break;
+                    case (int)Races.WoodElf:
+                        if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.ShortBlade)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveAgility / 33) + (attacker.Stats.LiveSpeed / 50); //5
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 20) + (attacker.Stats.LiveSpeed / 33) + (attacker.Stats.LiveLuck / 50); //10
+                        }
+                        else if (weapon.GetWeaponSkillIDAsShort() == (short)DFCareer.Skills.Archery)
+                        {
+                            mods.damageMod = (attacker.Stats.LiveStrength / 25) + (attacker.Stats.LiveAgility / 25); //8
+                            mods.toHitMod = (attacker.Stats.LiveAgility / 10) + (attacker.Stats.LiveSpeed / 25) + (attacker.Stats.LiveLuck / 25); //18
+                        }
+                        break;
+                    default:
+                        break;
                 }
             }
+            else if (weapon == null)
+            {
+                if (player.RaceTemplate.ID == (int)Races.Khajiit)
+                {
+                    mods.damageMod = (attacker.Stats.LiveStrength / 33) + (attacker.Stats.LiveEndurance / 33) + (attacker.Stats.LiveAgility / 50) + (attacker.Stats.LiveSpeed / 50); //10
+                    mods.toHitMod = (attacker.Stats.LiveAgility / 25) + (attacker.Stats.LiveSpeed / 50) + (attacker.Stats.LiveStrength / 50) + (attacker.Stats.LiveEndurance / 50) + (attacker.Stats.LiveLuck / 50); //12
+                }
+                else if (player.RaceTemplate.ID == (int)Races.Nord)
+                {
+                    mods.damageMod = (attacker.Stats.LiveStrength / 33) + (attacker.Stats.LiveEndurance / 50); //5
+                }
+            }
+            Debug.LogFormat("Here is the damage modifier for this Race and Weapon = {0}", mods.damageMod);
+            Debug.LogFormat("Here is the accuracy modifier for this Race and Weapon = {0}", mods.toHitMod);
             return mods;
 		}
 		
@@ -2792,8 +2865,8 @@ namespace PhysicalCombatAndArmorOverhaul
 
         static int GetBonusOrPenaltyByEnemyType(DaggerfallEntity attacker, DaggerfallEntity target)
         {
-            if (attacker == null || target == null) // I think i'm happy with the stat changes I made so far, so onto the next part I think. So I think I will consider changing // Better balance the durability damage against higher level enemies possibly. I could do something more interesting with the proficiencies actually, that being making each "type" of weapon proficiency do something different than the others, something like that.
-                return 0; // the racial proficiencies and bonuses to not be based on player level, but some other factors of some kind, similar to how I just changed the bonus and phobia system here. After that, something more to hopefully make enemies more difficult to "cheese", that being either increasing their weight values, or more likely, making the knock-back less and determined primarily by weapon weight used, as well as attacker strength and other factors, also add some random factor to those values for variety if possible. 
+            if (attacker == null || target == null) // I think i'm happy with the stat changes I made so far, so onto the next part I think. So I think I will consider changing // Better balance the durability damage against higher level enemies possibly.
+                return 0; // Something more to hopefully make enemies more difficult to "cheese", that being either increasing their weight values, or more likely, making the knock-back less and determined primarily by weapon weight used, as well as attacker strength and other factors, also add some random factor to those values for variety if possible. 
 
             int attackerWillpMod = 0;
             int confidenceMod = 0;
