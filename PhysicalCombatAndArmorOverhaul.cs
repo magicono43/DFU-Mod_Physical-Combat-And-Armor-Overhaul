@@ -2177,7 +2177,7 @@ namespace PhysicalCombatAndArmorOverhaul
 					damage *= 2;
 				
 				if (itemMat == (int)ArmorMaterialTypes.Leather)
-					damage /= 2;
+					damage /= 4;
 				else if (itemMat == (int)ArmorMaterialTypes.Chain || itemMat == (int)ArmorMaterialTypes.Chain2)
 					damage *= 2;
 				
@@ -2234,7 +2234,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			else
 			{
 				if (shieldCheck)
-					damage /= 2;
+					damage /= 3;
 				
 				if (itemMat == (int)ArmorMaterialTypes.Chain || itemMat == (int)ArmorMaterialTypes.Chain2)
 					damage /= 2;
@@ -2273,7 +2273,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			
 			if (item.ItemGroup == ItemGroups.Armor) // Target gets their armor/shield condition damaged.
             {
-                int amount = item.IsShield ? damage * 2: damage * 4;
+                int amount = item.IsShield ? damage: damage * 2;
                 item.LowerCondition(amount, owner);
 
                 /*int percentChange = 100 * amount / item.maxCondition;
@@ -2307,7 +2307,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			
 			if (item.ItemGroup == ItemGroups.Armor) // Target gets their armor/shield condition damaged.
             {
-                int amount = item.IsShield ? damage: damage * 2;
+                int amount = item.IsShield ? damage / 2: damage;
                 item.LowerCondition(amount, owner);
 
                 /*int percentChange = 100 * amount / item.maxCondition;
@@ -2348,6 +2348,9 @@ namespace PhysicalCombatAndArmorOverhaul
 		// Finds the material that an armor item is made from, then returns the multiplier that will be used later based on this material check.
 		private static int ArmorMaterialIdentifier (DaggerfallUnityItem armor)
         {
+            if (armor == null) // To attempt to keep object reference compile error from occuring when worn shield breaks from an attack.
+                return 1;
+
             if (!armor.IsShield)
             {
                 int itemMat = armor.GetMaterialArmorValue();
@@ -2865,8 +2868,8 @@ namespace PhysicalCombatAndArmorOverhaul
 
         static int GetBonusOrPenaltyByEnemyType(DaggerfallEntity attacker, DaggerfallEntity target)
         {
-            if (attacker == null || target == null) // I think i'm happy with the stat changes I made so far, so onto the next part I think. So I think I will consider changing // Better balance the durability damage against higher level enemies possibly.
-                return 0; // Something more to hopefully make enemies more difficult to "cheese", that being either increasing their weight values, or more likely, making the knock-back less and determined primarily by weapon weight used, as well as attacker strength and other factors, also add some random factor to those values for variety if possible. 
+            if (attacker == null || target == null)
+                return 0; // Something more to hopefully make enemies more difficult to "cheese", that being either increasing their weight values, or more likely, making the knock-back less and determined primarily by weapon weight used, as well as attacker strength and other factors, also add some random factor to those values for variety if possible. Don't forget about possibly making it so more damaged equipment is less effective, and well maintained gives bonuses, don't give bonus to monsters, possibly penalty though?
 
             int attackerWillpMod = 0;
             int confidenceMod = 0;
