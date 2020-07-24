@@ -33,7 +33,8 @@ namespace PhysicalCombatAndArmorOverhaul
 		public static bool archeryModuleCheck { get; set; }
         public static bool critStrikeModuleCheck { get; set; }
 		public static bool armorHitFormulaModuleCheck { get; set; }
-		public static bool shieldBlockSuccess { get; set; }
+        public static bool condBasedEffectModuleCheck { get; set; }
+        public static bool shieldBlockSuccess { get; set; }
 
         /////////////////////////////////////////////////////////////////////
         public static GameObject ExampleGo;
@@ -102,6 +103,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			bool fixedStrengthDamageModifier = settings.GetBool("Modules", "fixedStrengthDamageModifier");
 			bool armorHitFormulaRedone = settings.GetBool("Modules", "armorHitFormulaRedone");
 			bool criticalStrikesIncreaseDamage = settings.GetBool("Modules", "criticalStrikesIncreaseDamage");
+            bool conditionBasedEffectiveness = settings.GetBool("Modules", "conditionBasedEffectiveness");
             bool rolePlayRealismArcheryModule = false;
             bool ralzarMeanerMonstersEdit = false;
             if (roleplayRealism != null)
@@ -114,14 +116,14 @@ namespace PhysicalCombatAndArmorOverhaul
                 ralzarMeanerMonstersEdit = true;
             }
 
-            InitMod(equipmentDamageEnhanced, fixedStrengthDamageModifier, armorHitFormulaRedone, criticalStrikesIncreaseDamage, rolePlayRealismArcheryModule, ralzarMeanerMonstersEdit);
+            InitMod(equipmentDamageEnhanced, fixedStrengthDamageModifier, armorHitFormulaRedone, conditionBasedEffectiveness, criticalStrikesIncreaseDamage, rolePlayRealismArcheryModule, ralzarMeanerMonstersEdit);
 
             mod.IsReady = true;
         }
 		
 		#region InitMod and Settings
 		
-		private static void InitMod(bool equipmentDamageEnhanced, bool fixedStrengthDamageModifier, bool armorHitFormulaRedone, bool criticalStrikesIncreaseDamage, bool rolePlayRealismArcheryModule, bool ralzarMeanerMonstersEdit)
+		private static void InitMod(bool equipmentDamageEnhanced, bool fixedStrengthDamageModifier, bool armorHitFormulaRedone, bool conditionBasedEffectiveness, bool criticalStrikesIncreaseDamage, bool rolePlayRealismArcheryModule, bool ralzarMeanerMonstersEdit)
         {
             Debug.Log("Begin mod init: PhysicalCombatAndArmorOverhaul");
 
@@ -133,8 +135,8 @@ namespace PhysicalCombatAndArmorOverhaul
             }
 			else
 				Debug.Log("PhysicalCombatAndArmorOverhaul: Enhanced Equipment Damage Module Disabled");
-			
-			if (fixedStrengthDamageModifier)
+
+            if (fixedStrengthDamageModifier)
 			{
 				FormulaHelper.RegisterOverride(mod, "DamageModifier", (Func<int, int>)DamageModifier);
 				
@@ -194,8 +196,28 @@ namespace PhysicalCombatAndArmorOverhaul
 				critStrikeModuleCheck = false;
 				Debug.Log("PhysicalCombatAndArmorOverhaul: Critical Strikes Increase Damage Module Disabled");
 			}
-			
-			if (rolePlayRealismArcheryModule)
+
+            if (conditionBasedEffectiveness)
+            {
+                if (armorHitFormulaRedone)
+                {
+                    Debug.Log("PhysicalCombatAndArmorOverhaul: Condition Based Effectiveness Module Active");
+
+                    condBasedEffectModuleCheck = true;
+                }
+                else
+                {
+                    condBasedEffectModuleCheck = false;
+                    Debug.Log("PhysicalCombatAndArmorOverhaul: Condition Based Effectiveness Module Is Dependent On Armor Hit Formula Redone To Function, So By Default is Disabled");
+                }
+            }
+            else
+            {
+                condBasedEffectModuleCheck = false;
+                Debug.Log("PhysicalCombatAndArmorOverhaul: Condition Based Effectiveness Module Disabled");
+            }
+
+            if (rolePlayRealismArcheryModule)
 			{
 				FormulaHelper.RegisterOverride(mod, "AdjustWeaponHitChanceMod", (Func<DaggerfallEntity, DaggerfallEntity, int, int, DaggerfallUnityItem, int>)AdjustWeaponHitChanceMod);
 				FormulaHelper.RegisterOverride(mod, "AdjustWeaponAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, int, int, DaggerfallUnityItem, int>)AdjustWeaponAttackDamage);
@@ -804,6 +826,8 @@ namespace PhysicalCombatAndArmorOverhaul
                 }
                 // Get weapon skill used
                 skillID = weapon.GetWeaponSkillIDAsShort();
+                if (skillID == 32) // Checks if the weapon being used is in the Blunt Weapon category, then sets a bool value to true.
+                    bluntWep = true;
             }
             else
             {
@@ -904,6 +928,9 @@ namespace PhysicalCombatAndArmorOverhaul
                         unarmedAttack = false;
                         weaponAttack = true;
                         weapon = MonsterWeaponAssign(attacker);
+                        skillID = weapon.GetWeaponSkillIDAsShort();
+                        if (skillID == 32) // Checks if the weapon being used is in the Blunt Weapon category, then sets a bool value to true.
+                            bluntWep = true;
                     }
 
                     // Handle multiple attacks by AI
@@ -1010,9 +1037,21 @@ namespace PhysicalCombatAndArmorOverhaul
 				if (shieldBlockSuccess)
 					shieldBlockSuccess = CompareShieldToUnderArmor(target, struckBodyPart, naturalDamResist);
 			}
+
+            if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active. As well if a weapon is even being used.
+            {
+                if (attacker == player && weapon != null) // Only the player has weapon damage effected by condition value.
+                {
+                    damage = AlterDamageBasedOnWepCondition(damage, bluntWep, weapon);
+                    //Debug.LogFormat("Damage Multiplier Due To Weapon Condition = {0}", damage);
+                }
+            }
 			
-			DamageEquipment(attacker, target, damage, weapon, struckBodyPart); // Might alter this later so that equipment damage is only calculated with the amount that was reduced, not the whole initial amount, will see.
-			// I could fairly easily make worn/damaged equipment be less effective based on the current condition. Just alter the final damage based on the current condition percentage, simple. I'll keep this in mind after I finish working on this current enemies with weapons thing.
+			if (damage < 1) // Cut off the execution if the damage is still not anything higher than 1 at this point in the method.
+				return damage;
+
+            DamageEquipment(attacker, target, damage, weapon, struckBodyPart); // Might alter this later so that equipment damage is only calculated with the amount that was reduced, not the whole initial amount, will see.
+
 			if(((target != player) && (AITarget.EntityType == EntityTypes.EnemyMonster)))
 			{
 				monsterArmorCheck = ArmorStruckVerification(target, struckBodyPart); // Check for if a monster has a piece of armor/shield hit by an attack, returns true if so.
@@ -1284,8 +1323,8 @@ namespace PhysicalCombatAndArmorOverhaul
                     mods.damageMod = (attacker.Stats.LiveStrength / 33) + (attacker.Stats.LiveEndurance / 50); //5
                 }
             }
-            Debug.LogFormat("Here is the damage modifier for this Race and Weapon = {0}", mods.damageMod);
-            Debug.LogFormat("Here is the accuracy modifier for this Race and Weapon = {0}", mods.toHitMod);
+            //Debug.LogFormat("Here is the damage modifier for this Race and Weapon = {0}", mods.damageMod);
+            //Debug.LogFormat("Here is the accuracy modifier for this Race and Weapon = {0}", mods.toHitMod);
             return mods;
 		}
 		
@@ -1474,7 +1513,7 @@ namespace PhysicalCombatAndArmorOverhaul
 						chanceToHitMod += (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 3); // Now for player, at 100 crit skill, "crit" success will give 33 more hit-mod
 						//DaggerfallUI.Instance.PopupMessage("A Devastating Strike!"); // Turned off seems pretty annoying, even with the lower crit roll chance, for now at least.
 					}
-					//Debug.LogFormat("After Crit, Player = {0}", chanceToHitMod); // May consider eventually moving/adding the Critical Strike equation to the damage modifier formula, likely not in 1.0 of this mod, but maybe later on.
+					//Debug.LogFormat("After Crit, Player = {0}", chanceToHitMod);
 				}
 				// Apply critical strike modifier. For Enemies.
 				else
@@ -1738,7 +1777,82 @@ namespace PhysicalCombatAndArmorOverhaul
 		#endregion
 		
 		#region Mod Specific Methods
-		
+
+        // Multiplies the damage of an attack with a weapon, based on the current condition of said weapon, blunt less effected, but also does not benefit as much from higher condition.
+        private static int AlterDamageBasedOnWepCondition(int damage, bool bluntWep, DaggerfallUnityItem weapon)
+        {
+            int condPerc = weapon.ConditionPercentage;
+
+            if (bluntWep)
+            {
+                if (condPerc >= 92)                         // New
+                    damage = (int)Mathf.Round(damage * 1.1f);
+                else if (condPerc <= 91 && condPerc >= 76)  // Almost New
+                    damage = damage * 1;
+                else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
+                    damage = damage * 1;
+                else if (condPerc <= 60 && condPerc >= 41)  // Used
+                    damage = (int)Mathf.Round(damage * 0.90f);
+                else if (condPerc <= 40 && condPerc >= 16)  // Worn
+                    damage = (int)Mathf.Round(damage * 0.80f);
+                else if (condPerc <= 15 && condPerc >= 6)   // Battered
+                    damage = (int)Mathf.Round(damage * 0.65f);
+                else if (condPerc <= 5)                     // Useless, Broken
+                    damage = (int)Mathf.Round(damage * 0.50f);
+                else                                        // Other
+                    damage = damage * 1;
+            }
+            else
+            {
+                if (condPerc >= 92)                         // New
+                    damage = (int)Mathf.Round(damage * 1.3f);
+                else if (condPerc <= 91 && condPerc >= 76)  // Almost New
+                    damage = (int)Mathf.Round(damage * 1.1f);
+                else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
+                    damage = damage * 1;
+                else if (condPerc <= 60 && condPerc >= 41)  // Used
+                    damage = (int)Mathf.Round(damage * 0.85f);
+                else if (condPerc <= 40 && condPerc >= 16)  // Worn
+                    damage = (int)Mathf.Round(damage * 0.70f);
+                else if (condPerc <= 15 && condPerc >= 6)   // Battered
+                    damage = (int)Mathf.Round(damage * 0.45f);
+                else if (condPerc <= 5)                     // Useless, Broken
+                    damage = (int)Mathf.Round(damage * 0.25f);
+                else                                        // Other
+                    damage = damage * 1;
+            }
+            return damage;
+        }
+
+        // Provides the multiplier that will be applied to an armor piece, based on the current condition percentage of said armor.
+        private static float AlterArmorReducBasedOnItemCondition(DaggerfallUnityItem armor)
+        {
+            if (armor == null) // To attempt to keep object reference compile error from occuring when worn shield breaks from an attack.
+                return 1f;
+
+            int condPerc = armor.ConditionPercentage;
+            float condMulti = 1f;
+
+            if (condPerc >= 92)                         // New
+                condMulti = condMulti * 0.85f;
+            else if (condPerc <= 91 && condPerc >= 76)  // Almost New
+                condMulti = condMulti * 0.95f;
+            else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
+                condMulti = condMulti * 1;
+            else if (condPerc <= 60 && condPerc >= 41)  // Used
+                condMulti = condMulti * 1.10f;
+            else if (condPerc <= 40 && condPerc >= 16)  // Worn
+                condMulti = condMulti * 1.20f;
+            else if (condPerc <= 15 && condPerc >= 6)   // Battered
+                condMulti = condMulti * 1.35f;
+            else if (condPerc <= 5)                     // Useless, Broken
+                condMulti = condMulti * 1.50f;
+            else                                        // Other
+                condMulti = condMulti * 1;
+
+            return condMulti;
+        }
+
 		private static int CalculateArmorDamageReductionWithWeapon(DaggerfallEntity attacker, DaggerfallEntity target, int damage, DaggerfallUnityItem weapon, int struckBodyPart, float naturalDamResist)
 		{
 			int atkStrength = attacker.Stats.LiveStrength;
@@ -1782,7 +1896,6 @@ namespace PhysicalCombatAndArmorOverhaul
 		}
 			// Once I make it easier to add onto damage reduction values, I should take weapon weight into consideration and have it so heavier weapons do more damage resistance penetration, this would somewhat help in balancing out weapons that are just clearly better than others. Like the broadsword having less damage and weighing more than the longsword, that does not really make much sense to me, the broadsword does look a lot cooler at least.
 			// Possibly try and make it so getting hit in different parts of the body can do different things like bonus damage for the attack or something around that.
-			// If I do make it so the player hits monsters more often, I will want to also make it so knock-back is tweeked heavily so that enemies can't just be super easily stun-locked by any weapon.
 			// Will probably do some tests with and without my damage reduction mod, and try and see what the "Time Till Death" is for both. Maybe my mod will make death quicker, maybe it will make it slower compared to non-modded daggerfall.
 			// Something else I would like to add onto this mod eventually. Make it so, that when an attack is reduced from any amount that did not start as zero, to zero after damage reduction, make a sound that is different than the normal "miss" "woosh" sound, make one that sounds like something clanging off a metal surface or something of the like. To give an indication that armor/shield has completely negated an attacked.
 			// As this mod develops, I will definitely want/have to convert the "percentage" reduction amounts to an array or something, so I would more readily be able to add/subtract from these values on the fly, for situations like adding other variables into play that would chance the damage resistance amount on a per-attack basis.
@@ -1824,6 +1937,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			bool unarmedCheck = true;
 			bool bluntWep = false;
 			int wepWeight = 1;
+            float condMulti = 1f;
 			
 			
 			if (shieldCheck) // This part is a bit more difficult than I expected, I think i'll just have to make the shields a flat % reduction, regardless of material and what is being worn under the shield. Base this on the type of shield being used, also make blunt do more against shields than other types. Later on, i'll want to improve this to consider what is under the shield, as well as other factors, just do this for the time being.
@@ -1834,30 +1948,36 @@ namespace PhysicalCombatAndArmorOverhaul
 			}
 			else // Possibly add later on enemies/monsters that can more readily penetrate through damage reduction from armor and such, for now though, just do with this for now.
 			{
+                if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active.
+                {
+                    condMulti = AlterArmorReducBasedOnItemCondition(item);
+                    //Debug.LogFormat("Armor Against Unarmed Reduction Multiplier Due To Condition = {0}", condMulti);
+                }
+
                 switch (armorMaterial)
                 {
                     case 1: // leather
-                        return (int)Mathf.Round(damage * (.90f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.90f * condMulti), .95f) - naturalDamResist));
                     case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (.84f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.84f * condMulti), .95f) - naturalDamResist));
                     case 3: // iron
-                        return (int)Mathf.Round(damage * (.80f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.80f * condMulti), .92f) - naturalDamResist));
                     case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (.72f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.72f * condMulti), .89f) - naturalDamResist));
                     case 5: // elven
-                        return (int)Mathf.Round(damage * (.66f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.66f * condMulti), .86f) - naturalDamResist));
                     case 6: // dwarven
-                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .83f) - naturalDamResist));
                     case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (.52f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.52f * condMulti), .80f) - naturalDamResist));
                     case 8: // ebony
-                        return (int)Mathf.Round(damage * (.46f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.46f * condMulti), .76f) - naturalDamResist));
                     case 9: // orcish
-                        return (int)Mathf.Round(damage * (.36f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.36f * condMulti), .70f) - naturalDamResist));
                     case 10: // daedric
-                        return (int)Mathf.Round(damage * (.30f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.30f * condMulti), .65f) - naturalDamResist));
                     default:
-                        return (int)Mathf.Round(damage * (1f - naturalDamResist)); // May have to change this? Don't think so though.
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                 }
 			}
 		}
@@ -1866,8 +1986,9 @@ namespace PhysicalCombatAndArmorOverhaul
 		private static int PercentageReductionCalculationWithWeapon(DaggerfallUnityItem item, int armorMaterial, int atkStrength, int damage, bool bluntWep, int wepWeight, bool shieldCheck, float naturalDamResist)
 		{
 			bool unarmedCheck = false;
-			
-			if (shieldCheck) // This part is a bit more difficult than I expected, I think i'll just have to make the shields a flat % reduction, regardless of material and what is being worn under the shield. Base this on the type of shield being used, also make blunt do more against shields than other types. Later on, i'll want to improve this to consider what is under the shield, as well as other factors, just do this for the time being.
+            float condMulti = 1f;
+
+            if (shieldCheck) // This part is a bit more difficult than I expected, I think i'll just have to make the shields a flat % reduction, regardless of material and what is being worn under the shield. Base this on the type of shield being used, also make blunt do more against shields than other types. Later on, i'll want to improve this to consider what is under the shield, as well as other factors, just do this for the time being.
 			{
 				damage = ShieldDamageReductionCalculation(item, armorMaterial, atkStrength, damage, bluntWep, wepWeight, unarmedCheck, naturalDamResist);
 				
@@ -1875,32 +1996,38 @@ namespace PhysicalCombatAndArmorOverhaul
 			}
 			else
 			{
-				if (bluntWep)
+                if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active.
+                {
+                    condMulti = AlterArmorReducBasedOnItemCondition(item);
+                    //Debug.LogFormat("Armor Against Weapon Reduction Multiplier Due To Condition = {0}", condMulti);
+                }
+
+                if (bluntWep)
 				{
                     switch (armorMaterial)
                     {
                         case 1: // leather
-                            return (int)Mathf.Round(damage * (.72f - naturalDamResist)); // Made it so blunt weapons do 4% more damage to plate armors (most of them) compared to other weapons.
+                            return (int)Mathf.Round(damage * (Mathf.Min((.72f * condMulti), .89f) - naturalDamResist)); // Blunt weapons do 4% more damage to plate armors, compared to other weapons.
                         case 2: // chains 1 and 2
-                            return (int)Mathf.Round(damage * (.88f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.88f * condMulti), .95f) - naturalDamResist));
                         case 3: // iron
-                            return (int)Mathf.Round(damage * (.92f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.92f * condMulti), .95f) - naturalDamResist));
                         case 4: // steel and silver
-                            return (int)Mathf.Round(damage * (.84f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.84f * condMulti), .93f) - naturalDamResist));
                         case 5: // elven
-                            return (int)Mathf.Round(damage * (.80f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.80f * condMulti), .90f) - naturalDamResist));
                         case 6: // dwarven
-                            return (int)Mathf.Round(damage * (.72f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.72f * condMulti), .87f) - naturalDamResist));
                         case 7: // mithril and adamantium
-                            return (int)Mathf.Round(damage * (.64f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.64f * condMulti), .84f) - naturalDamResist));
                         case 8: // ebony
-                            return (int)Mathf.Round(damage * (.56f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.56f * condMulti), .78f) - naturalDamResist));
                         case 9: // orcish
-                            return (int)Mathf.Round(damage * (.48f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.48f * condMulti), .70f) - naturalDamResist));
                         case 10: // daedric
-                            return (int)Mathf.Round(damage * (.40f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.40f * condMulti), .58f) - naturalDamResist));
                         default:
-                            return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                     }
                 }
 				else
@@ -1908,27 +2035,27 @@ namespace PhysicalCombatAndArmorOverhaul
                     switch (armorMaterial)
                     {
                         case 1: // leather
-                            return (int)Mathf.Round(damage * (.88f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.88f * condMulti), .95f) - naturalDamResist));
                         case 2: // chains 1 and 2
-                            return (int)Mathf.Round(damage * (.72f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.72f * condMulti), .89f) - naturalDamResist));
                         case 3: // iron
-                            return (int)Mathf.Round(damage * (.86f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.86f * condMulti), .90f) - naturalDamResist));
                         case 4: // steel and silver
-                            return (int)Mathf.Round(damage * (.78f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.78f * condMulti), .88f) - naturalDamResist));
                         case 5: // elven
-                            return (int)Mathf.Round(damage * (.74f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.74f * condMulti), .85f) - naturalDamResist));
                         case 6: // dwarven
-                            return (int)Mathf.Round(damage * (.66f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.66f * condMulti), .82f) - naturalDamResist));
                         case 7: // mithril and adamantium
-                            return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .78f) - naturalDamResist));
                         case 8: // ebony
-                            return (int)Mathf.Round(damage * (.50f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.50f * condMulti), .73f) - naturalDamResist));
                         case 9: // orcish
-                            return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.42f * condMulti), .56f) - naturalDamResist));
                         case 10: // daedric
-                            return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((.34f * condMulti), .46f) - naturalDamResist));
                         default:
-                            return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                            return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                     }
                 }
 			}
@@ -1936,33 +2063,41 @@ namespace PhysicalCombatAndArmorOverhaul
 		
 		private static int ShieldDamageReductionCalculation(DaggerfallUnityItem shield, int shieldMaterial, int atkStrength, int damage, bool bluntWep, int wepWeight, bool unarmedCheck, float naturalDamResist)
 		{
-			// So I want to expand on this more later on, but for right now, I think i'm just going to go with something fairly basic. That being that shields, no matter what the type will have a large damage reduction, but this reduction will increase with the material type of the shield. Like I said, want to a lot more with this, but have to think more about it and learn more about actually doing it before I wrack my head on it.
-			if (unarmedCheck)
+            float condMulti = 1f;
+
+            if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active.
+            {
+                condMulti = AlterArmorReducBasedOnItemCondition(shield);
+                //Debug.LogFormat("Shield Reduction Multiplier Due To Condition = {0}", condMulti);
+            }
+
+            // So I want to expand on this more later on, but for right now, I think i'm just going to go with something fairly basic. That being that shields, no matter what the type will have a large damage reduction, but this reduction will increase with the material type of the shield. Like I said, want to a lot more with this, but have to think more about it and learn more about actually doing it before I wrack my head on it.
+            if (unarmedCheck)
 			{
                 switch (shieldMaterial)
                 {
                     case 1: // leather
-                        return (int)Mathf.Round(damage * (.59f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.59f * condMulti), .79f) - naturalDamResist));
                     case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (.55f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.55f * condMulti), .75f) - naturalDamResist));
                     case 3: // iron
-                        return (int)Mathf.Round(damage * (.49f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.49f * condMulti), .69f) - naturalDamResist));
                     case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (.45f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.45f * condMulti), .65f) - naturalDamResist));
                     case 5: // elven
-                        return (int)Mathf.Round(damage * (.43f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.43f * condMulti), .63f) - naturalDamResist));
                     case 6: // dwarven
-                        return (int)Mathf.Round(damage * (.39f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.39f * condMulti), .59f) - naturalDamResist));
                     case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (.35f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.35f * condMulti), .55f) - naturalDamResist));
                     case 8: // ebony
-                        return (int)Mathf.Round(damage * (.33f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.33f * condMulti), .44f) - naturalDamResist));
                     case 9: // orcish
-                        return (int)Mathf.Round(damage * (.29f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.29f * condMulti), .37f) - naturalDamResist));
                     case 10: // daedric
-                        return (int)Mathf.Round(damage * (.25f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.25f * condMulti), .31f) - naturalDamResist));
                     default:
-                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                 }
             }
 			else if (bluntWep)
@@ -1970,27 +2105,27 @@ namespace PhysicalCombatAndArmorOverhaul
                 switch (shieldMaterial)
                 {
                     case 1: // leather
-                        return (int)Mathf.Round(damage * (.74f - naturalDamResist)); // Blunt does slightly more damage to shields, overall.
+                        return (int)Mathf.Round(damage * (Mathf.Min((.74f * condMulti), .84f) - naturalDamResist)); // Blunt does slightly more damage to shields, overall.
                     case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (.70f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.70f * condMulti), .80f) - naturalDamResist));
                     case 3: // iron
-                        return (int)Mathf.Round(damage * (.64f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.64f * condMulti), .72f) - naturalDamResist));
                     case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .68f) - naturalDamResist));
                     case 5: // elven
-                        return (int)Mathf.Round(damage * (.54f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.54f * condMulti), .64f) - naturalDamResist));
                     case 6: // dwarven
-                        return (int)Mathf.Round(damage * (.50f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.50f * condMulti), .60f) - naturalDamResist));
                     case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (.46f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.46f * condMulti), .56f) - naturalDamResist));
                     case 8: // ebony
-                        return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.42f * condMulti), .50f) - naturalDamResist));
                     case 9: // orcish
-                        return (int)Mathf.Round(damage * (.38f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.38f * condMulti), .45f) - naturalDamResist));
                     case 10: // daedric
-                        return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.34f * condMulti), .39f) - naturalDamResist));
                     default:
-                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                 }
             }
 			else
@@ -1998,27 +2133,27 @@ namespace PhysicalCombatAndArmorOverhaul
                 switch (shieldMaterial)
                 {
                     case 1: // leather
-                        return (int)Mathf.Round(damage * (.70f - naturalDamResist)); // You get a very good damage reduction from any type of shield, it gets slightly better as the material of the shield gets better.
+                        return (int)Mathf.Round(damage * (Mathf.Min((.70f * condMulti), .80f) - naturalDamResist)); // You get a very good damage reduction from any type of shield, it gets slightly better as the material of the shield gets better.
                     case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (.66f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.66f * condMulti), .76f) - naturalDamResist));
                     case 3: // iron
-                        return (int)Mathf.Round(damage * (.60f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.60f * condMulti), .68f) - naturalDamResist));
                     case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (.54f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.54f * condMulti), .64f) - naturalDamResist));
                     case 5: // elven
-                        return (int)Mathf.Round(damage * (.50f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.50f * condMulti), .60f) - naturalDamResist));
                     case 6: // dwarven
-                        return (int)Mathf.Round(damage * (.46f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.46f * condMulti), .56f) - naturalDamResist));
                     case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.42f * condMulti), .52f) - naturalDamResist));
                     case 8: // ebony
-                        return (int)Mathf.Round(damage * (.38f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.38f * condMulti), .46f) - naturalDamResist));
                     case 9: // orcish
-                        return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.34f * condMulti), .41f) - naturalDamResist));
                     case 10: // daedric
-                        return (int)Mathf.Round(damage * (.30f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.30f * condMulti), .36f) - naturalDamResist));
                     default:
-                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                 }
             }
 		}
@@ -2401,7 +2536,7 @@ namespace PhysicalCombatAndArmorOverhaul
 			
 			if (item.ConditionPercentage <= 49 || condDiff >= 12)
 			{
-                if (item.IsEnchanted) // All Magically Enchanted Items Text // Add a testing "clock" earlier on to test for attacks per second from enemies to balance.
+                if (item.IsEnchanted) // All Magically Enchanted Items Text
                 {
                     if (item.customMagic != null)
                     {
@@ -2475,7 +2610,7 @@ namespace PhysicalCombatAndArmorOverhaul
 				if (item.ConditionPercentage == 48) // 49 & 45 // This will work for now, until I find a more elegant solution.
 					DaggerfallUI.AddHUDText(roughItemMessage, 2.00f); // Possibly make a random between a few of these lines to mix it up or something.				
 				else if (item.ConditionPercentage == 15) // 16 & 12
-					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f); // Also with that, likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff. I also probably need to "nerf" the min and max damage of the higher level enemies that have very high speed stats, their attacks are way too quick for how much damage they can deal each attack. Also as a note, now that many enemies are technically using weapons, some of the higher level enemies COMPLETELY SHRED through armor durability, it is pretty crazy, will have to tweek this.
+					DaggerfallUI.AddHUDText(damagedItemMessage, 2.00f);
                 else if (condDiff >= 12)
                     DaggerfallUI.AddHUDText(majorDamageItemMessage, 2.00f);
             }
@@ -2741,32 +2876,40 @@ namespace PhysicalCombatAndArmorOverhaul
 		// Currently being used to compare the damage reduction of a shield to the under armor it is covering. This is the average of all different types of damage reduction for simplification of this.
 		private static int PercentageReductionAverage(DaggerfallUnityItem item, int armorMaterial, int damage, float naturalDamResist, bool shieldQuickCheck)
 		{
-			if (shieldQuickCheck)
+            float condMulti = 1f;
+
+            if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active.
+            {
+                condMulti = AlterArmorReducBasedOnItemCondition(item);
+                //Debug.LogFormat("Average Reduction Multiplier Due To Condition = {0}", condMulti);
+            }
+
+            if (shieldQuickCheck)
 			{
                 switch (armorMaterial)
                 {
                     case 1: // leather
-                        return (int)Mathf.Round(damage * (.68f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.68f * condMulti), .81f) - naturalDamResist));
                     case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (.64f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.64f * condMulti), .77f) - naturalDamResist));
                     case 3: // iron
-                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .70f) - naturalDamResist));
                     case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (.52f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.52f * condMulti), .66f) - naturalDamResist));
                     case 5: // elven
-                        return (int)Mathf.Round(damage * (.49f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.49f * condMulti), .62f) - naturalDamResist));
                     case 6: // dwarven
-                        return (int)Mathf.Round(damage * (.45f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.45f * condMulti), .61f) - naturalDamResist));
                     case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (.41f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.41f * condMulti), .54f) - naturalDamResist));
                     case 8: // ebony
-                        return (int)Mathf.Round(damage * (.38f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.38f * condMulti), .47f) - naturalDamResist));
                     case 9: // orcish
-                        return (int)Mathf.Round(damage * (.34f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.34f * condMulti), .41f) - naturalDamResist));
                     case 10: // daedric
-                        return (int)Mathf.Round(damage * (.30f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.30f * condMulti), .35f) - naturalDamResist));
                     default:
-                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                 }
 			}
 			else
@@ -2774,27 +2917,27 @@ namespace PhysicalCombatAndArmorOverhaul
                 switch (armorMaterial)
                 {
                     case 1: // leather
-                        return (int)Mathf.Round(damage * (.83f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.83f * condMulti), .93f) - naturalDamResist));
                     case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (.81f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.81f * condMulti), .93f) - naturalDamResist));
                     case 3: // iron
-                        return (int)Mathf.Round(damage * (.86f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.86f * condMulti), .92f) - naturalDamResist));
                     case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (.78f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.78f * condMulti), .90f) - naturalDamResist));
                     case 5: // elven
-                        return (int)Mathf.Round(damage * (.73f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.73f * condMulti), .87f) - naturalDamResist));
                     case 6: // dwarven
-                        return (int)Mathf.Round(damage * (.65f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.65f * condMulti), .84f) - naturalDamResist));
                     case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (.58f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .81f) - naturalDamResist));
                     case 8: // ebony
-                        return (int)Mathf.Round(damage * (.51f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.51f * condMulti), .76f) - naturalDamResist));
                     case 9: // orcish
-                        return (int)Mathf.Round(damage * (.42f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.42f * condMulti), .65f) - naturalDamResist));
                     case 10: // daedric
-                        return (int)Mathf.Round(damage * (.35f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((.35f * condMulti), .56f) - naturalDamResist));
                     default:
-                        return (int)Mathf.Round(damage * (1f - naturalDamResist));
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                 }
 			}
 		}
@@ -2868,8 +3011,8 @@ namespace PhysicalCombatAndArmorOverhaul
 
         static int GetBonusOrPenaltyByEnemyType(DaggerfallEntity attacker, DaggerfallEntity target)
         {
-            if (attacker == null || target == null)
-                return 0; // Something more to hopefully make enemies more difficult to "cheese", that being either increasing their weight values, or more likely, making the knock-back less and determined primarily by weapon weight used, as well as attacker strength and other factors, also add some random factor to those values for variety if possible. Don't forget about possibly making it so more damaged equipment is less effective, and well maintained gives bonuses, don't give bonus to monsters, possibly penalty though?
+            if (attacker == null || target == null) // So after observing the effects of adding large amounts of weight to an enemy, it does not seem to have that much of an effect on their ability to be stun-locked. As the knock-back/hurt state is probably the real issue here, as well as other parts of the AI choices. So I think this comes down a lot more to AI behavior than creature weight values. So with that, I will mostly likely make an entirely seperate mod to try and deal with this issue and continue on non-AI related stuff in this already large mod. So yeah, start another "proof of concept" mod project where I attempt to change the AI to make it more challenging/smarter.
+                return 0; // Also might want to take a crack at having magic items get destroyed upon depletion, at least weapons and armor, etc. Likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff.
 
             int attackerWillpMod = 0;
             int confidenceMod = 0;
