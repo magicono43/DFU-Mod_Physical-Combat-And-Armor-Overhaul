@@ -1,7 +1,7 @@
 Name: Physical Combat And Armor Overhaul
 Author: Kirk.O
 Released On: Version 1.00, Released on 3/30/2020, 2:00 AM
-Version: 1.10
+Version: 1.20
 
 DESCRIPTION
 Instead of increasing chance to avoid and attack completely, armor now reduces the damage you take, based on the material as well as the type of attack. 
@@ -86,8 +86,6 @@ OPTIONS:
 	2. Fixed Strength Damage Modifier
 	3. Armor Hit Formula Redone
 	4. Critical Strikes Increase Damage
-	5. Roleplay Realism Archery Module
-	6. Ralzar Meaner Monsters Edit
 
 VERSION HISTORY:
 
