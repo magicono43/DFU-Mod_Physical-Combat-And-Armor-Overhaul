@@ -32,6 +32,7 @@ namespace PhysicalCombatAndArmorOverhaul
         static Mod mod;
 		public static bool archeryModuleCheck { get; set; }
         public static bool critStrikeModuleCheck { get; set; }
+        public static bool fadingEnchantedItemsModuleCheck { get; set; }
 		public static bool armorHitFormulaModuleCheck { get; set; }
         public static bool condBasedEffectModuleCheck { get; set; }
         public static bool shieldBlockSuccess { get; set; }
@@ -100,7 +101,8 @@ namespace PhysicalCombatAndArmorOverhaul
             Mod roleplayRealism = ModManager.Instance.GetMod("RoleplayRealism");
             Mod meanerMonsters = ModManager.Instance.GetMod("Meaner Monsters");
             bool equipmentDamageEnhanced = settings.GetBool("Modules", "equipmentDamageEnhanced");
-			bool fixedStrengthDamageModifier = settings.GetBool("Modules", "fixedStrengthDamageModifier");
+            bool fadingEnchantedItems = settings.GetBool("Modules", "fadingEnchantedItems");
+            bool fixedStrengthDamageModifier = settings.GetBool("Modules", "fixedStrengthDamageModifier");
 			bool armorHitFormulaRedone = settings.GetBool("Modules", "armorHitFormulaRedone");
 			bool criticalStrikesIncreaseDamage = settings.GetBool("Modules", "criticalStrikesIncreaseDamage");
             bool conditionBasedEffectiveness = settings.GetBool("Modules", "conditionBasedEffectiveness");
@@ -116,14 +118,14 @@ namespace PhysicalCombatAndArmorOverhaul
                 ralzarMeanerMonstersEdit = true;
             }
 
-            InitMod(equipmentDamageEnhanced, fixedStrengthDamageModifier, armorHitFormulaRedone, conditionBasedEffectiveness, criticalStrikesIncreaseDamage, rolePlayRealismArcheryModule, ralzarMeanerMonstersEdit);
+            InitMod(equipmentDamageEnhanced, fadingEnchantedItems, fixedStrengthDamageModifier, armorHitFormulaRedone, conditionBasedEffectiveness, criticalStrikesIncreaseDamage, rolePlayRealismArcheryModule, ralzarMeanerMonstersEdit);
 
             mod.IsReady = true;
         }
 		
 		#region InitMod and Settings
 		
-		private static void InitMod(bool equipmentDamageEnhanced, bool fixedStrengthDamageModifier, bool armorHitFormulaRedone, bool conditionBasedEffectiveness, bool criticalStrikesIncreaseDamage, bool rolePlayRealismArcheryModule, bool ralzarMeanerMonstersEdit)
+		private static void InitMod(bool equipmentDamageEnhanced, bool fadingEnchantedItems, bool fixedStrengthDamageModifier, bool armorHitFormulaRedone, bool conditionBasedEffectiveness, bool criticalStrikesIncreaseDamage, bool rolePlayRealismArcheryModule, bool ralzarMeanerMonstersEdit)
         {
             Debug.Log("Begin mod init: PhysicalCombatAndArmorOverhaul");
 
@@ -135,6 +137,26 @@ namespace PhysicalCombatAndArmorOverhaul
             }
 			else
 				Debug.Log("PhysicalCombatAndArmorOverhaul: Enhanced Equipment Damage Module Disabled");
+
+            if (fadingEnchantedItems)
+            {
+                if (equipmentDamageEnhanced)
+                {
+                    Debug.Log("PhysicalCombatAndArmorOverhaul: Fading Enchanted Items Module Active");
+
+                    fadingEnchantedItemsModuleCheck = true;
+                }
+                else
+                {
+                    fadingEnchantedItemsModuleCheck = false;
+                    Debug.Log("PhysicalCombatAndArmorOverhaul: Fading Enchanted Items Module Is Dependent On Equipment Damage Enhanced To Function, So By Default is Disabled");
+                }
+            }
+            else
+            {
+                fadingEnchantedItemsModuleCheck = false;
+                Debug.Log("PhysicalCombatAndArmorOverhaul: Fading Enchanted Items Module Disabled");
+            }
 
             if (fixedStrengthDamageModifier)
 			{
@@ -2403,13 +2425,24 @@ namespace PhysicalCombatAndArmorOverhaul
 		/// Applies condition damage to an item based on physical hit damage.
         private static void ApplyConditionDamageThroughWeaponDamage(DaggerfallUnityItem item, DaggerfallEntity owner, int damage, bool bluntWep, bool shtbladeWep, bool missileWep, int wepEqualize) // Possibly add on so that magic damage also damages worn equipment.
         {
-			//Debug.LogFormat("Item Group Index is {0}", item.GroupIndex);
-			//Debug.LogFormat("Item Template Index is {0}", item.TemplateIndex);
-			
-			if (item.ItemGroup == ItemGroups.Armor) // Target gets their armor/shield condition damaged.
+            ItemCollection playerItems = GameManager.Instance.PlayerEntity.Items;
+
+            //Debug.LogFormat("Item Group Index is {0}", item.GroupIndex);
+            //Debug.LogFormat("Item Template Index is {0}", item.TemplateIndex);
+
+            if (item.ItemGroup == ItemGroups.Armor) // Target gets their armor/shield condition damaged.
             {
                 int amount = item.IsShield ? damage: damage * 2;
-                item.LowerCondition(amount, owner);
+
+                if (fadingEnchantedItemsModuleCheck) // Only runs if "Fading Enchanted Items" module is active.
+                {
+                    if (owner == GameManager.Instance.PlayerEntity && item.IsEnchanted) // If the Weapon or Armor piece is enchanted, when broken it will be Destroyed from the player inventory.
+                        item.LowerCondition(amount, owner, playerItems);
+                    else
+                        item.LowerCondition(amount, owner);
+                }
+                else
+                    item.LowerCondition(amount, owner);
 
                 /*int percentChange = 100 * amount / item.maxCondition;
                 if (owner == GameManager.Instance.PlayerEntity){
@@ -2425,7 +2458,15 @@ namespace PhysicalCombatAndArmorOverhaul
                 if (missileWep)
                     amount = SpecificWeaponConditionDamage(item, amount, wepEqualize);
 
-                item.LowerCondition(amount, owner);
+                if (fadingEnchantedItemsModuleCheck) // Only runs if "Fading Enchanted Items" module is active.
+                {
+                    if (owner == GameManager.Instance.PlayerEntity && item.IsEnchanted) // If the Weapon or Armor piece is enchanted, when broken it will be Destroyed from the player inventory.
+                        item.LowerCondition(amount, owner, playerItems);
+                    else
+                        item.LowerCondition(amount, owner);
+                }
+                else
+                    item.LowerCondition(amount, owner);
 
                 /*int percentChange = 100 * amount / item.maxCondition;
                 if (owner == GameManager.Instance.PlayerEntity){
@@ -2437,13 +2478,24 @@ namespace PhysicalCombatAndArmorOverhaul
 		/// Applies condition damage to an item based on physical hit damage. Specifically for unarmed attacks.
         private static void ApplyConditionDamageThroughUnarmedDamage(DaggerfallUnityItem item, DaggerfallEntity owner, int damage)
         {
-			//Debug.LogFormat("Item Group Index is {0}", item.GroupIndex);
-			//Debug.LogFormat("Item Template Index is {0}", item.TemplateIndex);
-			
-			if (item.ItemGroup == ItemGroups.Armor) // Target gets their armor/shield condition damaged.
+            ItemCollection playerItems = GameManager.Instance.PlayerEntity.Items;
+
+            //Debug.LogFormat("Item Group Index is {0}", item.GroupIndex);
+            //Debug.LogFormat("Item Template Index is {0}", item.TemplateIndex);
+
+            if (item.ItemGroup == ItemGroups.Armor) // Target gets their armor/shield condition damaged.
             {
                 int amount = item.IsShield ? damage / 2: damage;
-                item.LowerCondition(amount, owner);
+
+                if (fadingEnchantedItemsModuleCheck) // Only runs if "Fading Enchanted Items" module is active.
+                {
+                    if (owner == GameManager.Instance.PlayerEntity && item.IsEnchanted) // If the Weapon or Armor piece is enchanted, when broken it will be Destroyed from the player inventory.
+                        item.LowerCondition(amount, owner, playerItems);
+                    else
+                        item.LowerCondition(amount, owner);
+                }
+                else
+                    item.LowerCondition(amount, owner);
 
                 /*int percentChange = 100 * amount / item.maxCondition;
                 if (owner == GameManager.Instance.PlayerEntity){
@@ -3012,7 +3064,7 @@ namespace PhysicalCombatAndArmorOverhaul
         static int GetBonusOrPenaltyByEnemyType(DaggerfallEntity attacker, DaggerfallEntity target)
         {
             if (attacker == null || target == null) // So after observing the effects of adding large amounts of weight to an enemy, it does not seem to have that much of an effect on their ability to be stun-locked. As the knock-back/hurt state is probably the real issue here, as well as other parts of the AI choices. So I think this comes down a lot more to AI behavior than creature weight values. So with that, I will mostly likely make an entirely seperate mod to try and deal with this issue and continue on non-AI related stuff in this already large mod. So yeah, start another "proof of concept" mod project where I attempt to change the AI to make it more challenging/smarter.
-                return 0; // Also might want to take a crack at having magic items get destroyed upon depletion, at least weapons and armor, etc. Likely try and make it so magic weapons/armor that breaks actually disappears completely, instead of how it works now where magic accessories disappear, but weapons and armor just break and stay in your inventory, even soul bounded stuff.
+                return 0;
 
             int attackerWillpMod = 0;
             int confidenceMod = 0;
