@@ -823,8 +823,8 @@ namespace PhysicalCombatAndArmorOverhaul
                         else // There is a damage penalty for attacking a target with below the minimum material requirements of that target, more as the difference between becomes greater.
                             matReqDamMulti = (Mathf.Min(matReqDamMulti * 0.2f, 0.9f) - 1) * -1; // Keeps the damage multiplier penalty from going above 90% reduced damage.
 
-                        if (attacker == player)
-                            Debug.LogFormat("1. matReqDamMulti = {0}", matReqDamMulti);
+                        //if (attacker == player)
+                            //Debug.LogFormat("1. matReqDamMulti = {0}", matReqDamMulti);
                     }
                     // Get weapon skill used
                     skillID = weapon.GetWeaponSkillIDAsShort();
@@ -1028,15 +1028,15 @@ namespace PhysicalCombatAndArmorOverhaul
 				//Debug.LogFormat("5. Here is damage value AFTER crit modifier is applied = {0}", damage);
 			}
 
-            if (attacker == player)
-                Debug.LogFormat("2. Here is damage value BEFORE soft material requirement modifier is applied = {0}", damage);
+            //if (attacker == player)
+                //Debug.LogFormat("2. Here is damage value BEFORE soft material requirement modifier is applied = {0}", damage);
 
             float damCheckBeforeMatMod = damage;
 
             damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
 
-            if (attacker == player)
-                Debug.LogFormat("3. Here is damage value AFTER soft material requirement modifier is applied = {0}", damage);
+            //if (attacker == player)
+                //Debug.LogFormat("3. Here is damage value AFTER soft material requirement modifier is applied = {0}", damage);
 
             float damCheckAfterMatMod = damage;
 
