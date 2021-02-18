@@ -1,9 +1,9 @@
 {
     "ModTitle": "PhysicalCombatAndArmorOverhaul",
-    "ModVersion": "1.30",
+    "ModVersion": "1.40",
     "ModAuthor": "Kirk.O",
     "ContactInfo": "kirkoliveri@gmail.com",
-    "DFUnity_Version": "0.10.26",
+    "DFUnity_Version": "0.11.1",
     "ModDescription": "Armor Reduces Damage Taken Instead of Reducing Chances of Being Hit, Also Much More.",
     "GUID": "5a0317fc-6006-44f3-b269-09c77398ca70",
     "Files": [
