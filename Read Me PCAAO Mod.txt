@@ -1,7 +1,7 @@
 Name: Physical Combat And Armor Overhaul
 Author: Kirk.O
 Released On: Version 1.00, Released on 3/30/2020, 2:00 AM
-Version: 1.20
+Version: 1.40
 
 DESCRIPTION
 Instead of increasing chance to avoid and attack completely, armor now reduces the damage you take, based on the material as well as the type of attack. 

@@ -3,12 +3,12 @@
     "ModVersion": "1.40",
     "ModAuthor": "Kirk.O",
     "ContactInfo": "kirkoliveri@gmail.com",
-    "DFUnity_Version": "0.11.1",
+    "DFUnity_Version": "0.11.4",
     "ModDescription": "Armor Reduces Damage Taken Instead of Reducing Chances of Being Hit, Also Much More.",
     "GUID": "5a0317fc-6006-44f3-b269-09c77398ca70",
     "Files": [
-        "Assets/Game/Mods/PhysicalCombatAndArmorOverhaul/modsettings.json",
-        "Assets/Game/Mods/PhysicalCombatAndArmorOverhaul/Scripts/PhysicalCombatAndArmorOverhaul.cs"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PhysicalCombatAndArmorOverhaul.cs",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/modsettings.json"
     ],
     "Dependencies": [
         {

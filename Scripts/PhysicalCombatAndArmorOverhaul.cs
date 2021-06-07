@@ -3,9 +3,9 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    3/17/2020, 6:30 PM
-// Last Edit:		10/2/2020, 4:00 PM
-// Version:			1.30
-// Special Thanks:  Hazelnut and Ralzar
+// Last Edit:		6/6/2021, 7:50 PM
+// Version:			1.40
+// Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
 
 using DaggerfallConnect;
@@ -1013,7 +1013,7 @@ namespace PhysicalCombatAndArmorOverhaul
                 // Handle poisoned weapons
                 if (damage > 0 && weapon.poisonType != Poisons.None)
                 {
-                    FormulaHelper.InflictPoison(target, weapon.poisonType, false);
+                    FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
                     weapon.poisonType = Poisons.None;
                 }
             }
