@@ -1819,7 +1819,7 @@ namespace PhysicalCombatAndArmorOverhaul
         #region Mod Specific Methods
 
         // Multiplies the damage of an attack with a weapon, based on the current condition of said weapon, blunt less effected, but also does not benefit as much from higher condition.
-        private static int AlterDamageBasedOnWepCondition(int damage, bool bluntWep, DaggerfallUnityItem weapon)
+        public static int AlterDamageBasedOnWepCondition(int damage, bool bluntWep, DaggerfallUnityItem weapon)
         {
             int condPerc = weapon.ConditionPercentage;
 
@@ -1865,7 +1865,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // Provides the multiplier that will be applied to an armor piece, based on the current condition percentage of said armor.
-        private static float AlterArmorReducBasedOnItemCondition(DaggerfallUnityItem armor)
+        public static float AlterArmorReducBasedOnItemCondition(DaggerfallUnityItem armor)
         {
             if (armor == null) // To attempt to keep object reference compile error from occuring when worn shield breaks from an attack.
                 return 1f;
@@ -1893,7 +1893,7 @@ namespace PhysicalCombatAndArmorOverhaul
             return condMulti;
         }
 
-        private static int CalculateArmorDamageReductionWithWeapon(DaggerfallEntity attacker, DaggerfallEntity target, int damage, DaggerfallUnityItem weapon, int struckBodyPart, float naturalDamResist)
+        public static int CalculateArmorDamageReductionWithWeapon(DaggerfallEntity attacker, DaggerfallEntity target, int damage, DaggerfallUnityItem weapon, int struckBodyPart, float naturalDamResist)
         {
             int atkStrength = attacker.Stats.LiveStrength;
             int armorMaterial = 0;
@@ -1940,7 +1940,7 @@ namespace PhysicalCombatAndArmorOverhaul
         // Something else I would like to add onto this mod eventually. Make it so, that when an attack is reduced from any amount that did not start as zero, to zero after damage reduction, make a sound that is different than the normal "miss" "woosh" sound, make one that sounds like something clanging off a metal surface or something of the like. To give an indication that armor/shield has completely negated an attacked.
         // As this mod develops, I will definitely want/have to convert the "percentage" reduction amounts to an array or something, so I would more readily be able to add/subtract from these values on the fly, for situations like adding other variables into play that would chance the damage resistance amount on a per-attack basis.
 
-        private static int CalculateArmorDamageReductionWithUnarmed(DaggerfallEntity attacker, DaggerfallEntity target, int damage, int struckBodyPart, float naturalDamResist)
+        public static int CalculateArmorDamageReductionWithUnarmed(DaggerfallEntity attacker, DaggerfallEntity target, int damage, int struckBodyPart, float naturalDamResist)
         {
             int atkStrength = attacker.Stats.LiveStrength;
             int armorMaterial = 0;
@@ -1972,7 +1972,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         /// Does most of the calculations determining how much an attack gets reduced by a piece of armor, if no weapon is being used to attack with.
-        private static int PercentageReductionCalculationWithUnarmed(DaggerfallUnityItem item, int armorMaterial, int atkStrength, int damage, bool shieldCheck, float naturalDamResist)
+        public static int PercentageReductionCalculationWithUnarmed(DaggerfallUnityItem item, int armorMaterial, int atkStrength, int damage, bool shieldCheck, float naturalDamResist)
         {
             bool unarmedCheck = true;
             bool bluntWep = false;
@@ -2023,7 +2023,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         /// Does most of the calculations determining how much an attack gets reduced by a piece of armor, if a weapon is being used to attack with.
-        private static int PercentageReductionCalculationWithWeapon(DaggerfallUnityItem item, int armorMaterial, int atkStrength, int damage, bool bluntWep, int wepWeight, bool shieldCheck, float naturalDamResist)
+        public static int PercentageReductionCalculationWithWeapon(DaggerfallUnityItem item, int armorMaterial, int atkStrength, int damage, bool bluntWep, int wepWeight, bool shieldCheck, float naturalDamResist)
         {
             bool unarmedCheck = false;
             float condMulti = 1f;
@@ -2101,7 +2101,7 @@ namespace PhysicalCombatAndArmorOverhaul
             }
         }
 
-        private static int ShieldDamageReductionCalculation(DaggerfallUnityItem shield, int shieldMaterial, int atkStrength, int damage, bool bluntWep, int wepWeight, bool unarmedCheck, float naturalDamResist)
+        public static int ShieldDamageReductionCalculation(DaggerfallUnityItem shield, int shieldMaterial, int atkStrength, int damage, bool bluntWep, int wepWeight, bool unarmedCheck, float naturalDamResist)
         {
             float condMulti = 1f;
 
@@ -2199,7 +2199,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // This will be the main section of where various groups of enemies will have their 'Natural' damage reduction calculated.
-        private static int PercentageReductionCalculationForMonsters(DaggerfallEntity attacker, DaggerfallEntity target, int damage, bool bluntWep, float naturalDamResist)
+        public static int PercentageReductionCalculationForMonsters(DaggerfallEntity attacker, DaggerfallEntity target, int damage, bool bluntWep, float naturalDamResist)
         {
             EnemyEntity AITarget = target as EnemyEntity;
 
@@ -2268,7 +2268,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // This is where specific monsters will be given a true or false, depending on if said monster is clearly holding a type of weapon in their sprite.
-        private static bool SpecialWeaponCheckForMonsters(DaggerfallEntity attacker)
+        public static bool SpecialWeaponCheckForMonsters(DaggerfallEntity attacker)
         {
             EnemyEntity AIAttacker = null;
             AIAttacker = attacker as EnemyEntity;
@@ -2299,7 +2299,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // This is where specific monsters will be given a pre-defined weapon object for purposes of the rest of the formula, based on their level and sprite weapon appearance.
-        private static DaggerfallUnityItem MonsterWeaponAssign(DaggerfallEntity attacker)
+        public static DaggerfallUnityItem MonsterWeaponAssign(DaggerfallEntity attacker)
         {
             EnemyEntity AIAttacker = null;
             AIAttacker = attacker as EnemyEntity;
@@ -2342,7 +2342,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         /// Does most of the calculations determining how much a material/piece of equipment should be taking damage from something hitting it.
-        private static int MaterialDifferenceDamageCalculation(DaggerfallUnityItem item, int matDifference, int atkStrength, int damage, bool bluntWep, int wepWeight, bool shieldCheck)
+        public static int MaterialDifferenceDamageCalculation(DaggerfallUnityItem item, int matDifference, int atkStrength, int damage, bool bluntWep, int wepWeight, bool shieldCheck)
         {
             int itemMat = item.NativeMaterialValue;
 
@@ -2441,7 +2441,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         /// Applies condition damage to an item based on physical hit damage.
-        private static void ApplyConditionDamageThroughWeaponDamage(DaggerfallUnityItem item, DaggerfallEntity owner, int damage, bool bluntWep, bool shtbladeWep, bool missileWep, int wepEqualize) // Possibly add on so that magic damage also damages worn equipment.
+        public static void ApplyConditionDamageThroughWeaponDamage(DaggerfallUnityItem item, DaggerfallEntity owner, int damage, bool bluntWep, bool shtbladeWep, bool missileWep, int wepEqualize) // Possibly add on so that magic damage also damages worn equipment.
         {
             ItemCollection playerItems = GameManager.Instance.PlayerEntity.Items;
 
@@ -2494,7 +2494,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         /// Applies condition damage to an item based on physical hit damage. Specifically for unarmed attacks.
-        private static void ApplyConditionDamageThroughUnarmedDamage(DaggerfallUnityItem item, DaggerfallEntity owner, int damage)
+        public static void ApplyConditionDamageThroughUnarmedDamage(DaggerfallUnityItem item, DaggerfallEntity owner, int damage)
         {
             ItemCollection playerItems = GameManager.Instance.PlayerEntity.Items;
 
@@ -2523,7 +2523,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         /// Does a roll for based on the critical strike chance of the attacker, if this roll is successful critSuccess is returned as 'true'.
-        private static bool CriticalStrikeHandler(DaggerfallEntity attacker)
+        public static bool CriticalStrikeHandler(DaggerfallEntity attacker)
         {
             PlayerEntity player = GameManager.Instance.PlayerEntity;
             int attackerLuckBonus = (int)Mathf.Floor((float)(attacker.Stats.LiveLuck - 50) / 25f);
@@ -2551,7 +2551,7 @@ namespace PhysicalCombatAndArmorOverhaul
         #region Helper Methods
 
         // Finds the material that an armor item is made from, then returns the multiplier that will be used later based on this material check.
-        private static int ArmorMaterialIdentifier(DaggerfallUnityItem armor)
+        public static int ArmorMaterialIdentifier(DaggerfallUnityItem armor)
         {
             if (armor == null) // To attempt to keep object reference compile error from occuring when worn shield breaks from an attack.
                 return 1;
@@ -2597,7 +2597,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // If the player has equipment that is below a certain percentage of condition, this will check if they should be warned with a pop-up message about said piece of equipment.
-        private static void WarningMessagePlayerEquipmentCondition(DaggerfallUnityItem item, int startItemCondPer)
+        public static void WarningMessagePlayerEquipmentCondition(DaggerfallUnityItem item, int startItemCondPer)
         {
             string roughItemMessage = "";
             string damagedItemMessage = "";
@@ -2687,7 +2687,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // Retrieves the multiplier based on the condition modifier of a material, the idea being that items will take around the same amount of damage as other items in that category.
-        private static int EqualizeMaterialConditions(DaggerfallUnityItem item)
+        public static int EqualizeMaterialConditions(DaggerfallUnityItem item)
         {
             int itemMat = item.NativeMaterialValue;
 
@@ -2750,7 +2750,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // Finds the material that an armor item is made from, then returns the multiplier that will be used later based on this material check.
-        private static int ArmorMaterialModifierFinder(DaggerfallUnityItem armor)
+        public static int ArmorMaterialModifierFinder(DaggerfallUnityItem armor)
         {
             int itemMat = armor.NativeMaterialValue;
 
@@ -2783,7 +2783,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // For dealing with special cases of specific weapons in terms of condition damage amount.
-        private static int SpecificWeaponConditionDamage(DaggerfallUnityItem weapon, int damageWep, int materialValue)
+        public static int SpecificWeaponConditionDamage(DaggerfallUnityItem weapon, int damageWep, int materialValue)
         {
             if (weapon.TemplateIndex == (int)Weapons.Long_Bow)
             {
@@ -2805,7 +2805,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // Check whether the struck body part of the target was covered by armor or shield, returns true if yes, false if no.
-        private static bool ArmorStruckVerification(DaggerfallEntity target, int struckBodyPart)
+        public static bool ArmorStruckVerification(DaggerfallEntity target, int struckBodyPart)
         {
             if (shieldBlockSuccess)
                 return true;
@@ -2820,7 +2820,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // Checks for if a shield block was successful and returns true if so, false if not.
-        private static bool ShieldBlockChanceCalculation(DaggerfallEntity target, bool shieldStrongSpot, DaggerfallUnityItem shield)
+        public static bool ShieldBlockChanceCalculation(DaggerfallEntity target, bool shieldStrongSpot, DaggerfallUnityItem shield)
         {
             float hardBlockChance = 0f;
             float softBlockChance = 0f;
@@ -2904,7 +2904,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // Compares the damage reduction of the struck shield, with the armor under the part that was struck, and returns true if the shield has the higher reduction value, or false if the armor under has a higher reduction value. This is to keep a full-suit of daedric armor from being worse while wearing a leather shield, which when a block is successful, would actually take more damage than if not wearing a shield.
-        private static bool CompareShieldToUnderArmor(DaggerfallEntity target, int struckBodyPart, float naturalDamResist)
+        public static bool CompareShieldToUnderArmor(DaggerfallEntity target, int struckBodyPart, float naturalDamResist)
         {
             int redDamShield = 100;
             int redDamUnderArmor = 100;
@@ -2944,7 +2944,7 @@ namespace PhysicalCombatAndArmorOverhaul
         }
 
         // Currently being used to compare the damage reduction of a shield to the under armor it is covering. This is the average of all different types of damage reduction for simplification of this.
-        private static int PercentageReductionAverage(DaggerfallUnityItem item, int armorMaterial, int damage, float naturalDamResist, bool shieldQuickCheck)
+        public static int PercentageReductionAverage(DaggerfallUnityItem item, int armorMaterial, int damage, float naturalDamResist, bool shieldQuickCheck)
         {
             float condMulti = 1f;
 
