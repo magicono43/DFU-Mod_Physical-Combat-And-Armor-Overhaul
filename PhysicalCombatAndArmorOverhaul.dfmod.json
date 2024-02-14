@@ -1,26 +1,14 @@
 {
     "ModTitle": "PhysicalCombatAndArmorOverhaul",
-    "ModVersion": "1.42",
+    "ModVersion": "2.00",
     "ModAuthor": "Kirk.O",
     "ContactInfo": "kirkoliveri@gmail.com",
-    "DFUnity_Version": "0.15.4",
-    "ModDescription": "Armor Reduces Damage Taken Instead of Reducing Chances of Being Hit, Also Much More.",
+    "DFUnity_Version": "1.0.0",
+    "ModDescription": "Near Complete Overhaul of Daggerfall's Combat System, The Physical Aspects Atleast.",
     "GUID": "5a0317fc-6006-44f3-b269-09c77398ca70",
     "Files": [
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PhysicalCombatAndArmorOverhaul.cs",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/modsettings.json",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/PhysicalCombatAndArmorOverhaul.dfmod.json"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PhysicalCombatOverhaulMain.cs"
     ],
-    "Dependencies": [
-        {
-            "Name": "roleplayrealism",
-            "IsOptional": true,
-            "IsPeer": false
-        },
-        {
-            "Name": "meaner monsters",
-            "IsOptional": true,
-            "IsPeer": false
-        }
-    ]
+    "Dependencies": []
 }
