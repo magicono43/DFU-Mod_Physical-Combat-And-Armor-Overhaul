@@ -8,7 +8,8 @@
     "GUID": "5a0317fc-6006-44f3-b269-09c77398ca70",
     "Files": [
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/modsettings.json",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PhysicalCombatOverhaulMain.cs"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PhysicalCombatOverhaulMain.cs",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/ImmersiveFootsteps.cs"
     ],
     "Dependencies": []
 }

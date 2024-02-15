@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		2/13/2024, 9:00 PM
+// Last Edit:		2/14/2024, 8:50 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -14,6 +14,10 @@ using DaggerfallWorkshop.Game.Utility.ModSupport;
 using DaggerfallWorkshop.Game.Serialization;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
+using DaggerfallWorkshop.Game.Formulas;
+using System;
+using DaggerfallWorkshop.Game.Entity;
+using DaggerfallWorkshop.Game.Items;
 
 namespace PhysicalCombatOverhaul
 {
@@ -23,12 +27,35 @@ namespace PhysicalCombatOverhaul
 
         static Mod mod;
 
+        // Global Variables
+        public static ImmersiveFootsteps footstepComponent { get; set; }
+        public static AudioClip LastSoundPlayed { get { return lastSoundPlayed; } set { lastSoundPlayed = value; } }
+
+        #region Mod Sound Variables
+
+        // Mod Sounds
+        private static AudioClip lastSoundPlayed = null;
+        public static AudioClip[] UnarmedHitWoodLightClips = { null, null, null, null };
+        public static AudioClip[] UnarmedHitWoodHardClips = { null, null, null };
+
+        public AudioClip[] FootstepSoundDungeon = { null, null, null };
+        public AudioClip[] FootstepSoundOutside = { null, null, null };
+        public AudioClip[] FootstepSoundSnow = { null, null, null };
+        public AudioClip[] FootstepSoundBuilding = { null, null, null };
+        public AudioClip[] FootstepSoundShallow = { null, null, null };
+        public AudioClip[] FootstepSoundSubmerged = { null, null, null };
+        public AudioClip[] FootstepsArmor = { null, null, null };
+
+        #endregion
+
         [Invoke(StateManager.StateTypes.Start, 0)]
         public static void Init(InitParams initParams)
         {
             mod = initParams.Mod;
             var go = new GameObject(mod.Title);
             go.AddComponent<PhysicalCombatOverhaulMain>(); // Add script to the scene.
+
+            go.AddComponent<ImmersiveFootsteps>();
 
             mod.LoadSettingsCallback = LoadSettings; // To enable use of the "live settings changes" feature in-game.
 
@@ -42,6 +69,13 @@ namespace PhysicalCombatOverhaul
             Instance = this;
 
             mod.LoadSettings();
+
+            //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
+
+            // Load Resources
+            LoadAudio();
+
+            DisableVanillaFootsteps();
 
             Debug.Log("Finished mod init: Physical Combat And Armor Overhaul");
         }
@@ -62,6 +96,51 @@ namespace PhysicalCombatOverhaul
             {
                 // sdf
             }
+        }
+
+        #region Load Audio Clips
+
+        private void LoadAudio() // Example taken from Penwick Papers Mod
+        {
+            ModManager modManager = ModManager.Instance;
+            bool success = true;
+
+            // Bashing
+            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_3", false, out UnarmedHitWoodLightClips[0]);
+            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_6", false, out UnarmedHitWoodLightClips[1]);
+            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_7", false, out UnarmedHitWoodLightClips[2]);
+            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_8", false, out UnarmedHitWoodLightClips[3]);
+
+            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_1", false, out UnarmedHitWoodHardClips[0]);
+            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_2", false, out UnarmedHitWoodHardClips[1]);
+            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_5", false, out UnarmedHitWoodHardClips[2]);
+
+            if (!success)
+                throw new Exception("LockedLootContainers: Missing sound asset");
+        }
+
+        #endregion
+
+        private static int CalculateAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
+        {
+            return 0;
+        }
+
+        private void DisableVanillaFootsteps()
+        {
+            var oldFootsteps = GameManager.Instance.PlayerObject.GetComponent<PlayerFootsteps>();
+
+            oldFootsteps.FootstepSoundBuilding1 = SoundClips.None;
+            oldFootsteps.FootstepSoundBuilding2 = SoundClips.None;
+            oldFootsteps.FootstepSoundDungeon1 = SoundClips.None;
+            oldFootsteps.FootstepSoundDungeon1 = SoundClips.None;
+            oldFootsteps.FootstepSoundOutside1 = SoundClips.None;
+            oldFootsteps.FootstepSoundOutside1 = SoundClips.None;
+            oldFootsteps.FootstepSoundShallow = SoundClips.None;
+            oldFootsteps.FootstepSoundSnow1 = SoundClips.None;
+            oldFootsteps.FootstepSoundSnow2 = SoundClips.None;
+            oldFootsteps.FootstepSoundSubmerged = SoundClips.None;
+
         }
     }
 }
