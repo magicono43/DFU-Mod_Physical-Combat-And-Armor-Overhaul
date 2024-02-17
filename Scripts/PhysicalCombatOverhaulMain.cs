@@ -38,13 +38,13 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] UnarmedHitWoodLightClips = { null, null, null, null };
         public static AudioClip[] UnarmedHitWoodHardClips = { null, null, null };
 
-        public AudioClip[] FootstepSoundDungeon = { null, null, null };
-        public AudioClip[] FootstepSoundOutside = { null, null, null };
-        public AudioClip[] FootstepSoundSnow = { null, null, null };
-        public AudioClip[] FootstepSoundBuilding = { null, null, null };
-        public AudioClip[] FootstepSoundShallow = { null, null, null };
-        public AudioClip[] FootstepSoundSubmerged = { null, null, null };
-        public AudioClip[] FootstepsArmor = { null, null, null };
+        public static AudioClip[] FootstepSoundDungeon = { null, null, null };
+        public static AudioClip[] FootstepSoundOutside = { null, null, null };
+        public static AudioClip[] FootstepSoundSnow = { null, null, null };
+        public static AudioClip[] FootstepSoundBuilding = { null, null, null };
+        public static AudioClip[] FootstepSoundShallow = { null, null, null };
+        public static AudioClip[] FootstepSoundSubmerged = { null, null, null };
+        public static AudioClip[] FootstepsArmor = { null, null, null };
 
         #endregion
 
@@ -73,9 +73,12 @@ namespace PhysicalCombatOverhaul
             //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
 
             // Load Resources
-            LoadAudio();
+            //LoadAudio();
 
             DisableVanillaFootsteps();
+
+            GameObject playerAdvanced = GameManager.Instance.PlayerObject;
+            playerAdvanced.AddComponent<ImmersiveFootsteps>();
 
             Debug.Log("Finished mod init: Physical Combat And Armor Overhaul");
         }
@@ -85,6 +88,7 @@ namespace PhysicalCombatOverhaul
             //ReverseCycleDirection = mod.GetSettings().GetValue<bool>("GeneralSettings", "ReverseCycleDirections");
         }
 
+        /*
         private void Update()
         {
             if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
@@ -97,9 +101,11 @@ namespace PhysicalCombatOverhaul
                 // sdf
             }
         }
+        */
 
         #region Load Audio Clips
 
+        /*
         private void LoadAudio() // Example taken from Penwick Papers Mod
         {
             ModManager modManager = ModManager.Instance;
@@ -118,6 +124,7 @@ namespace PhysicalCombatOverhaul
             if (!success)
                 throw new Exception("LockedLootContainers: Missing sound asset");
         }
+        */
 
         #endregion
 

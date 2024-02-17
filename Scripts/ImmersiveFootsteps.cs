@@ -3,6 +3,8 @@ using DaggerfallWorkshop;
 using DaggerfallConnect.Arena2;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game;
+using DaggerfallWorkshop.Game.Serialization;
+using DaggerfallWorkshop.Utility;
 
 namespace PhysicalCombatOverhaul
 {
@@ -13,13 +15,36 @@ namespace PhysicalCombatOverhaul
 
         ulong loadID = 0;
 
-        DaggerfallAudioSource dfAudioSource;
-
-        #endregion
-
         public float WalkStepInterval = 2.5f; // Matched to classic. Was 1.6f;
         public float RunStepInterval = 2.5f; // Matched to classic. Was 1.8f;
         public float FootstepVolumeScale = 0.7f;
+        public float stepInterval = 0.5f;
+
+        public float footstepTimer = 0f;
+        public bool isWalking = false;
+
+        DaggerfallAudioSource dfAudioSource;
+        PlayerMotor playerMotor;
+        PlayerEnterExit playerEnterExit;
+        TransportManager transportManager;
+        AudioSource customAudioSource;
+
+        DaggerfallDateTime.Seasons currentSeason = DaggerfallDateTime.Seasons.Summer;
+        int currentClimateIndex;
+        bool isInside = false;
+        bool isInOutsideWater = false;
+        bool isInOutsidePath = false;
+        bool isOnStaticGeometry = false;
+
+        DaggerfallDateTime.Seasons playerSeason;
+        int playerClimateIndex;
+        bool playerInside;
+        bool playerInBuilding;
+        bool playerOnExteriorWater;
+        bool playerOnExteriorPath;
+        bool playerOnStaticGeometry;
+
+        #endregion
 
         #region Properties
 
@@ -31,9 +56,126 @@ namespace PhysicalCombatOverhaul
 
         #endregion
 
-        void Awake()
+        private void Start()
         {
             dfAudioSource = GetComponent<DaggerfallAudioSource>();
+            playerMotor = GetComponent<PlayerMotor>();
+            playerEnterExit = GetComponent<PlayerEnterExit>();
+            transportManager = GetComponent<TransportManager>();
+        }
+
+        private void FixedUpdate()
+        {
+            if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
+                return;
+
+            if (playerMotor == null)
+            {
+                footstepTimer = 0f;
+                return;
+            }
+
+            if (playerMotor.IsStandingStill)
+            {
+                // Reset footstepTimer if the character is not moving
+                footstepTimer = 0f;
+                return;
+            }
+
+            // Continue experimenting with this tomorrow.
+
+            footstepTimer += Time.fixedDeltaTime;
+
+            if (footstepTimer >= stepInterval)
+            {
+                // Play footstep sound
+                dfAudioSource.PlayOneShot(SoundClips.ActivateLockUnlock, 1, 1 * DaggerfallUnity.Settings.SoundVolume);
+                //dfAudioSource.AudioSource.PlayOneShot(GetLockAlreadyJammedClip(), UnityEngine.Random.Range(1.2f, 1.91f) * DaggerfallUnity.Settings.SoundVolume);
+                //customAudioSource.PlayOneShot(clip1, volumeScale * DaggerfallUnity.Settings.SoundVolume);
+
+                // Reset the footstepTimer
+                footstepTimer = 0f;
+            }
+
+            /*
+            playerSeason = DaggerfallUnity.Instance.WorldTime.Now.SeasonValue;
+            playerClimateIndex = GameManager.Instance.PlayerGPS.CurrentClimateIndex;
+            playerInside = (playerEnterExit == null) ? true : playerEnterExit.IsPlayerInside;
+            playerInBuilding = (playerEnterExit == null) ? false : playerEnterExit.IsPlayerInsideBuilding;
+
+            // Play splash footsteps whether player is walking on or swimming in exterior water
+            playerOnExteriorWater = (GameManager.Instance.PlayerMotor.OnExteriorWater == PlayerMotor.OnExteriorWaterMethod.Swimming || GameManager.Instance.PlayerMotor.OnExteriorWater == PlayerMotor.OnExteriorWaterMethod.WaterWalking);
+
+            playerOnExteriorPath = GameManager.Instance.PlayerMotor.OnExteriorPath;
+            playerOnStaticGeometry = GameManager.Instance.PlayerMotor.OnExteriorStaticGeometry;
+
+            // Change footstep sounds between winter/summer variants, when player enters/exits an interior space, or changes between path, water, or other outdoor ground
+            if (playerSeason != currentSeason || playerClimateIndex != currentClimateIndex || isInside != playerInside || playerOnExteriorWater != isInOutsideWater || playerOnExteriorPath != isInOutsidePath || playerOnStaticGeometry != isOnStaticGeometry)
+            {
+                currentSeason = playerSeason;
+                currentClimateIndex = playerClimateIndex;
+                isInside = playerInside;
+                isInOutsideWater = playerOnExteriorWater;
+                isInOutsidePath = playerOnExteriorPath;
+                isOnStaticGeometry = playerOnStaticGeometry;
+            }
+
+            // Play sound if over distance threshold
+            if (distance > threshold && customAudioSource && clip1 && clip2)
+            {
+                float volumeScale = FootstepVolumeScale;
+                if (playerMotor.IsMovingLessThanHalfSpeed)
+                    volumeScale *= 0.5f;
+
+                if (!alternateStep)
+                    customAudioSource.PlayOneShot(clip1, volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                else
+                    customAudioSource.PlayOneShot(clip2, volumeScale * DaggerfallUnity.Settings.SoundVolume);
+
+                alternateStep = (!alternateStep);
+                distance = 0f;
+            }
+            */
+        }
+
+        public static bool CoinFlip()
+        {
+            if (UnityEngine.Random.Range(0, 1 + 1) == 0)
+                return false;
+            else
+                return true;
+        }
+
+        public static AudioClip RollRandomAudioClip(AudioClip[] clips)
+        {
+            int randChoice = UnityEngine.Random.Range(0, clips.Length);
+            AudioClip clip = clips[randChoice];
+
+            if (clip == PhysicalCombatOverhaulMain.LastSoundPlayed)
+            {
+                if (randChoice == 0)
+                    randChoice++;
+                else if (randChoice == clips.Length - 1)
+                    randChoice--;
+                else
+                    randChoice = CoinFlip() ? randChoice + 1 : randChoice - 1;
+
+                clip = clips[randChoice];
+            }
+            PhysicalCombatOverhaulMain.LastSoundPlayed = clip;
+            return clip;
+        }
+
+        public static AudioClip GetDungeonFootstepClip()
+        {
+            AudioClip clip = null;
+
+            clip = RollRandomAudioClip(PhysicalCombatOverhaulMain.FootstepSoundDungeon);
+
+            if (clip == null)
+                clip = PhysicalCombatOverhaulMain.FootstepSoundDungeon[0];
+
+            return clip;
         }
     }
 }
