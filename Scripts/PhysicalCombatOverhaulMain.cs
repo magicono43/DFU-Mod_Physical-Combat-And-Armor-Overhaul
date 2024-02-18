@@ -73,7 +73,7 @@ namespace PhysicalCombatOverhaul
             //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
 
             // Load Resources
-            //LoadAudio();
+            LoadAudio();
 
             DisableVanillaFootsteps();
 
@@ -105,26 +105,19 @@ namespace PhysicalCombatOverhaul
 
         #region Load Audio Clips
 
-        /*
+        
         private void LoadAudio() // Example taken from Penwick Papers Mod
         {
             ModManager modManager = ModManager.Instance;
             bool success = true;
 
-            // Bashing
-            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_3", false, out UnarmedHitWoodLightClips[0]);
-            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_6", false, out UnarmedHitWoodLightClips[1]);
-            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_7", false, out UnarmedHitWoodLightClips[2]);
-            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_8", false, out UnarmedHitWoodLightClips[3]);
-
-            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_1", false, out UnarmedHitWoodHardClips[0]);
-            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_2", false, out UnarmedHitWoodHardClips[1]);
-            success &= modManager.TryGetAsset("WoW_UnarmedHitWoodShield_5", false, out UnarmedHitWoodHardClips[2]);
+            success &= modManager.TryGetAsset("Squidward_Walk_1", false, out FootstepSoundDungeon[0]);
+            success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
 
             if (!success)
                 throw new Exception("LockedLootContainers: Missing sound asset");
         }
-        */
+        
 
         #endregion
 

@@ -8,7 +8,6 @@ using DaggerfallWorkshop.Utility;
 
 namespace PhysicalCombatOverhaul
 {
-    [RequireComponent(typeof(DaggerfallAudioSource))]
     public class ImmersiveFootsteps : MonoBehaviour
     {
         #region Fields
@@ -22,7 +21,9 @@ namespace PhysicalCombatOverhaul
 
         public float footstepTimer = 0f;
         public bool isWalking = false;
+        public bool altStep = false;
 
+        GameObject playerAdvanced;
         DaggerfallAudioSource dfAudioSource;
         PlayerMotor playerMotor;
         PlayerEnterExit playerEnterExit;
@@ -58,7 +59,8 @@ namespace PhysicalCombatOverhaul
 
         private void Start()
         {
-            dfAudioSource = GetComponent<DaggerfallAudioSource>();
+            playerAdvanced = GameManager.Instance.PlayerObject;
+            dfAudioSource = playerAdvanced.GetComponent<DaggerfallAudioSource>();
             playerMotor = GetComponent<PlayerMotor>();
             playerEnterExit = GetComponent<PlayerEnterExit>();
             transportManager = GetComponent<TransportManager>();
@@ -89,8 +91,18 @@ namespace PhysicalCombatOverhaul
             if (footstepTimer >= stepInterval)
             {
                 // Play footstep sound
-                dfAudioSource.PlayOneShot(SoundClips.ActivateLockUnlock, 1, 1 * DaggerfallUnity.Settings.SoundVolume);
-                //dfAudioSource.AudioSource.PlayOneShot(GetLockAlreadyJammedClip(), UnityEngine.Random.Range(1.2f, 1.91f) * DaggerfallUnity.Settings.SoundVolume);
+                if (!altStep)
+                {
+                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[0], 1 * DaggerfallUnity.Settings.SoundVolume);
+                    altStep = true;
+                }
+                else
+                {
+                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[1], 1 * DaggerfallUnity.Settings.SoundVolume);
+                    altStep = false;
+                }
+
+                //dfAudioSource.PlayOneShot(SoundClips.ActivateLockUnlock, 1, 1 * DaggerfallUnity.Settings.SoundVolume);
                 //customAudioSource.PlayOneShot(clip1, volumeScale * DaggerfallUnity.Settings.SoundVolume);
 
                 // Reset the footstepTimer
