@@ -23,6 +23,8 @@ namespace PhysicalCombatOverhaul
         public bool isWalking = false;
         public bool altStep = false;
 
+        public float volumeScale = 1f;
+
         GameObject playerAdvanced;
         DaggerfallAudioSource dfAudioSource;
         PlayerMotor playerMotor;
@@ -80,25 +82,39 @@ namespace PhysicalCombatOverhaul
             if (playerMotor.IsStandingStill)
             {
                 // Reset footstepTimer if the character is not moving
-                footstepTimer = 0f;
+                //footstepTimer = 0f;
                 return;
             }
 
             // Continue experimenting with this tomorrow.
 
-            footstepTimer += Time.fixedDeltaTime;
+            if (playerMotor.IsRunning)
+            {
+                footstepTimer += 1.5f * Time.fixedDeltaTime;
+                volumeScale = 1.25f;
+            }
+            else if (playerMotor.IsMovingLessThanHalfSpeed)
+            {
+                footstepTimer += 0.7f * Time.fixedDeltaTime;
+                volumeScale = 0.6f;
+            }
+            else
+            {
+                footstepTimer += Time.fixedDeltaTime;
+                volumeScale = 1f;
+            }
 
             if (footstepTimer >= stepInterval)
             {
                 // Play footstep sound
                 if (!altStep)
                 {
-                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[0], 1 * DaggerfallUnity.Settings.SoundVolume);
+                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                     altStep = true;
                 }
                 else
                 {
-                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[1], 1 * DaggerfallUnity.Settings.SoundVolume);
+                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                     altStep = false;
                 }
 
