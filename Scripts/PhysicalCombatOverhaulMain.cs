@@ -18,6 +18,8 @@ using DaggerfallWorkshop.Game.Formulas;
 using System;
 using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
+using DaggerfallWorkshop.Game.UserInterfaceWindows;
+using DaggerfallWorkshop.Game.UserInterface;
 
 namespace PhysicalCombatOverhaul
 {
@@ -30,6 +32,11 @@ namespace PhysicalCombatOverhaul
         // Global Variables
         public static ImmersiveFootsteps footstepComponent { get; set; }
         public static AudioClip LastSoundPlayed { get { return lastSoundPlayed; } set { lastSoundPlayed = value; } }
+        public static IUserInterfaceWindow LastUIWindow { get; set; }
+        public static DaggerfallUnityItem WornHelmet { get; set; }
+        public static DaggerfallUnityItem WornChestArmor { get; set; }
+        public static DaggerfallUnityItem WornLegArmor { get; set; }
+        public static DaggerfallUnityItem WornBoots { get; set; }
 
         #region Mod Sound Variables
 
@@ -72,6 +79,8 @@ namespace PhysicalCombatOverhaul
 
             //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
 
+            DaggerfallUI.UIManager.OnWindowChange += UIManager_RefreshEquipSlotReferencesOnInventoryClose;
+
             // Load Resources
             LoadAudio();
 
@@ -102,6 +111,37 @@ namespace PhysicalCombatOverhaul
             }
         }
         */
+
+        public static void UIManager_RefreshEquipSlotReferencesOnInventoryClose(object sender, EventArgs e)
+        {
+            if (!GameManager.Instance.StateManager.GameInProgress)
+                return;
+
+            if (GameManager.Instance.StateManager.LastState == StateManager.StateTypes.Game || GameManager.Instance.StateManager.LastState == StateManager.StateTypes.UI)
+            {
+                if (DaggerfallUI.UIManager.WindowCount > 0)
+                    LastUIWindow = DaggerfallUI.Instance.UserInterfaceManager.TopWindow;
+
+                if (DaggerfallUI.UIManager.WindowCount == 0 && LastUIWindow is DaggerfallInventoryWindow)
+                {
+                    RefreshEquipmentSlotReferences();
+                }
+            }
+        }
+
+        public static void RefreshEquipmentSlotReferences()
+        {
+            PlayerEntity player = GameManager.Instance.PlayerEntity;
+
+            if (player != null)
+            {
+                WornHelmet = player.ItemEquipTable.GetItem(EquipSlots.Head);
+                WornChestArmor = player.ItemEquipTable.GetItem(EquipSlots.ChestArmor);
+                WornLegArmor = player.ItemEquipTable.GetItem(EquipSlots.LegsArmor);
+                WornBoots = player.ItemEquipTable.GetItem(EquipSlots.Feet);
+                // Eventual method call to refresh what sounds should be used based on the equipped items, etc.
+            }
+        }
 
         #region Load Audio Clips
 

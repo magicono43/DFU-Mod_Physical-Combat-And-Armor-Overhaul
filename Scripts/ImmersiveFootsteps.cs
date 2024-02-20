@@ -20,6 +20,7 @@ namespace PhysicalCombatOverhaul
         public float stepInterval = 0.5f;
 
         public float footstepTimer = 0f;
+        public int refreshSlotsTimer = 0;
         public bool isWalking = false;
         public bool altStep = false;
 
@@ -72,6 +73,14 @@ namespace PhysicalCombatOverhaul
         {
             if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
                 return;
+
+            refreshSlotsTimer++;
+
+            if (refreshSlotsTimer >= 250) // 50 FixedUpdates is approximately equal to 1 second since each FixedUpdate happens every 0.02 seconds, that's what Unity docs say at least.
+            {
+                refreshSlotsTimer = 0;
+                PhysicalCombatOverhaulMain.RefreshEquipmentSlotReferences();
+            }
 
             if (playerMotor == null)
             {
