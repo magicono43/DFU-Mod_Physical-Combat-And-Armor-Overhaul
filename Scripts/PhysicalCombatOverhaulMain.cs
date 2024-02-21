@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		2/14/2024, 8:50 PM
+// Last Edit:		2/20/2024, 7:10 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -153,6 +153,8 @@ namespace PhysicalCombatOverhaul
 
             success &= modManager.TryGetAsset("Squidward_Walk_1", false, out FootstepSoundDungeon[0]);
             success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
+            success &= modManager.TryGetAsset("WoW_2hMaceHitMetalShield_7", false, out FootstepSoundBuilding[0]);
+            success &= modManager.TryGetAsset("WoW_2hMaceHitMetalShield_8", false, out FootstepSoundBuilding[1]);
 
             if (!success)
                 throw new Exception("LockedLootContainers: Missing sound asset");

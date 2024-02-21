@@ -115,16 +115,33 @@ namespace PhysicalCombatOverhaul
 
             if (footstepTimer >= stepInterval)
             {
-                // Play footstep sound
-                if (!altStep)
+                if (PhysicalCombatOverhaulMain.WornBoots == null)
                 {
-                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                    altStep = true;
+                    // Play footstep sound
+                    if (!altStep)
+                    {
+                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        altStep = true;
+                    }
+                    else
+                    {
+                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        altStep = false;
+                    }
                 }
                 else
                 {
-                    dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                    altStep = false;
+                    // Play footstep sound
+                    if (!altStep)
+                    {
+                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundBuilding[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        altStep = true;
+                    }
+                    else
+                    {
+                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundBuilding[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        altStep = false;
+                    }
                 }
 
                 //dfAudioSource.PlayOneShot(SoundClips.ActivateLockUnlock, 1, 1 * DaggerfallUnity.Settings.SoundVolume);
