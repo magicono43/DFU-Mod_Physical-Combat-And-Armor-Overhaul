@@ -95,7 +95,7 @@ namespace PhysicalCombatOverhaul
                 return;
             }
 
-            // Continue experimenting with this tomorrow.
+            // Tomorrow, perhaps see about making a "overlay" or delayed sound to happen before or after the armor-based footstep sound, which would act as the "environment specific" sound, will see.
 
             if (playerMotor.IsRunning)
             {
@@ -115,17 +115,25 @@ namespace PhysicalCombatOverhaul
 
             if (footstepTimer >= stepInterval)
             {
+                dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.TestFootstepSound[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.TestFootstepSound[0], UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
+                //dfAudioSource.AudioSource.PlayOneShot(GetTestFootstepClip(), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                //dfAudioSource.AudioSource.PlayOneShot(GetTestFootstepClip(), UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
+
+                /*
                 if (PhysicalCombatOverhaulMain.WornBoots == null)
                 {
                     // Play footstep sound
                     if (!altStep)
                     {
                         dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = true;
                     }
                     else
                     {
                         dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = false;
                     }
                 }
@@ -135,14 +143,17 @@ namespace PhysicalCombatOverhaul
                     if (!altStep)
                     {
                         dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundBuilding[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = true;
                     }
                     else
                     {
                         dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundBuilding[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = false;
                     }
                 }
+                */
 
                 //dfAudioSource.PlayOneShot(SoundClips.ActivateLockUnlock, 1, 1 * DaggerfallUnity.Settings.SoundVolume);
                 //customAudioSource.PlayOneShot(clip1, volumeScale * DaggerfallUnity.Settings.SoundVolume);
@@ -220,14 +231,14 @@ namespace PhysicalCombatOverhaul
             return clip;
         }
 
-        public static AudioClip GetDungeonFootstepClip()
+        public static AudioClip GetTestFootstepClip()
         {
             AudioClip clip = null;
 
-            clip = RollRandomAudioClip(PhysicalCombatOverhaulMain.FootstepSoundDungeon);
+            clip = RollRandomAudioClip(PhysicalCombatOverhaulMain.TestFootstepSound);
 
             if (clip == null)
-                clip = PhysicalCombatOverhaulMain.FootstepSoundDungeon[0];
+                clip = PhysicalCombatOverhaulMain.TestFootstepSound[0];
 
             return clip;
         }

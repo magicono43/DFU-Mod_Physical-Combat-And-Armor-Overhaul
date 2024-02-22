@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		2/20/2024, 7:10 PM
+// Last Edit:		2/22/2024, 6:20 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -45,7 +45,8 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] UnarmedHitWoodLightClips = { null, null, null, null };
         public static AudioClip[] UnarmedHitWoodHardClips = { null, null, null };
 
-        public static AudioClip[] FootstepSoundDungeon = { null, null, null };
+        public static AudioClip[] TestFootstepSound = { null, null, null, null, null, null };
+        public static AudioClip[] FootstepSoundDungeon = { null, null, null, null, null };
         public static AudioClip[] FootstepSoundOutside = { null, null, null };
         public static AudioClip[] FootstepSoundSnow = { null, null, null };
         public static AudioClip[] FootstepSoundBuilding = { null, null, null };
@@ -151,10 +152,13 @@ namespace PhysicalCombatOverhaul
             ModManager modManager = ModManager.Instance;
             bool success = true;
 
-            success &= modManager.TryGetAsset("Squidward_Walk_1", false, out FootstepSoundDungeon[0]);
-            success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
-            success &= modManager.TryGetAsset("WoW_2hMaceHitMetalShield_7", false, out FootstepSoundBuilding[0]);
-            success &= modManager.TryGetAsset("WoW_2hMaceHitMetalShield_8", false, out FootstepSoundBuilding[1]);
+            success &= modManager.TryGetAsset("Testing_1", false, out TestFootstepSound[0]);
+            success &= modManager.TryGetAsset("Testing_2", false, out TestFootstepSound[1]);
+            success &= modManager.TryGetAsset("Testing_3", false, out TestFootstepSound[2]);
+            success &= modManager.TryGetAsset("Testing_4", false, out TestFootstepSound[3]);
+            success &= modManager.TryGetAsset("Testing_5", false, out TestFootstepSound[4]);
+            success &= modManager.TryGetAsset("Testing_6", false, out TestFootstepSound[5]);
+            //success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
 
             if (!success)
                 throw new Exception("LockedLootContainers: Missing sound asset");

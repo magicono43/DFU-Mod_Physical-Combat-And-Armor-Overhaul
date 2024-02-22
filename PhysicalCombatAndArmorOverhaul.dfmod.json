@@ -10,10 +10,12 @@
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/modsettings.json",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PhysicalCombatOverhaulMain.cs",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/ImmersiveFootsteps.cs",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Squidward_Walk_2.mp3",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Squidward_Walk_1.mp3",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/WoW_2hMaceHitMetalShield_7.wav",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/WoW_2hMaceHitMetalShield_8.wav"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Testing_6.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Testing_3.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Testing_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Testing_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Testing_5.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Testing_4.mp3"
     ],
     "Dependencies": []
 }
