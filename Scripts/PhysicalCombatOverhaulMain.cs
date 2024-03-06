@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		2/22/2024, 6:20 PM
+// Last Edit:		3/5/2024, 11:30 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -179,9 +179,9 @@ namespace PhysicalCombatOverhaul
             oldFootsteps.FootstepSoundBuilding1 = SoundClips.None;
             oldFootsteps.FootstepSoundBuilding2 = SoundClips.None;
             oldFootsteps.FootstepSoundDungeon1 = SoundClips.None;
-            oldFootsteps.FootstepSoundDungeon1 = SoundClips.None;
+            oldFootsteps.FootstepSoundDungeon2 = SoundClips.None;
             oldFootsteps.FootstepSoundOutside1 = SoundClips.None;
-            oldFootsteps.FootstepSoundOutside1 = SoundClips.None;
+            oldFootsteps.FootstepSoundOutside2 = SoundClips.None;
             oldFootsteps.FootstepSoundShallow = SoundClips.None;
             oldFootsteps.FootstepSoundSnow1 = SoundClips.None;
             oldFootsteps.FootstepSoundSnow2 = SoundClips.None;

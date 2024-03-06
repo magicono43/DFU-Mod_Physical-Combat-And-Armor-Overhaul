@@ -5,6 +5,7 @@ using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Serialization;
 using DaggerfallWorkshop.Utility;
+using DaggerfallConnect;
 
 namespace PhysicalCombatOverhaul
 {
@@ -27,6 +28,7 @@ namespace PhysicalCombatOverhaul
         public float volumeScale = 1f;
 
         GameObject playerAdvanced;
+        PlayerGPS playerGPS;
         DaggerfallAudioSource dfAudioSource;
         PlayerMotor playerMotor;
         PlayerEnterExit playerEnterExit;
@@ -34,7 +36,7 @@ namespace PhysicalCombatOverhaul
         AudioSource customAudioSource;
 
         DaggerfallDateTime.Seasons currentSeason = DaggerfallDateTime.Seasons.Summer;
-        int currentClimateIndex;
+        int currentClimateIndex = (int)MapsFile.Climates.Ocean;
         bool isInside = false;
         bool isInOutsideWater = false;
         bool isInOutsidePath = false;
@@ -63,6 +65,7 @@ namespace PhysicalCombatOverhaul
         private void Start()
         {
             playerAdvanced = GameManager.Instance.PlayerObject;
+            playerGPS = GameManager.Instance.PlayerGPS;
             dfAudioSource = playerAdvanced.GetComponent<DaggerfallAudioSource>();
             playerMotor = GetComponent<PlayerMotor>();
             playerEnterExit = GetComponent<PlayerEnterExit>();
@@ -201,6 +204,85 @@ namespace PhysicalCombatOverhaul
                 distance = 0f;
             }
             */
+        }
+
+        public void DetermineGroundClimateFootstep()
+        {
+            currentSeason = DaggerfallUnity.Instance.WorldTime.Now.SeasonValue;
+            currentClimateIndex = GameManager.Instance.PlayerGPS.CurrentClimateIndex;
+
+            switch (currentSeason)
+            {
+                case DaggerfallDateTime.Seasons.Fall:
+                    switch (currentClimateIndex)
+                    {
+                        case (int)MapsFile.Climates.Ocean:
+                        case (int)MapsFile.Climates.Desert:
+                        case (int)MapsFile.Climates.Desert2:
+                        case (int)MapsFile.Climates.Mountain:
+                        case (int)MapsFile.Climates.Rainforest:
+                        case (int)MapsFile.Climates.Swamp:
+                        case (int)MapsFile.Climates.Subtropical:
+                        case (int)MapsFile.Climates.MountainWoods:
+                        case (int)MapsFile.Climates.Woodlands:
+                        case (int)MapsFile.Climates.HauntedWoodlands:
+                        default:
+                            break;
+                    } break;
+                case DaggerfallDateTime.Seasons.Spring:
+                    switch (currentClimateIndex)
+                    {
+                        case (int)MapsFile.Climates.Ocean:
+                        case (int)MapsFile.Climates.Desert:
+                        case (int)MapsFile.Climates.Desert2:
+                        case (int)MapsFile.Climates.Mountain:
+                        case (int)MapsFile.Climates.Rainforest:
+                        case (int)MapsFile.Climates.Swamp:
+                        case (int)MapsFile.Climates.Subtropical:
+                        case (int)MapsFile.Climates.MountainWoods:
+                        case (int)MapsFile.Climates.Woodlands:
+                        case (int)MapsFile.Climates.HauntedWoodlands:
+                        default:
+                            break;
+                    }
+                    break;
+                case DaggerfallDateTime.Seasons.Summer:
+                    switch (currentClimateIndex)
+                    {
+                        case (int)MapsFile.Climates.Ocean:
+                        case (int)MapsFile.Climates.Desert:
+                        case (int)MapsFile.Climates.Desert2:
+                        case (int)MapsFile.Climates.Mountain:
+                        case (int)MapsFile.Climates.Rainforest:
+                        case (int)MapsFile.Climates.Swamp:
+                        case (int)MapsFile.Climates.Subtropical:
+                        case (int)MapsFile.Climates.MountainWoods:
+                        case (int)MapsFile.Climates.Woodlands:
+                        case (int)MapsFile.Climates.HauntedWoodlands:
+                        default:
+                            break;
+                    }
+                    break;
+                case DaggerfallDateTime.Seasons.Winter:
+                    switch (currentClimateIndex)
+                    {
+                        case (int)MapsFile.Climates.Ocean:
+                        case (int)MapsFile.Climates.Desert:
+                        case (int)MapsFile.Climates.Desert2:
+                        case (int)MapsFile.Climates.Mountain:
+                        case (int)MapsFile.Climates.Rainforest:
+                        case (int)MapsFile.Climates.Swamp:
+                        case (int)MapsFile.Climates.Subtropical:
+                        case (int)MapsFile.Climates.MountainWoods:
+                        case (int)MapsFile.Climates.Woodlands:
+                        case (int)MapsFile.Climates.HauntedWoodlands:
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         public static bool CoinFlip()
