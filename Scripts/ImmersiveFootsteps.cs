@@ -208,8 +208,35 @@ namespace PhysicalCombatOverhaul
 
         public void DetermineGroundClimateFootstep()
         {
+            int currentTileMapIndex = GameManager.Instance.StreamingWorld.PlayerTileMapIndex;
             currentSeason = DaggerfallUnity.Instance.WorldTime.Now.SeasonValue;
             currentClimateIndex = GameManager.Instance.PlayerGPS.CurrentClimateIndex;
+
+            if (IsShallowWaterTile(currentTileMapIndex)) { } // Just establishing logic for now. Later will actually set this to play the shallow water footstep sound when on these tiles.
+
+            if (IsPathTile(currentTileMapIndex)) { } // Just establishing logic for now. Later will actually set this to play the path footstep sound when on these tiles.
+
+            if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
+            {
+                // Just like the above if-statements, I think this small section will end with a returned sound-clip directly, but just placeholder logic for now as well.
+                if (IsAlternateSwampTile(currentTileMapIndex)) { } // Return specific sound-clip here. (Likely the mud footstep ones.)
+                else { } // Otherwise use the snow footstep sound-clip.
+            }
+
+            if (IsSandyClimate(currentClimateIndex))
+            {
+                // Tomorrow, do similar as above but for the "sandy" climates to use either sand or stone/gravel sound depending on the tile type, will see.
+            }
+
+            // Work on this order of actions later today.
+            // Subscribe To Events For Triggering Changes
+            //      Method Calls
+            //          Season
+            //              Climate
+            // (Could Eventually Have Weather In Here As Well, Will See.)
+            //                  Tile Index
+            //                      Sound To Play
+            // Might be another step? But I'll just have to check/remember later.
 
             switch (currentSeason)
             {
@@ -282,6 +309,85 @@ namespace PhysicalCombatOverhaul
                     break;
                 default:
                     break;
+            }
+        }
+
+        public static bool IsSnowyClimate(int climateIndex)
+        {
+            // These are all the existing climates that DO NOT get snow on the ground during the winter season, in the vanilla game atleast.
+            switch (climateIndex)
+            {
+                case (int)MapsFile.Climates.Desert:
+                case (int)MapsFile.Climates.Desert2:
+                case (int)MapsFile.Climates.Rainforest:
+                case (int)MapsFile.Climates.Subtropical:
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
+        public static bool IsShallowWaterTile(int tileIndex)
+        {
+            // These are all the "Shallow Water" ground tiles, as determined by the "PlayerMotor.cs" script atleast.
+            switch (tileIndex)
+            {
+                case 5:
+                case 6:
+                case 8:
+                case 20:
+                case 21:
+                case 23:
+                case 30:
+                case 31:
+                case 33:
+                case 34:
+                case 35:
+                case 36:
+                case 49:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsPathTile(int tileIndex)
+        {
+            // These are all the "Path" ground tiles, as determined by the "PlayerMotor.cs" script atleast.
+            switch (tileIndex)
+            {
+                case 46:
+                case 47:
+                case 55:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsAlternateSwampTile(int tileIndex)
+        {
+            // These are all the ground tiles for the snowy swamp tileset that look more like mud than snow to me.
+            switch (tileIndex)
+            {
+                case 1:
+                case 7:
+                case 10:
+                case 11:
+                case 13:
+                case 25:
+                case 26:
+                case 28:
+                case 37:
+                case 38:
+                case 39:
+                case 43:
+                case 48:
+                case 50:
+                case 52:
+                    return true;
+                default:
+                    return false;
             }
         }
 
