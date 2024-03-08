@@ -223,10 +223,35 @@ namespace PhysicalCombatOverhaul
                 else { } // Otherwise use the snow footstep sound-clip.
             }
 
+            if (IsGrassyClimate(currentClimateIndex))
+            {
+                if (IsTemperateDirtTile(currentTileMapIndex)) { } // Gravel
+                else if (IsTemperateStoneTile(currentTileMapIndex)) { } // Stone
+                else { } // Grass
+            }
+
+            if (IsRockyClimate(currentClimateIndex))
+            {
+                if (IsMountainDirtTile(currentTileMapIndex)) { } // Gravel
+                else if (IsMountainStoneTile(currentTileMapIndex)) { } // Stone
+                else { } // Grass
+            }
+
             if (IsSandyClimate(currentClimateIndex))
             {
-                // Tomorrow, do similar as above but for the "sandy" climates to use either sand or stone/gravel sound depending on the tile type, will see.
+                if (IsDesertGravelTile(currentTileMapIndex)) { } // Gravel
+                else if (IsDesertStoneTile(currentTileMapIndex)) { } // Stone
+                else { } // Sand
             }
+
+            if (IsSwampyClimate(currentClimateIndex))
+            {
+                if (IsSwampBogTile(currentTileMapIndex)) { } // Mud
+                else if (IsSwampGrassTile(currentTileMapIndex)) { } // Grass
+                else { } // Mud
+            }
+
+            // Perhaps tomorrow I'll try doing the subscribing to events for triggering when to recheck/update these values? Not sure, but will see.
 
             // Work on this order of actions later today.
             // Subscribe To Events For Triggering Changes
@@ -238,78 +263,11 @@ namespace PhysicalCombatOverhaul
             //                      Sound To Play
             // Might be another step? But I'll just have to check/remember later.
 
-            switch (currentSeason)
-            {
-                case DaggerfallDateTime.Seasons.Fall:
-                    switch (currentClimateIndex)
-                    {
-                        case (int)MapsFile.Climates.Ocean:
-                        case (int)MapsFile.Climates.Desert:
-                        case (int)MapsFile.Climates.Desert2:
-                        case (int)MapsFile.Climates.Mountain:
-                        case (int)MapsFile.Climates.Rainforest:
-                        case (int)MapsFile.Climates.Swamp:
-                        case (int)MapsFile.Climates.Subtropical:
-                        case (int)MapsFile.Climates.MountainWoods:
-                        case (int)MapsFile.Climates.Woodlands:
-                        case (int)MapsFile.Climates.HauntedWoodlands:
-                        default:
-                            break;
-                    } break;
-                case DaggerfallDateTime.Seasons.Spring:
-                    switch (currentClimateIndex)
-                    {
-                        case (int)MapsFile.Climates.Ocean:
-                        case (int)MapsFile.Climates.Desert:
-                        case (int)MapsFile.Climates.Desert2:
-                        case (int)MapsFile.Climates.Mountain:
-                        case (int)MapsFile.Climates.Rainforest:
-                        case (int)MapsFile.Climates.Swamp:
-                        case (int)MapsFile.Climates.Subtropical:
-                        case (int)MapsFile.Climates.MountainWoods:
-                        case (int)MapsFile.Climates.Woodlands:
-                        case (int)MapsFile.Climates.HauntedWoodlands:
-                        default:
-                            break;
-                    }
-                    break;
-                case DaggerfallDateTime.Seasons.Summer:
-                    switch (currentClimateIndex)
-                    {
-                        case (int)MapsFile.Climates.Ocean:
-                        case (int)MapsFile.Climates.Desert:
-                        case (int)MapsFile.Climates.Desert2:
-                        case (int)MapsFile.Climates.Mountain:
-                        case (int)MapsFile.Climates.Rainforest:
-                        case (int)MapsFile.Climates.Swamp:
-                        case (int)MapsFile.Climates.Subtropical:
-                        case (int)MapsFile.Climates.MountainWoods:
-                        case (int)MapsFile.Climates.Woodlands:
-                        case (int)MapsFile.Climates.HauntedWoodlands:
-                        default:
-                            break;
-                    }
-                    break;
-                case DaggerfallDateTime.Seasons.Winter:
-                    switch (currentClimateIndex)
-                    {
-                        case (int)MapsFile.Climates.Ocean:
-                        case (int)MapsFile.Climates.Desert:
-                        case (int)MapsFile.Climates.Desert2:
-                        case (int)MapsFile.Climates.Mountain:
-                        case (int)MapsFile.Climates.Rainforest:
-                        case (int)MapsFile.Climates.Swamp:
-                        case (int)MapsFile.Climates.Subtropical:
-                        case (int)MapsFile.Climates.MountainWoods:
-                        case (int)MapsFile.Climates.Woodlands:
-                        case (int)MapsFile.Climates.HauntedWoodlands:
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
-            }
+            // Desert Terrain = Desert, Desert2, Subtropical
+            // Mountain Terrain = Mountain, MountainWoods
+            // Woodland Terrain = Woodlands, HauntedWoodlands
+            // Swamp Terrain = Swamp, Rainforest
+            // Other Terrain = Ocean
         }
 
         public static bool IsSnowyClimate(int climateIndex)
@@ -324,6 +282,55 @@ namespace PhysicalCombatOverhaul
                     return false;
                 default:
                     return true;
+            }
+        }
+
+        public static bool IsGrassyClimate(int climateIndex)
+        {
+            switch (climateIndex)
+            {
+                case (int)MapsFile.Climates.Woodlands:
+                case (int)MapsFile.Climates.HauntedWoodlands:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsRockyClimate(int climateIndex)
+        {
+            switch (climateIndex)
+            {
+                case (int)MapsFile.Climates.Mountain:
+                case (int)MapsFile.Climates.MountainWoods:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsSandyClimate(int climateIndex)
+        {
+            switch (climateIndex)
+            {
+                case (int)MapsFile.Climates.Desert:
+                case (int)MapsFile.Climates.Desert2:
+                case (int)MapsFile.Climates.Subtropical:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsSwampyClimate(int climateIndex)
+        {
+            switch (climateIndex)
+            {
+                case (int)MapsFile.Climates.Swamp:
+                case (int)MapsFile.Climates.Rainforest:
+                    return true;
+                default:
+                    return false;
             }
         }
 
@@ -385,6 +392,198 @@ namespace PhysicalCombatOverhaul
                 case 48:
                 case 50:
                 case 52:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsTemperateDirtTile(int tileIndex)
+        {
+            // These are all the ground tiles for the temperate tileset that look more like dirt than grass or stone to me.
+            switch (tileIndex)
+            {
+                case 1:
+                case 4:
+                case 7:
+                case 10:
+                case 13:
+                case 25:
+                case 26:
+                case 28:
+                case 37:
+                case 38:
+                case 39:
+                case 51:
+                case 52:
+                case 54:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsTemperateStoneTile(int tileIndex)
+        {
+            // These are all the ground tiles for the temperate tileset that look more like stone than grass or dirt to me.
+            switch (tileIndex)
+            {
+                case 3:
+                case 14:
+                case 16:
+                case 17:
+                case 24:
+                case 27:
+                case 29:
+                case 32:
+                case 43:
+                case 44:
+                case 45:
+                case 50:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsMountainDirtTile(int tileIndex)
+        {
+            // These are all the ground tiles for the mountain tileset that look more like dirt than grass or stone to me.
+            switch (tileIndex)
+            {
+                case 1:
+                case 4:
+                case 7:
+                case 10:
+                case 13:
+                case 25:
+                case 26:
+                case 28:
+                case 37:
+                case 38:
+                case 39:
+                case 51:
+                case 52:
+                case 54:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsMountainStoneTile(int tileIndex)
+        {
+            // These are all the ground tiles for the mountain tileset that look more like stone than grass or dirt to me.
+            switch (tileIndex)
+            {
+                case 3:
+                case 14:
+                case 16:
+                case 17:
+                case 24:
+                case 27:
+                case 29:
+                case 32:
+                case 43:
+                case 44:
+                case 45:
+                case 50:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsDesertGravelTile(int tileIndex)
+        {
+            // These are all the ground tiles for the desert tileset that look more like gravel than sand or stone to me.
+            switch (tileIndex)
+            {
+                case 2:
+                case 9:
+                case 11:
+                case 12:
+                case 15:
+                case 18:
+                case 19:
+                case 22:
+                case 39:
+                case 40:
+                case 41:
+                case 42:
+                case 45:
+                case 53:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsDesertStoneTile(int tileIndex)
+        {
+            // These are all the ground tiles for the desert tileset that look more like stone than sand or gravel to me.
+            switch (tileIndex)
+            {
+                case 3:
+                case 14:
+                case 16:
+                case 17:
+                case 24:
+                case 26:
+                case 27:
+                case 29:
+                case 32:
+                case 38:
+                case 43:
+                case 44:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsSwampBogTile(int tileIndex)
+        {
+            // These are all the ground tiles for the swamp tileset that look more like bog than grass or mud to me.
+            switch (tileIndex)
+            {
+                case 1:
+                case 4:
+                case 7:
+                case 10:
+                case 13:
+                case 25:
+                case 26:
+                case 28:
+                case 37:
+                case 38:
+                case 39:
+                case 50:
+                case 51:
+                case 52:
+                case 54:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsSwampGrassTile(int tileIndex)
+        {
+            // These are all the ground tiles for the swamp tileset that look more like grass than mud or bog to me.
+            switch (tileIndex)
+            {
+                case 3:
+                case 14:
+                case 16:
+                case 17:
+                case 24:
+                case 27:
+                case 29:
+                case 32:
+                case 43:
+                case 44:
+                case 45:
                     return true;
                 default:
                     return false;
