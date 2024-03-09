@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/7/2024, 11:40 PM
+// Last Edit:		3/8/2024, 11:50 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -42,8 +42,25 @@ namespace PhysicalCombatOverhaul
 
         // Mod Sounds
         private static AudioClip lastSoundPlayed = null;
-        public static AudioClip[] UnarmedHitWoodLightClips = { null, null, null, null };
-        public static AudioClip[] UnarmedHitWoodHardClips = { null, null, null };
+
+        public static AudioClip[] GrassFootstepsMain = { null, null, null };
+        public static AudioClip[] GrassFootstepsAlt = { null, null, null };
+        public static AudioClip[] GravelFootstepsMain = { null, null, null };
+        public static AudioClip[] GravelFootstepsAlt = { null, null, null };
+        public static AudioClip[] MudFootstepsMain = { null, null, null };
+        public static AudioClip[] MudFootstepsAlt = { null, null, null };
+        public static AudioClip[] PathFootstepsMain = { null, null, null };
+        public static AudioClip[] PathFootstepsAlt = { null, null, null };
+        public static AudioClip[] SandFootstepsMain = { null, null, null };
+        public static AudioClip[] SandFootstepsAlt = { null, null, null };
+        public static AudioClip[] ShallowWaterFootstepsMain = { null, null, null };
+        public static AudioClip[] ShallowWaterFootstepsAlt = { null, null, null };
+        public static AudioClip[] SnowFootstepsMain = { null, null, null };
+        public static AudioClip[] SnowFootstepsAlt = { null, null, null };
+        public static AudioClip[] TileFootstepsMain = { null, null, null };
+        public static AudioClip[] TileFootstepsAlt = { null, null, null };
+        public static AudioClip[] WoodFootstepsMain = { null, null, null };
+        public static AudioClip[] WoodFootstepsAlt = { null, null, null };
 
         public static AudioClip[] TestFootstepSound = { null, null, null, null, null, null };
         public static AudioClip[] FootstepSoundDungeon = { null, null, null, null, null };
@@ -159,6 +176,69 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Testing_5", false, out TestFootstepSound[4]);
             success &= modManager.TryGetAsset("Testing_6", false, out TestFootstepSound[5]);
             //success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
+
+            success &= modManager.TryGetAsset("Grass_Footstep_1", false, out GrassFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Grass_Footstep_2", false, out GrassFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Grass_Footstep_3", false, out GrassFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Grass_Footstep_4", false, out GrassFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Grass_Footstep_5", false, out GrassFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Grass_Footstep_6", false, out GrassFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Gravel_Footstep_1", false, out GravelFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Gravel_Footstep_2", false, out GravelFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Gravel_Footstep_3", false, out GravelFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Gravel_Footstep_4", false, out GravelFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Gravel_Footstep_5", false, out GravelFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Gravel_Footstep_6", false, out GravelFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Mud_Footstep_1", false, out MudFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Mud_Footstep_2", false, out MudFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Mud_Footstep_3", false, out MudFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Mud_Footstep_4", false, out MudFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Mud_Footstep_5", false, out MudFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Mud_Footstep_6", false, out MudFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Path_Footstep_1", false, out PathFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Path_Footstep_2", false, out PathFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Path_Footstep_3", false, out PathFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Path_Footstep_4", false, out PathFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Path_Footstep_5", false, out PathFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Path_Footstep_6", false, out PathFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Sand_Footstep_1", false, out SandFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Sand_Footstep_2", false, out SandFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Sand_Footstep_3", false, out SandFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Sand_Footstep_4", false, out SandFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Sand_Footstep_5", false, out SandFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Sand_Footstep_6", false, out SandFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Shallow_Water_Footstep_1", false, out ShallowWaterFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Shallow_Water_Footstep_2", false, out ShallowWaterFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Shallow_Water_Footstep_3", false, out ShallowWaterFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Shallow_Water_Footstep_4", false, out ShallowWaterFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Shallow_Water_Footstep_5", false, out ShallowWaterFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Shallow_Water_Footstep_6", false, out ShallowWaterFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Snow_Footstep_1", false, out SnowFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Snow_Footstep_2", false, out SnowFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Snow_Footstep_3", false, out SnowFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Snow_Footstep_4", false, out SnowFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Snow_Footstep_5", false, out SnowFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Snow_Footstep_6", false, out SnowFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Tile_Footstep_1", false, out TileFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Tile_Footstep_2", false, out TileFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Tile_Footstep_3", false, out TileFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Tile_Footstep_4", false, out TileFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Tile_Footstep_5", false, out TileFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Tile_Footstep_6", false, out TileFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Wood_Footstep_1", false, out WoodFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Wood_Footstep_2", false, out WoodFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Wood_Footstep_3", false, out WoodFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Wood_Footstep_4", false, out WoodFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Wood_Footstep_5", false, out WoodFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Wood_Footstep_6", false, out WoodFootstepsAlt[2]);
 
             if (!success)
                 throw new Exception("LockedLootContainers: Missing sound asset");

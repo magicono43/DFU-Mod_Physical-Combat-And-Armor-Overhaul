@@ -6,6 +6,7 @@ using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Serialization;
 using DaggerfallWorkshop.Utility;
 using DaggerfallConnect;
+using PCO = PhysicalCombatOverhaul.PhysicalCombatOverhaulMain;
 
 namespace PhysicalCombatOverhaul
 {
@@ -35,20 +36,21 @@ namespace PhysicalCombatOverhaul
         TransportManager transportManager;
         AudioSource customAudioSource;
 
+        AudioClip[] currentClimateFootsteps;
+
+        DaggerfallDateTime.Seasons lastSeason = DaggerfallDateTime.Seasons.Summer;
+        int lastClimateIndex = (int)MapsFile.Climates.Ocean;
+        int lastTileMapIndex = 0;
+
         DaggerfallDateTime.Seasons currentSeason = DaggerfallDateTime.Seasons.Summer;
         int currentClimateIndex = (int)MapsFile.Climates.Ocean;
-        bool isInside = false;
-        bool isInOutsideWater = false;
-        bool isInOutsidePath = false;
-        bool isOnStaticGeometry = false;
+        int currentTileMapIndex = 0;
 
-        DaggerfallDateTime.Seasons playerSeason;
-        int playerClimateIndex;
-        bool playerInside;
-        bool playerInBuilding;
-        bool playerOnExteriorWater;
-        bool playerOnExteriorPath;
-        bool playerOnStaticGeometry;
+        bool isInside = false;
+        bool isInBuilding = false;
+        bool onExteriorWater = false;
+        bool onExteriorPath = false;
+        bool oStaticGeometry = false;
 
         #endregion
 
@@ -206,52 +208,58 @@ namespace PhysicalCombatOverhaul
             */
         }
 
-        public void DetermineGroundClimateFootstep()
+        public void DetermineExteriorClimateFootstep()
         {
-            int currentTileMapIndex = GameManager.Instance.StreamingWorld.PlayerTileMapIndex;
             currentSeason = DaggerfallUnity.Instance.WorldTime.Now.SeasonValue;
             currentClimateIndex = GameManager.Instance.PlayerGPS.CurrentClimateIndex;
+            currentTileMapIndex = GameManager.Instance.StreamingWorld.PlayerTileMapIndex;
 
-            if (IsShallowWaterTile(currentTileMapIndex)) { } // Just establishing logic for now. Later will actually set this to play the shallow water footstep sound when on these tiles.
-
-            if (IsPathTile(currentTileMapIndex)) { } // Just establishing logic for now. Later will actually set this to play the path footstep sound when on these tiles.
-
-            if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
+            if (lastTileMapIndex != currentTileMapIndex || lastClimateIndex != currentClimateIndex || lastSeason != currentSeason)
             {
-                // Just like the above if-statements, I think this small section will end with a returned sound-clip directly, but just placeholder logic for now as well.
-                if (IsAlternateSwampTile(currentTileMapIndex)) { } // Return specific sound-clip here. (Likely the mud footstep ones.)
-                else { } // Otherwise use the snow footstep sound-clip.
+                lastSeason = currentSeason;
+                lastClimateIndex = currentClimateIndex;
+                lastTileMapIndex = currentTileMapIndex;
+
+                if (IsShallowWaterTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
+                else if (IsPathTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; }
+                else if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
+                {
+                    if (IsAlternateSwampTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; }
+                    else { currentClimateFootsteps = altStep ? PCO.SnowFootstepsAlt : PCO.SnowFootstepsMain; }
+                }
+                else if (IsGrassyClimate(currentClimateIndex))
+                {
+                    if (IsTemperateDirtTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
+                    else if (IsTemperateStoneTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    else { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
+                }
+                else if (IsRockyClimate(currentClimateIndex))
+                {
+                    if (IsMountainDirtTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
+                    else if (IsMountainStoneTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    else { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
+                }
+                else if (IsSandyClimate(currentClimateIndex))
+                {
+                    if (IsDesertGravelTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
+                    else if (IsDesertStoneTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    else { currentClimateFootsteps = altStep ? PCO.SandFootstepsAlt : PCO.SandFootstepsMain; } // Sand
+                }
+                else if (IsSwampyClimate(currentClimateIndex))
+                {
+                    if (IsSwampBogTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; } // Mud
+                    else if (IsSwampGrassTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
+                    else { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; } // Mud
+                }
             }
 
-            if (IsGrassyClimate(currentClimateIndex))
+            if (currentClimateFootsteps.Length <= 0)
             {
-                if (IsTemperateDirtTile(currentTileMapIndex)) { } // Gravel
-                else if (IsTemperateStoneTile(currentTileMapIndex)) { } // Stone
-                else { } // Grass
-            }
-
-            if (IsRockyClimate(currentClimateIndex))
-            {
-                if (IsMountainDirtTile(currentTileMapIndex)) { } // Gravel
-                else if (IsMountainStoneTile(currentTileMapIndex)) { } // Stone
-                else { } // Grass
-            }
-
-            if (IsSandyClimate(currentClimateIndex))
-            {
-                if (IsDesertGravelTile(currentTileMapIndex)) { } // Gravel
-                else if (IsDesertStoneTile(currentTileMapIndex)) { } // Stone
-                else { } // Sand
-            }
-
-            if (IsSwampyClimate(currentClimateIndex))
-            {
-                if (IsSwampBogTile(currentTileMapIndex)) { } // Mud
-                else if (IsSwampGrassTile(currentTileMapIndex)) { } // Grass
-                else { } // Mud
+                currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain;
             }
 
             // Perhaps tomorrow I'll try doing the subscribing to events for triggering when to recheck/update these values? Not sure, but will see.
+            // Probably also try doing testing for the current changes tomorrow, now that I have the audio-files somewhat set-up in their respective arrays for the climates atleast.
 
             // Work on this order of actions later today.
             // Subscribe To Events For Triggering Changes
@@ -269,6 +277,8 @@ namespace PhysicalCombatOverhaul
             // Swamp Terrain = Swamp, Rainforest
             // Other Terrain = Ocean
         }
+
+        #region Climate Checks
 
         public static bool IsSnowyClimate(int climateIndex)
         {
@@ -333,6 +343,10 @@ namespace PhysicalCombatOverhaul
                     return false;
             }
         }
+
+        #endregion
+
+        #region Tile Checks
 
         public static bool IsShallowWaterTile(int tileIndex)
         {
@@ -589,6 +603,8 @@ namespace PhysicalCombatOverhaul
                     return false;
             }
         }
+
+        #endregion
 
         public static bool CoinFlip()
         {
