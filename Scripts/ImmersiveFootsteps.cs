@@ -36,7 +36,7 @@ namespace PhysicalCombatOverhaul
         TransportManager transportManager;
         AudioSource customAudioSource;
 
-        AudioClip[] currentClimateFootsteps;
+        AudioClip[] currentClimateFootsteps = PCO.PathFootstepsMain; // This for now until I do proper detection for non-exterior areas as well.
 
         DaggerfallDateTime.Seasons lastSeason = DaggerfallDateTime.Seasons.Summer;
         int lastClimateIndex = (int)MapsFile.Climates.Ocean;
@@ -84,12 +84,17 @@ namespace PhysicalCombatOverhaul
             if (refreshSlotsTimer >= 250) // 50 FixedUpdates is approximately equal to 1 second since each FixedUpdate happens every 0.02 seconds, that's what Unity docs say at least.
             {
                 refreshSlotsTimer = 0;
-                PhysicalCombatOverhaulMain.RefreshEquipmentSlotReferences();
+                PCO.RefreshEquipmentSlotReferences();
             }
 
             if (playerMotor == null)
             {
                 footstepTimer = 0f;
+                return;
+            }
+
+            if (playerMotor.IsGrounded == false)
+            {
                 return;
             }
 
@@ -120,25 +125,38 @@ namespace PhysicalCombatOverhaul
 
             if (footstepTimer >= stepInterval)
             {
-                dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.TestFootstepSound[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.TestFootstepSound[0], UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
+                isInside = (playerEnterExit == null) ? true : playerEnterExit.IsPlayerInside;
+
+                if (isInside)
+                {
+                    DetermineInteriorClimateFootstep();
+                }
+                else
+                {
+                    DetermineExteriorClimateFootstep();
+                }
+
+                dfAudioSource.AudioSource.PlayOneShot(RollRandomAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+
+                //dfAudioSource.AudioSource.PlayOneShot(PCO.TestFootstepSound[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                //dfAudioSource.AudioSource.PlayOneShot(PCO.TestFootstepSound[0], UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
                 //dfAudioSource.AudioSource.PlayOneShot(GetTestFootstepClip(), volumeScale * DaggerfallUnity.Settings.SoundVolume);
                 //dfAudioSource.AudioSource.PlayOneShot(GetTestFootstepClip(), UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
 
                 /*
-                if (PhysicalCombatOverhaulMain.WornBoots == null)
+                if (PCO.WornBoots == null)
                 {
                     // Play footstep sound
                     if (!altStep)
                     {
-                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundDungeon[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = true;
                     }
                     else
                     {
-                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundDungeon[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundDungeon[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = false;
                     }
                 }
@@ -147,14 +165,14 @@ namespace PhysicalCombatOverhaul
                     // Play footstep sound
                     if (!altStep)
                     {
-                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundBuilding[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundBuilding[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = true;
                     }
                     else
                     {
-                        dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundBuilding[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PhysicalCombatOverhaulMain.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundBuilding[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                         altStep = false;
                     }
                 }
@@ -208,6 +226,11 @@ namespace PhysicalCombatOverhaul
             */
         }
 
+        public void DetermineInteriorClimateFootstep()
+        {
+            // I suppose try and work on this tomorrow, getting the correct footstep type depending on the interior floor, will see.
+        }
+
         public void DetermineExteriorClimateFootstep()
         {
             currentSeason = DaggerfallUnity.Instance.WorldTime.Now.SeasonValue;
@@ -224,7 +247,7 @@ namespace PhysicalCombatOverhaul
                 else if (IsPathTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; }
                 else if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
                 {
-                    if (IsAlternateSwampTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; }
+                    if (currentClimateIndex == (int)MapsFile.Climates.Swamp && IsAlternateSwampTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; }
                     else { currentClimateFootsteps = altStep ? PCO.SnowFootstepsAlt : PCO.SnowFootstepsMain; }
                 }
                 else if (IsGrassyClimate(currentClimateIndex))
@@ -619,7 +642,7 @@ namespace PhysicalCombatOverhaul
             int randChoice = UnityEngine.Random.Range(0, clips.Length);
             AudioClip clip = clips[randChoice];
 
-            if (clip == PhysicalCombatOverhaulMain.LastSoundPlayed)
+            if (clip == PCO.LastSoundPlayed)
             {
                 if (randChoice == 0)
                     randChoice++;
@@ -630,7 +653,7 @@ namespace PhysicalCombatOverhaul
 
                 clip = clips[randChoice];
             }
-            PhysicalCombatOverhaulMain.LastSoundPlayed = clip;
+            PCO.LastSoundPlayed = clip;
             return clip;
         }
 
@@ -638,10 +661,10 @@ namespace PhysicalCombatOverhaul
         {
             AudioClip clip = null;
 
-            clip = RollRandomAudioClip(PhysicalCombatOverhaulMain.TestFootstepSound);
+            clip = RollRandomAudioClip(PCO.TestFootstepSound);
 
             if (clip == null)
-                clip = PhysicalCombatOverhaulMain.TestFootstepSound[0];
+                clip = PCO.TestFootstepSound[0];
 
             return clip;
         }

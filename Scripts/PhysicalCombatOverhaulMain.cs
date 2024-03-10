@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/8/2024, 11:50 PM
+// Last Edit:		3/9/2024, 11:20 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -256,17 +256,22 @@ namespace PhysicalCombatOverhaul
         {
             var oldFootsteps = GameManager.Instance.PlayerObject.GetComponent<PlayerFootsteps>();
 
-            oldFootsteps.FootstepSoundBuilding1 = SoundClips.None;
-            oldFootsteps.FootstepSoundBuilding2 = SoundClips.None;
             oldFootsteps.FootstepSoundDungeon1 = SoundClips.None;
             oldFootsteps.FootstepSoundDungeon2 = SoundClips.None;
             oldFootsteps.FootstepSoundOutside1 = SoundClips.None;
             oldFootsteps.FootstepSoundOutside2 = SoundClips.None;
-            oldFootsteps.FootstepSoundShallow = SoundClips.None;
             oldFootsteps.FootstepSoundSnow1 = SoundClips.None;
             oldFootsteps.FootstepSoundSnow2 = SoundClips.None;
+            oldFootsteps.FootstepSoundBuilding1 = SoundClips.None;
+            oldFootsteps.FootstepSoundBuilding2 = SoundClips.None;
+            oldFootsteps.FootstepSoundShallow = SoundClips.None;
             oldFootsteps.FootstepSoundSubmerged = SoundClips.None;
 
+            oldFootsteps.FallHardSound = SoundClips.None;
+            oldFootsteps.FallDamageSound = SoundClips.None;
+            oldFootsteps.SplashLargeSound = SoundClips.None;
+
+            oldFootsteps.enabled = false;
         }
     }
 }
