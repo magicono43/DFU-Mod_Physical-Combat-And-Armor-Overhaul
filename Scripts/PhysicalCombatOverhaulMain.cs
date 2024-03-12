@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/9/2024, 11:20 PM
+// Last Edit:		3/11/2024, 11:50 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -97,6 +97,8 @@ namespace PhysicalCombatOverhaul
 
             //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
 
+            PlayerEnterExit.OnTransitionInterior += UpdateFootsteps_OnTransitionInterior;
+            PlayerEnterExit.OnTransitionDungeonInterior += UpdateFootsteps_OnTransitionDungeonInterior;
             DaggerfallUI.UIManager.OnWindowChange += UIManager_RefreshEquipSlotReferencesOnInventoryClose;
 
             // Load Resources
@@ -129,6 +131,16 @@ namespace PhysicalCombatOverhaul
             }
         }
         */
+
+        public void UpdateFootsteps_OnTransitionInterior(PlayerEnterExit.TransitionEventArgs args)
+        {
+            //
+        }
+
+        public void UpdateFootsteps_OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs args)
+        {
+            //
+        }
 
         public static void UIManager_RefreshEquipSlotReferencesOnInventoryClose(object sender, EventArgs e)
         {

@@ -6,6 +6,7 @@ using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Serialization;
 using DaggerfallWorkshop.Utility;
 using DaggerfallConnect;
+using System.Collections.Generic;
 using PCO = PhysicalCombatOverhaul.PhysicalCombatOverhaulMain;
 
 namespace PhysicalCombatOverhaul
@@ -243,35 +244,35 @@ namespace PhysicalCombatOverhaul
                 lastClimateIndex = currentClimateIndex;
                 lastTileMapIndex = currentTileMapIndex;
 
-                if (IsShallowWaterTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
-                else if (IsPathTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; }
+                if (CheckClimateTileTables("Shallow_Water", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
+                else if (CheckClimateTileTables("Path", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; }
                 else if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
                 {
-                    if (currentClimateIndex == (int)MapsFile.Climates.Swamp && IsAlternateSwampTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; }
+                    if (currentClimateIndex == (int)MapsFile.Climates.Swamp && CheckClimateTileTables("Swamp_Snow_Alt", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; }
                     else { currentClimateFootsteps = altStep ? PCO.SnowFootstepsAlt : PCO.SnowFootstepsMain; }
                 }
                 else if (IsGrassyClimate(currentClimateIndex))
                 {
-                    if (IsTemperateDirtTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
-                    else if (IsTemperateStoneTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    if (CheckClimateTileTables("Temperate_Dirt", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
+                    else if (CheckClimateTileTables("Temperate_Stone", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
                     else { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
                 }
                 else if (IsRockyClimate(currentClimateIndex))
                 {
-                    if (IsMountainDirtTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
-                    else if (IsMountainStoneTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    if (CheckClimateTileTables("Mountain_Dirt", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
+                    else if (CheckClimateTileTables("Mountain_Stone", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
                     else { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
                 }
                 else if (IsSandyClimate(currentClimateIndex))
                 {
-                    if (IsDesertGravelTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
-                    else if (IsDesertStoneTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    if (CheckClimateTileTables("Desert_Gravel", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
+                    else if (CheckClimateTileTables("Desert_Stone", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
                     else { currentClimateFootsteps = altStep ? PCO.SandFootstepsAlt : PCO.SandFootstepsMain; } // Sand
                 }
                 else if (IsSwampyClimate(currentClimateIndex))
                 {
-                    if (IsSwampBogTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; } // Mud
-                    else if (IsSwampGrassTile(currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
+                    if (CheckClimateTileTables("Swamp_Bog", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; } // Mud
+                    else if (CheckClimateTileTables("Swamp_Grass", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
                     else { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; } // Mud
                 }
             }
@@ -301,7 +302,7 @@ namespace PhysicalCombatOverhaul
             // Other Terrain = Ocean
         }
 
-        #region Climate Checks
+        #region Climate Type Checks
 
         public static bool IsSnowyClimate(int climateIndex)
         {
@@ -369,262 +370,81 @@ namespace PhysicalCombatOverhaul
 
         #endregion
 
-        #region Tile Checks
+        #region Climate Tile Checks
 
-        public static bool IsShallowWaterTile(int tileIndex)
+        static Dictionary<byte, bool> shallowWaterTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the "Shallow Water" ground tiles, as determined by the "PlayerMotor.cs" script atleast.
-            switch (tileIndex)
-            {
-                case 5:
-                case 6:
-                case 8:
-                case 20:
-                case 21:
-                case 23:
-                case 30:
-                case 31:
-                case 33:
-                case 34:
-                case 35:
-                case 36:
-                case 49:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {5,true}, {6,true}, {8,true}, {20,true}, {21,true}, {23,true}, {30,true}, {31,true}, {33,true}, {34,true}, {35,true}, {36,true}, {49,true}
+        };
 
-        public static bool IsPathTile(int tileIndex)
+        static Dictionary<byte, bool> pathTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the "Path" ground tiles, as determined by the "PlayerMotor.cs" script atleast.
-            switch (tileIndex)
-            {
-                case 46:
-                case 47:
-                case 55:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {46,true}, {47,true}, {55,true}
+        };
 
-        public static bool IsAlternateSwampTile(int tileIndex)
+        static Dictionary<byte, bool> temperateDirtTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the snowy swamp tileset that look more like mud than snow to me.
-            switch (tileIndex)
-            {
-                case 1:
-                case 7:
-                case 10:
-                case 11:
-                case 13:
-                case 25:
-                case 26:
-                case 28:
-                case 37:
-                case 38:
-                case 39:
-                case 43:
-                case 48:
-                case 50:
-                case 52:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {1,true}, {4,true}, {7,true}, {10,true}, {13,true}, {25,true}, {26,true}, {28,true}, {37,true}, {38,true}, {39,true}, {51,true}, {52,true}, {54,true}
+        };
 
-        public static bool IsTemperateDirtTile(int tileIndex)
+        static Dictionary<byte, bool> temperateStoneTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the temperate tileset that look more like dirt than grass or stone to me.
-            switch (tileIndex)
-            {
-                case 1:
-                case 4:
-                case 7:
-                case 10:
-                case 13:
-                case 25:
-                case 26:
-                case 28:
-                case 37:
-                case 38:
-                case 39:
-                case 51:
-                case 52:
-                case 54:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {3,true}, {14,true}, {16,true}, {17,true}, {24,true}, {27,true}, {29,true}, {32,true}, {43,true}, {44,true}, {45,true}, {50,true}
+        };
 
-        public static bool IsTemperateStoneTile(int tileIndex)
+        static Dictionary<byte, bool> mountainDirtTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the temperate tileset that look more like stone than grass or dirt to me.
-            switch (tileIndex)
-            {
-                case 3:
-                case 14:
-                case 16:
-                case 17:
-                case 24:
-                case 27:
-                case 29:
-                case 32:
-                case 43:
-                case 44:
-                case 45:
-                case 50:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {1,true}, {4,true}, {7,true}, {10,true}, {13,true}, {25,true}, {26,true}, {28,true}, {37,true}, {38,true}, {39,true}, {51,true}, {52,true}, {54,true}
+        };
 
-        public static bool IsMountainDirtTile(int tileIndex)
+        static Dictionary<byte, bool> mountainStoneTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the mountain tileset that look more like dirt than grass or stone to me.
-            switch (tileIndex)
-            {
-                case 1:
-                case 4:
-                case 7:
-                case 10:
-                case 13:
-                case 25:
-                case 26:
-                case 28:
-                case 37:
-                case 38:
-                case 39:
-                case 51:
-                case 52:
-                case 54:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {3,true}, {14,true}, {16,true}, {17,true}, {24,true}, {27,true}, {29,true}, {32,true}, {43,true}, {44,true}, {45,true}, {50,true}
+        };
 
-        public static bool IsMountainStoneTile(int tileIndex)
+        static Dictionary<byte, bool> desertGravelTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the mountain tileset that look more like stone than grass or dirt to me.
-            switch (tileIndex)
-            {
-                case 3:
-                case 14:
-                case 16:
-                case 17:
-                case 24:
-                case 27:
-                case 29:
-                case 32:
-                case 43:
-                case 44:
-                case 45:
-                case 50:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {2,true}, {9,true}, {11,true}, {12,true}, {15,true}, {18,true}, {19,true}, {22,true}, {39,true}, {40,true}, {41,true}, {42,true}, {45,true}, {53,true}
+        };
 
-        public static bool IsDesertGravelTile(int tileIndex)
+        static Dictionary<byte, bool> desertStoneTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the desert tileset that look more like gravel than sand or stone to me.
-            switch (tileIndex)
-            {
-                case 2:
-                case 9:
-                case 11:
-                case 12:
-                case 15:
-                case 18:
-                case 19:
-                case 22:
-                case 39:
-                case 40:
-                case 41:
-                case 42:
-                case 45:
-                case 53:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {3,true}, {14,true}, {16,true}, {17,true}, {24,true}, {26,true}, {27,true}, {29,true}, {32,true}, {38,true}, {43,true}, {44,true}
+        };
 
-        public static bool IsDesertStoneTile(int tileIndex)
+        static Dictionary<byte, bool> swampBogTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the desert tileset that look more like stone than sand or gravel to me.
-            switch (tileIndex)
-            {
-                case 3:
-                case 14:
-                case 16:
-                case 17:
-                case 24:
-                case 26:
-                case 27:
-                case 29:
-                case 32:
-                case 38:
-                case 43:
-                case 44:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {1,true}, {4,true}, {7,true}, {10,true}, {13,true}, {25,true}, {26,true}, {28,true}, {37,true}, {38,true}, {39,true}, {50,true}, {51,true}, {52,true}, {54,true}
+        };
 
-        public static bool IsSwampBogTile(int tileIndex)
+        static Dictionary<byte, bool> swampGrassTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the swamp tileset that look more like bog than grass or mud to me.
-            switch (tileIndex)
-            {
-                case 1:
-                case 4:
-                case 7:
-                case 10:
-                case 13:
-                case 25:
-                case 26:
-                case 28:
-                case 37:
-                case 38:
-                case 39:
-                case 50:
-                case 51:
-                case 52:
-                case 54:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            {3,true}, {14,true}, {16,true}, {17,true}, {24,true}, {27,true}, {29,true}, {32,true}, {43,true}, {44,true}, {45,true}
+        };
 
-        public static bool IsSwampGrassTile(int tileIndex)
+        static Dictionary<byte, bool> swampAlternateTileLookup = new Dictionary<byte, bool>
         {
-            // These are all the ground tiles for the swamp tileset that look more like grass than mud or bog to me.
-            switch (tileIndex)
+            {1,true}, {7,true}, {10,true}, {11,true}, {13,true}, {25,true}, {26,true}, {28,true}, {37,true}, {38,true}, {39,true}, {43,true}, {48,true}, {50,true}, {52,true}
+        };
+
+        static Dictionary<string, Dictionary<byte, bool>> climateFloorTilesLookup = new Dictionary<string, Dictionary<byte, bool>>
+        {
+            {"Shallow_Water",shallowWaterTileLookup}, {"Path",pathTileLookup}, {"Temperate_Dirt",temperateDirtTileLookup}, {"Temperate_Stone",temperateStoneTileLookup},
+            {"Mountain_Dirt",mountainDirtTileLookup}, {"Mountain_Stone",mountainStoneTileLookup}, {"Desert_Gravel",desertGravelTileLookup}, {"Desert_Stone",desertStoneTileLookup},
+            {"Swamp_Bog",swampBogTileLookup}, {"Swamp_Grass",swampGrassTileLookup}, {"Swamp_Snow_Alt",swampAlternateTileLookup}
+        };
+
+        public static bool CheckClimateTileTables(string climateKey, byte tileKey)
+        {
+            if (climateFloorTilesLookup.ContainsKey(climateKey))
             {
-                case 3:
-                case 14:
-                case 16:
-                case 17:
-                case 24:
-                case 27:
-                case 29:
-                case 32:
-                case 43:
-                case 44:
-                case 45:
-                    return true;
-                default:
-                    return false;
+                if (climateFloorTilesLookup[climateKey].ContainsKey(tileKey))
+                {
+                    return climateFloorTilesLookup[climateKey][tileKey];
+                }
+                else { return false; }
             }
+            else { return false; }
         }
 
         #endregion
