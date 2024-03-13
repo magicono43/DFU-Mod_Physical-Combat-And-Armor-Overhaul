@@ -230,6 +230,54 @@ namespace PhysicalCombatOverhaul
         public void DetermineInteriorClimateFootstep()
         {
             // I suppose try and work on this tomorrow, getting the correct footstep type depending on the interior floor, will see.
+
+            /*
+             * Interior Tile Floors:
+             * 16_3
+             * 37_3
+             * 40_3
+             * 41_0, 41_1, 41_2, 41_3
+             * 44_3
+             * 63_3
+             * 111_2, 111_3
+             * 137_3
+             * 141_0, 141_1, 141_2, 141_3
+             * 144_3
+             * 311_3
+             * 337_3
+             * 341_0, 341_1, 341_2, 341_3
+             * 363_3
+             * 411_3
+             * 437_3
+             * 440_3
+             * 444_3
+             * 463_3
+             * 
+             * Interior Stone Floors:
+             * 60_3
+             * 140_3
+             * 160_3
+             * 163_3
+             * 340_3
+             * 360_3
+             * 366_3
+             * 416_3
+             * 460_3
+             * 466_3
+             * 
+             * Interior Wood Floors:
+             * 28_3
+             * 66_3
+             * 116_3
+             * 128_3
+             * 166_3
+             * 171_3
+             * 316_3
+             * 328_3
+             * 344_3
+             * 428_3
+             * 
+            */
         }
 
         public void DetermineExteriorClimateFootstep()

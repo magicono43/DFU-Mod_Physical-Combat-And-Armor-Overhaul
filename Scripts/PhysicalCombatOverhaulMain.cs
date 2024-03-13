@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/11/2024, 11:50 PM
+// Last Edit:		3/12/2024, 11:30 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -20,6 +20,7 @@ using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using DaggerfallWorkshop.Game.UserInterface;
+using DaggerfallConnect;
 
 namespace PhysicalCombatOverhaul
 {
@@ -134,7 +135,13 @@ namespace PhysicalCombatOverhaul
 
         public void UpdateFootsteps_OnTransitionInterior(PlayerEnterExit.TransitionEventArgs args)
         {
-            //
+            DFLocation.BuildingTypes buildingType = GameManager.Instance.PlayerEnterExit.BuildingDiscoveryData.buildingType;
+            PlayerGPS.DiscoveredBuilding buildingData = GameManager.Instance.PlayerEnterExit.BuildingDiscoveryData;
+
+            if (GameManager.Instance.PlayerEnterExit.IsPlayerInside)
+            {
+                //
+            }
         }
 
         public void UpdateFootsteps_OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs args)
