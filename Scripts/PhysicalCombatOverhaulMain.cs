@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/12/2024, 11:30 PM
+// Last Edit:		3/13/2024, 11:50 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -140,7 +140,31 @@ namespace PhysicalCombatOverhaul
 
             if (GameManager.Instance.PlayerEnterExit.IsPlayerInside)
             {
-                //
+                if (buildingType != DFLocation.BuildingTypes.None)
+                {
+                    GameObject interiorGO = args.DaggerfallInterior.gameObject;
+
+                    if (interiorGO != null)
+                    {
+                        GameObject modelsGO = interiorGO.transform.Find("Models").gameObject;
+
+                        if (modelsGO != null)
+                        {
+                            GameObject combinedModelsGO = modelsGO.transform.Find("CombinedModels").gameObject;
+
+                            if (combinedModelsGO != null)
+                            {
+                                MeshRenderer meshRender = combinedModelsGO.GetComponent<MeshRenderer>();
+
+                                if (meshRender != null)
+                                {
+                                    //meshRender.materials;
+                                    // Continue working on this tomorrow, array of materials and checking those somehow to determine main floor texture/type, etc.
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
