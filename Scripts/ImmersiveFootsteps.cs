@@ -13,6 +13,8 @@ namespace PhysicalCombatOverhaul
 {
     public class ImmersiveFootsteps : MonoBehaviour
     {
+        public static ImmersiveFootsteps Instance;
+
         #region Fields
 
         ulong loadID = 0;
@@ -41,7 +43,7 @@ namespace PhysicalCombatOverhaul
 
         DaggerfallDateTime.Seasons lastSeason = DaggerfallDateTime.Seasons.Summer;
         int lastClimateIndex = (int)MapsFile.Climates.Ocean;
-        int lastTileMapIndex = 0;
+        public int lastTileMapIndex = 0;
 
         DaggerfallDateTime.Seasons currentSeason = DaggerfallDateTime.Seasons.Summer;
         int currentClimateIndex = (int)MapsFile.Climates.Ocean;
@@ -63,10 +65,18 @@ namespace PhysicalCombatOverhaul
             set { loadID = value; }
         }
 
+        public AudioClip[] CurrentClimateFootsteps
+        {
+            get { return currentClimateFootsteps; }
+            set { currentClimateFootsteps = value; }
+        }
+
         #endregion
 
         private void Start()
         {
+            Instance = this;
+
             playerAdvanced = GameManager.Instance.PlayerObject;
             playerGPS = GameManager.Instance.PlayerGPS;
             dfAudioSource = playerAdvanced.GetComponent<DaggerfallAudioSource>();
@@ -489,6 +499,45 @@ namespace PhysicalCombatOverhaul
                 if (climateFloorTilesLookup[climateKey].ContainsKey(tileKey))
                 {
                     return climateFloorTilesLookup[climateKey][tileKey];
+                }
+                else { return false; }
+            }
+            else { return false; }
+        }
+
+        #endregion
+
+        #region Building Interior Climate Floor Checks
+
+        static Dictionary<string, bool> buildingTileFloorArchiveLookup = new Dictionary<string, bool>
+        {
+            {"16_3",true}, {"37_3",true}, {"40_3",true}, {"41_0",true}, {"41_1",true}, {"41_2",true}, {"41_3",true}, {"44_3",true}, {"63_3",true}, {"111_2",true}, {"111_3",true},
+            {"137_3",true}, {"141_0",true}, {"141_1",true}, {"141_2",true}, {"141_3",true}, {"144_3",true}, {"311_3",true}, {"337_3",true}, {"341_0",true}, {"341_1",true},
+            {"341_2",true}, {"341_3",true}, {"363_3",true}, {"411_3",true}, {"437_3",true}, {"440_3",true}, {"444_3",true}, {"463_3",true}
+        };
+
+        static Dictionary<string, bool> buildingStoneFloorArchiveLookup = new Dictionary<string, bool>
+        {
+            {"60_3",true}, {"140_3",true}, {"160_3",true}, {"163_3",true}, {"340_3",true}, {"360_3",true}, {"366_3",true}, {"416_3",true}, {"460_3",true}, {"466_3",true}
+        };
+
+        static Dictionary<string, bool> buildingWoodFloorArchiveLookup = new Dictionary<string, bool>
+        {
+            {"28_3",true}, {"66_3",true}, {"116_3",true}, {"128_3",true}, {"166_3",true}, {"171_3",true}, {"316_3",true}, {"328_3",true}, {"344_3",true}, {"428_3",true}
+        };
+
+        static Dictionary<string, Dictionary<string, bool>> buildingClimateFloorTypesLookup = new Dictionary<string, Dictionary<string, bool>>
+        {
+            {"Tile_Floor",buildingTileFloorArchiveLookup}, {"Stone_Floor",buildingStoneFloorArchiveLookup}, {"Wood_Floor",buildingWoodFloorArchiveLookup}
+        };
+
+        public static bool CheckBuildingClimateFloorTypeTables(string floorTypeKey, string archiveKey)
+        {
+            if (buildingClimateFloorTypesLookup.ContainsKey(floorTypeKey))
+            {
+                if (buildingClimateFloorTypesLookup[floorTypeKey].ContainsKey(archiveKey))
+                {
+                    return buildingClimateFloorTypesLookup[floorTypeKey][archiveKey];
                 }
                 else { return false; }
             }

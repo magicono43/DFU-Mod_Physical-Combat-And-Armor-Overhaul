@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/13/2024, 11:50 PM
+// Last Edit:		3/14/2024, 11:50 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -21,6 +21,7 @@ using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using DaggerfallWorkshop.Game.UserInterface;
 using DaggerfallConnect;
+using System.Text.RegularExpressions;
 
 namespace PhysicalCombatOverhaul
 {
@@ -99,6 +100,7 @@ namespace PhysicalCombatOverhaul
             //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
 
             PlayerEnterExit.OnTransitionInterior += UpdateFootsteps_OnTransitionInterior;
+            PlayerEnterExit.OnTransitionExterior += UpdateFootsteps_OnTransitionExterior;
             PlayerEnterExit.OnTransitionDungeonInterior += UpdateFootsteps_OnTransitionDungeonInterior;
             DaggerfallUI.UIManager.OnWindowChange += UIManager_RefreshEquipSlotReferencesOnInventoryClose;
 
@@ -158,14 +160,73 @@ namespace PhysicalCombatOverhaul
 
                                 if (meshRender != null)
                                 {
-                                    //meshRender.materials;
-                                    // Continue working on this tomorrow, array of materials and checking those somehow to determine main floor texture/type, etc.
+                                    Material[] mats = meshRender.materials;
+                                    for (int i = 0; i < mats.Length; i++)
+                                    {
+                                        string matArchive = GetFormattedTextureArchiveFromMaterialName(mats[i].name);
+                                        if (matArchive == string.Empty) { continue; }
+                                        else
+                                        {
+                                            if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Wood_Floor", matArchive))
+                                            {
+                                                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? WoodFootstepsAlt : WoodFootstepsMain;
+                                                return;
+                                            }
+                                            else if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Stone_Floor", matArchive))
+                                            {
+                                                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? PathFootstepsAlt : PathFootstepsMain;
+                                                return;
+                                            }
+                                            else if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Tile_Floor", matArchive))
+                                            {
+                                                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? TileFootstepsAlt : TileFootstepsMain;
+                                                return;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                // If the player is confirmed to be "inside", but another check fails after that, just default the footstep sound to the "Tile" one.
+                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? TileFootstepsAlt : TileFootstepsMain;
             }
+        }
+
+        public static string GetFormattedTextureArchiveFromMaterialName(string input)
+        {
+            // Assumed format example of input string: "TEXTURE.067 [Index=14] (Instance)"
+
+            // Define a regular expression pattern to match the desired parts of the input string
+            string pattern = @"TEXTURE\.(\d+) \[Index=(\d+)\] \(Instance\)";
+
+            // Match the input string against the pattern
+            Match match = Regex.Match(input, pattern);
+
+            // Check if the input string matches the pattern
+            if (match.Success)
+            {
+                // Extract the captured groups from the match
+                string textureNumber = match.Groups[1].Value.TrimStart('0');
+                string indexNumber = match.Groups[2].Value;
+
+                // Format the extracted numbers as desired
+                string formattedString = textureNumber + "_" + indexNumber;
+
+                return formattedString;
+            }
+            else
+            {
+                // Return an empty string if the input string doesn't match the expected pattern
+                return string.Empty;
+            }
+        }
+
+        public void UpdateFootsteps_OnTransitionExterior(PlayerEnterExit.TransitionEventArgs args)
+        {
+            ImmersiveFootsteps.Instance.lastTileMapIndex = 0;
+            ImmersiveFootsteps.Instance.DetermineExteriorClimateFootstep();
         }
 
         public void UpdateFootsteps_OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs args)
