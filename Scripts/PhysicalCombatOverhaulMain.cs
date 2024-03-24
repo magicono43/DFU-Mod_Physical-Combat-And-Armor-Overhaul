@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/14/2024, 11:50 PM
+// Last Edit:		3/23/2024, 11:00 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -45,6 +45,8 @@ namespace PhysicalCombatOverhaul
         // Mod Sounds
         private static AudioClip lastSoundPlayed = null;
 
+        public static AudioClip[] DeepWaterFootstepsMain = { null, null, null };
+        public static AudioClip[] DeepWaterFootstepsAlt = { null, null, null };
         public static AudioClip[] GrassFootstepsMain = { null, null, null };
         public static AudioClip[] GrassFootstepsAlt = { null, null, null };
         public static AudioClip[] GravelFootstepsMain = { null, null, null };
@@ -231,7 +233,7 @@ namespace PhysicalCombatOverhaul
 
         public void UpdateFootsteps_OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs args)
         {
-            //
+            // Determine tomorrow if I'll just have all dungeons uset he "tile footstep" sound, for ease on my part, will see. Otherwise work on overlaying armor and climate footstep sounds.
         }
 
         public static void UIManager_RefreshEquipSlotReferencesOnInventoryClose(object sender, EventArgs e)
@@ -280,6 +282,13 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Testing_5", false, out TestFootstepSound[4]);
             success &= modManager.TryGetAsset("Testing_6", false, out TestFootstepSound[5]);
             //success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
+
+            success &= modManager.TryGetAsset("Deep_Water_Footstep_1", false, out DeepWaterFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Deep_Water_Footstep_2", false, out DeepWaterFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Deep_Water_Footstep_3", false, out DeepWaterFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Deep_Water_Footstep_4", false, out DeepWaterFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Deep_Water_Footstep_5", false, out DeepWaterFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Deep_Water_Footstep_6", false, out DeepWaterFootstepsAlt[2]);
 
             success &= modManager.TryGetAsset("Grass_Footstep_1", false, out GrassFootstepsMain[0]);
             success &= modManager.TryGetAsset("Grass_Footstep_2", false, out GrassFootstepsMain[1]);

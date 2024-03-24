@@ -24,6 +24,10 @@ namespace PhysicalCombatOverhaul
         public float FootstepVolumeScale = 0.7f;
         public float stepInterval = 0.5f;
 
+        public float swimInterval = 1.75f;
+        public Vector3 lastPosition;
+        public float distance = 0f;
+
         public float footstepTimer = 0f;
         public int refreshSlotsTimer = 0;
         public bool isWalking = false;
@@ -83,12 +87,17 @@ namespace PhysicalCombatOverhaul
             playerMotor = GetComponent<PlayerMotor>();
             playerEnterExit = GetComponent<PlayerEnterExit>();
             transportManager = GetComponent<TransportManager>();
+
+            // Set start position
+            lastPosition = GetHorizontalPosition();
         }
 
         private void FixedUpdate()
         {
             if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
                 return;
+
+            bool playerSwimming = false;
 
             refreshSlotsTimer++;
 
@@ -104,7 +113,12 @@ namespace PhysicalCombatOverhaul
                 return;
             }
 
-            if (playerMotor.IsGrounded == false)
+            if (playerEnterExit != null)
+            {
+                playerSwimming = playerEnterExit.IsPlayerSwimming;
+            }
+
+            if (playerMotor.IsGrounded == false && !playerSwimming)
             {
                 return;
             }
@@ -132,6 +146,34 @@ namespace PhysicalCombatOverhaul
             {
                 footstepTimer += Time.fixedDeltaTime;
                 volumeScale = 1f;
+            }
+
+            if (playerSwimming)
+            {
+                // Get distance player travelled horizontally
+                Vector3 position = GetHorizontalPosition();
+                distance += Vector3.Distance(position, lastPosition);
+                lastPosition = position;
+
+                if (distance > swimInterval)
+                {
+                    isInside = (playerEnterExit == null) ? true : playerEnterExit.IsPlayerInside;
+
+                    if (isInside)
+                    {
+                        DetermineInteriorClimateFootstep();
+                    }
+                    else
+                    {
+                        DetermineExteriorClimateFootstep();
+                    }
+
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+
+                    distance = 0f;
+                }
+
+                footstepTimer = 0f;
             }
 
             if (footstepTimer >= stepInterval)
@@ -239,7 +281,24 @@ namespace PhysicalCombatOverhaul
 
         public void DetermineInteriorClimateFootstep()
         {
-            // I suppose try and work on this tomorrow, getting the correct footstep type depending on the interior floor, will see.
+            // Use water sounds if in dungeon water
+            if (GameManager.Instance.PlayerEnterExit.IsPlayerInsideDungeon && playerEnterExit.blockWaterLevel != 10000)
+            {
+                // In water, deep depth
+                if (playerEnterExit.IsPlayerSwimming)
+                {
+                    currentClimateFootsteps = altStep ? PCO.DeepWaterFootstepsAlt : PCO.DeepWaterFootstepsMain;
+                }
+                // In water, shallow depth
+                else if (!playerEnterExit.IsPlayerSwimming && (playerMotor.transform.position.y - 0.57f) < (playerEnterExit.blockWaterLevel * -1 * MeshReader.GlobalScale))
+                {
+                    currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain;
+                }
+                else
+                {
+                    CurrentClimateFootsteps = altStep ? PCO.TileFootstepsAlt : PCO.TileFootstepsMain;
+                }
+            }
 
             /*
              * Interior Tile Floors:
@@ -302,7 +361,13 @@ namespace PhysicalCombatOverhaul
                 lastClimateIndex = currentClimateIndex;
                 lastTileMapIndex = currentTileMapIndex;
 
-                if (CheckClimateTileTables("Shallow_Water", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
+                if (currentTileMapIndex == 0)
+                {
+                    // Minor bug here, if you are water-walking over water tiles, like the ocean, but water walking wears off, the "shallow water" sound will still play, due to not updating, oh well for now.
+                    if (GameManager.Instance.PlayerMotor.OnExteriorWater == PlayerMotor.OnExteriorWaterMethod.WaterWalking) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
+                    else { currentClimateFootsteps = altStep ? PCO.DeepWaterFootstepsAlt : PCO.DeepWaterFootstepsMain; }
+                }
+                else if (CheckClimateTileTables("Shallow_Water", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
                 else if (CheckClimateTileTables("Path", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; }
                 else if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
                 {
@@ -545,6 +610,11 @@ namespace PhysicalCombatOverhaul
         }
 
         #endregion
+
+        private Vector3 GetHorizontalPosition()
+        {
+            return new Vector3(transform.position.x, transform.position.y, transform.position.z);
+        }
 
         public static bool CoinFlip()
         {
