@@ -368,7 +368,10 @@ namespace PhysicalCombatOverhaul
                     else { currentClimateFootsteps = altStep ? PCO.DeepWaterFootstepsAlt : PCO.DeepWaterFootstepsMain; }
                 }
                 else if (CheckClimateTileTables("Shallow_Water", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
-                else if (CheckClimateTileTables("Path", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; }
+                else if (CheckClimateTileTables("Path", (byte)currentTileMapIndex))
+                {
+                    CheckToUseArmorFootsteps(); // Continue working on the "armor footstep" stuff tomorrow.
+                }
                 else if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
                 {
                     if (currentClimateIndex == (int)MapsFile.Climates.Swamp && CheckClimateTileTables("Swamp_Snow_Alt", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.MudFootstepsAlt : PCO.MudFootstepsMain; }
@@ -610,6 +613,30 @@ namespace PhysicalCombatOverhaul
         }
 
         #endregion
+
+        public void CheckToUseArmorFootsteps()
+        {
+            DaggerfallUnityItem boots = PCO.WornBoots;
+            if (boots != null)
+            {
+                if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron)
+                {
+                    currentClimateFootsteps = altStep ? PCO.PlateFootstepsAlt : PCO.PlateFootstepsMain;
+                }
+                else if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain)
+                {
+                    currentClimateFootsteps = altStep ? PCO.ChainmailFootstepsAlt : PCO.ChainmailFootstepsMain;
+                }
+                else
+                {
+                    currentClimateFootsteps = altStep ? PCO.LeatherFootstepsAlt : PCO.LeatherFootstepsMain;
+                }
+            }
+            else
+            {
+                currentClimateFootsteps = altStep ? PCO.UnarmoredFootstepsAlt : PCO.UnarmoredFootstepsMain;
+            }
+        }
 
         private Vector3 GetHorizontalPosition()
         {

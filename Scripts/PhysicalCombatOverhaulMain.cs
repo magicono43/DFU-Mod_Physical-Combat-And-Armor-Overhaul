@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/23/2024, 11:00 PM
+// Last Edit:		3/24/2024, 9:30 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -44,6 +44,15 @@ namespace PhysicalCombatOverhaul
 
         // Mod Sounds
         private static AudioClip lastSoundPlayed = null;
+
+        public static AudioClip[] ChainmailFootstepsMain = { null, null, null };
+        public static AudioClip[] ChainmailFootstepsAlt = { null, null, null };
+        public static AudioClip[] LeatherFootstepsMain = { null, null, null };
+        public static AudioClip[] LeatherFootstepsAlt = { null, null, null };
+        public static AudioClip[] PlateFootstepsMain = { null, null, null };
+        public static AudioClip[] PlateFootstepsAlt = { null, null, null };
+        public static AudioClip[] UnarmoredFootstepsMain = { null, null, null };
+        public static AudioClip[] UnarmoredFootstepsAlt = { null, null, null };
 
         public static AudioClip[] DeepWaterFootstepsMain = { null, null, null };
         public static AudioClip[] DeepWaterFootstepsAlt = { null, null, null };
@@ -282,6 +291,34 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Testing_5", false, out TestFootstepSound[4]);
             success &= modManager.TryGetAsset("Testing_6", false, out TestFootstepSound[5]);
             //success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
+
+            success &= modManager.TryGetAsset("Chainmail_Footstep_1", false, out ChainmailFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Chainmail_Footstep_2", false, out ChainmailFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Chainmail_Footstep_3", false, out ChainmailFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Chainmail_Footstep_4", false, out ChainmailFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Chainmail_Footstep_5", false, out ChainmailFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Chainmail_Footstep_6", false, out ChainmailFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Leather_Footstep_1", false, out LeatherFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Leather_Footstep_2", false, out LeatherFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Leather_Footstep_3", false, out LeatherFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Leather_Footstep_4", false, out LeatherFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Leather_Footstep_5", false, out LeatherFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Leather_Footstep_6", false, out LeatherFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Plate_Footstep_1", false, out PlateFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Plate_Footstep_2", false, out PlateFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Plate_Footstep_3", false, out PlateFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Plate_Footstep_4", false, out PlateFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Plate_Footstep_5", false, out PlateFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Plate_Footstep_6", false, out PlateFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Unarmored_Footstep_1", false, out UnarmoredFootstepsMain[0]);
+            success &= modManager.TryGetAsset("Unarmored_Footstep_2", false, out UnarmoredFootstepsMain[1]);
+            success &= modManager.TryGetAsset("Unarmored_Footstep_3", false, out UnarmoredFootstepsMain[2]);
+            success &= modManager.TryGetAsset("Unarmored_Footstep_4", false, out UnarmoredFootstepsAlt[0]);
+            success &= modManager.TryGetAsset("Unarmored_Footstep_5", false, out UnarmoredFootstepsAlt[1]);
+            success &= modManager.TryGetAsset("Unarmored_Footstep_6", false, out UnarmoredFootstepsAlt[2]);
 
             success &= modManager.TryGetAsset("Deep_Water_Footstep_1", false, out DeepWaterFootstepsMain[0]);
             success &= modManager.TryGetAsset("Deep_Water_Footstep_2", false, out DeepWaterFootstepsMain[1]);
