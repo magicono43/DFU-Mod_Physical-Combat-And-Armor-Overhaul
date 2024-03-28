@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/24/2024, 9:30 PM
+// Last Edit:		3/27/2024, 11:50 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -35,6 +35,7 @@ namespace PhysicalCombatOverhaul
         public static ImmersiveFootsteps footstepComponent { get; set; }
         public static AudioClip LastSoundPlayed { get { return lastSoundPlayed; } set { lastSoundPlayed = value; } }
         public static IUserInterfaceWindow LastUIWindow { get; set; }
+        public static byte CurrInteriorFloorType { get; set; }
         public static DaggerfallUnityItem WornHelmet { get; set; }
         public static DaggerfallUnityItem WornChestArmor { get; set; }
         public static DaggerfallUnityItem WornLegArmor { get; set; }
@@ -181,16 +182,19 @@ namespace PhysicalCombatOverhaul
                                             if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Wood_Floor", matArchive))
                                             {
                                                 ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? WoodFootstepsAlt : WoodFootstepsMain;
+                                                CurrInteriorFloorType = 2;
                                                 return;
                                             }
                                             else if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Stone_Floor", matArchive))
                                             {
                                                 ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? PathFootstepsAlt : PathFootstepsMain;
+                                                CurrInteriorFloorType = 1;
                                                 return;
                                             }
                                             else if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Tile_Floor", matArchive))
                                             {
                                                 ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? TileFootstepsAlt : TileFootstepsMain;
+                                                CurrInteriorFloorType = 0;
                                                 return;
                                             }
                                         }
@@ -202,6 +206,7 @@ namespace PhysicalCombatOverhaul
                 }
                 // If the player is confirmed to be "inside", but another check fails after that, just default the footstep sound to the "Tile" one.
                 ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? TileFootstepsAlt : TileFootstepsMain;
+                CurrInteriorFloorType = 0;
             }
         }
 
@@ -236,6 +241,7 @@ namespace PhysicalCombatOverhaul
 
         public void UpdateFootsteps_OnTransitionExterior(PlayerEnterExit.TransitionEventArgs args)
         {
+            CurrInteriorFloorType = 0;
             ImmersiveFootsteps.Instance.lastTileMapIndex = 0;
             ImmersiveFootsteps.Instance.DetermineExteriorClimateFootstep();
         }
@@ -243,6 +249,7 @@ namespace PhysicalCombatOverhaul
         public void UpdateFootsteps_OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs args)
         {
             // Determine tomorrow if I'll just have all dungeons uset he "tile footstep" sound, for ease on my part, will see. Otherwise work on overlaying armor and climate footstep sounds.
+            // Guess start here tomorrow, and do testing and fixing from there? Will see.
         }
 
         public static void UIManager_RefreshEquipSlotReferencesOnInventoryClose(object sender, EventArgs e)
@@ -262,6 +269,54 @@ namespace PhysicalCombatOverhaul
             }
         }
 
+        public static void UpdateInteriorArmorFootstepSounds()
+        {
+            DaggerfallUnityItem boots = WornBoots;
+
+            if (CurrInteriorFloorType == 2)
+            {
+                if (boots != null)
+                {
+                    if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron)
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? PlateFootstepsAlt : PlateFootstepsMain;
+                    else if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain)
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? ChainmailFootstepsAlt : ChainmailFootstepsMain;
+                    else
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? WoodFootstepsAlt : WoodFootstepsMain;
+                }
+                else
+                    ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? WoodFootstepsAlt : WoodFootstepsMain;
+            }
+            else if (CurrInteriorFloorType == 1)
+            {
+                if (boots != null)
+                {
+                    if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron)
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? PlateFootstepsAlt : PlateFootstepsMain;
+                    else if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain)
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? ChainmailFootstepsAlt : ChainmailFootstepsMain;
+                    else
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? PathFootstepsAlt : PathFootstepsMain;
+                }
+                else
+                    ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? UnarmoredFootstepsAlt : UnarmoredFootstepsMain;
+            }
+            else
+            {
+                if (boots != null)
+                {
+                    if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron)
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? PlateFootstepsAlt : PlateFootstepsMain;
+                    else if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain)
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? ChainmailFootstepsAlt : ChainmailFootstepsMain;
+                    else
+                        ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? TileFootstepsAlt : TileFootstepsMain;
+                }
+                else
+                    ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? UnarmoredFootstepsAlt : UnarmoredFootstepsMain;
+            }
+        }
+
         public static void RefreshEquipmentSlotReferences()
         {
             PlayerEntity player = GameManager.Instance.PlayerEntity;
@@ -273,6 +328,11 @@ namespace PhysicalCombatOverhaul
                 WornLegArmor = player.ItemEquipTable.GetItem(EquipSlots.LegsArmor);
                 WornBoots = player.ItemEquipTable.GetItem(EquipSlots.Feet);
                 // Eventual method call to refresh what sounds should be used based on the equipped items, etc.
+
+                if (GameManager.Instance.PlayerEnterExit.IsPlayerInside)
+                {
+                    UpdateInteriorArmorFootstepSounds();
+                }
             }
         }
 

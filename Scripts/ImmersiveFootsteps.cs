@@ -130,8 +130,6 @@ namespace PhysicalCombatOverhaul
                 return;
             }
 
-            // Tomorrow, perhaps see about making a "overlay" or delayed sound to happen before or after the armor-based footstep sound, which would act as the "environment specific" sound, will see.
-
             if (playerMotor.IsRunning)
             {
                 footstepTimer += 1.5f * Time.fixedDeltaTime;
@@ -370,7 +368,7 @@ namespace PhysicalCombatOverhaul
                 else if (CheckClimateTileTables("Shallow_Water", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.ShallowWaterFootstepsAlt : PCO.ShallowWaterFootstepsMain; }
                 else if (CheckClimateTileTables("Path", (byte)currentTileMapIndex))
                 {
-                    CheckToUseArmorFootsteps(); // Continue working on the "armor footstep" stuff tomorrow.
+                    CheckToUseArmorFootsteps();
                 }
                 else if (currentSeason == DaggerfallDateTime.Seasons.Winter && IsSnowyClimate(currentClimateIndex))
                 {
@@ -380,19 +378,19 @@ namespace PhysicalCombatOverhaul
                 else if (IsGrassyClimate(currentClimateIndex))
                 {
                     if (CheckClimateTileTables("Temperate_Dirt", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
-                    else if (CheckClimateTileTables("Temperate_Stone", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    else if (CheckClimateTileTables("Temperate_Stone", (byte)currentTileMapIndex)) { CheckToUseArmorFootsteps(); } // Stone
                     else { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
                 }
                 else if (IsRockyClimate(currentClimateIndex))
                 {
                     if (CheckClimateTileTables("Mountain_Dirt", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
-                    else if (CheckClimateTileTables("Mountain_Stone", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    else if (CheckClimateTileTables("Mountain_Stone", (byte)currentTileMapIndex)) { CheckToUseArmorFootsteps(); } // Stone
                     else { currentClimateFootsteps = altStep ? PCO.GrassFootstepsAlt : PCO.GrassFootstepsMain; } // Grass
                 }
                 else if (IsSandyClimate(currentClimateIndex))
                 {
                     if (CheckClimateTileTables("Desert_Gravel", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.GravelFootstepsAlt : PCO.GravelFootstepsMain; } // Gravel
-                    else if (CheckClimateTileTables("Desert_Stone", (byte)currentTileMapIndex)) { currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain; } // Stone
+                    else if (CheckClimateTileTables("Desert_Stone", (byte)currentTileMapIndex)) { CheckToUseArmorFootsteps(); } // Stone
                     else { currentClimateFootsteps = altStep ? PCO.SandFootstepsAlt : PCO.SandFootstepsMain; } // Sand
                 }
                 else if (IsSwampyClimate(currentClimateIndex))
@@ -407,9 +405,6 @@ namespace PhysicalCombatOverhaul
             {
                 currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain;
             }
-
-            // Perhaps tomorrow I'll try doing the subscribing to events for triggering when to recheck/update these values? Not sure, but will see.
-            // Probably also try doing testing for the current changes tomorrow, now that I have the audio-files somewhat set-up in their respective arrays for the climates atleast.
 
             // Work on this order of actions later today.
             // Subscribe To Events For Triggering Changes
