@@ -294,7 +294,7 @@ namespace PhysicalCombatOverhaul
                 }
                 else
                 {
-                    CurrentClimateFootsteps = altStep ? PCO.TileFootstepsAlt : PCO.TileFootstepsMain;
+                    CheckToUseArmorFootsteps();
                 }
             }
 
@@ -405,6 +405,8 @@ namespace PhysicalCombatOverhaul
             {
                 currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain;
             }
+
+            // I guess tomorrow start trying to work on the "armor sway" stuff and see how that goes.
 
             // Work on this order of actions later today.
             // Subscribe To Events For Triggering Changes
@@ -609,6 +611,33 @@ namespace PhysicalCombatOverhaul
 
         #endregion
 
+        #region Acrobat Motor Message Listeners
+
+        // Capture this message so we can play fall damage sound
+        private void ApplyPlayerFallDamage(float fallDistance)
+        {
+            // Play falling damage one-shot through normal audio source
+            if (dfAudioSource)
+                dfAudioSource.AudioSource.PlayOneShot(CheckToUseHardFallSounds(true), 4f * DaggerfallUnity.Settings.SoundVolume);
+        }
+
+        // Capture this message so we can play hard fall sound
+        private void HardFallAlert(float fallDistance)
+        {
+            // Play hard fall one-shot through normal audio source
+            if (dfAudioSource)
+                dfAudioSource.AudioSource.PlayOneShot(CheckToUseHardFallSounds(false), 4f * DaggerfallUnity.Settings.SoundVolume);
+        }
+
+        // Capture this message so we can play large splash sound
+        public void PlayLargeSplash()
+        {
+            if (dfAudioSource)
+                dfAudioSource.AudioSource.PlayOneShot(PCO.WaterLandingSound[0], 4f * DaggerfallUnity.Settings.SoundVolume);
+        }
+
+        #endregion
+
         public void CheckToUseArmorFootsteps()
         {
             DaggerfallUnityItem boots = PCO.WornBoots;
@@ -630,6 +659,30 @@ namespace PhysicalCombatOverhaul
             else
             {
                 currentClimateFootsteps = altStep ? PCO.UnarmoredFootstepsAlt : PCO.UnarmoredFootstepsMain;
+            }
+        }
+
+        public AudioClip CheckToUseHardFallSounds(bool fallDamage)
+        {
+            DaggerfallUnityItem boots = PCO.WornBoots;
+            if (boots != null)
+            {
+                if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron)
+                {
+                    return fallDamage ? PCO.PlateHardLanding[1] : PCO.PlateHardLanding[0];
+                }
+                else if (boots.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain)
+                {
+                    return fallDamage ? PCO.ChainmailHardLanding[1] : PCO.ChainmailHardLanding[0];
+                }
+                else
+                {
+                    return fallDamage ? PCO.LeatherHardLanding[1] : PCO.LeatherHardLanding[0];
+                }
+            }
+            else
+            {
+                return fallDamage ? PCO.UnarmoredHardLanding[1] : PCO.UnarmoredHardLanding[0];
             }
         }
 

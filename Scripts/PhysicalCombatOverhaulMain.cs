@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/27/2024, 11:50 PM
+// Last Edit:		3/28/2024, 10:50 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -76,6 +76,12 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] WoodFootstepsMain = { null, null, null };
         public static AudioClip[] WoodFootstepsAlt = { null, null, null };
 
+        public static AudioClip[] ChainmailHardLanding = { null, null };
+        public static AudioClip[] LeatherHardLanding = { null, null };
+        public static AudioClip[] PlateHardLanding = { null, null };
+        public static AudioClip[] UnarmoredHardLanding = { null, null };
+        public static AudioClip[] WaterLandingSound = { null };
+
         public static AudioClip[] TestFootstepSound = { null, null, null, null, null, null };
         public static AudioClip[] FootstepSoundDungeon = { null, null, null, null, null };
         public static AudioClip[] FootstepSoundOutside = { null, null, null };
@@ -114,6 +120,7 @@ namespace PhysicalCombatOverhaul
             PlayerEnterExit.OnTransitionInterior += UpdateFootsteps_OnTransitionInterior;
             PlayerEnterExit.OnTransitionExterior += UpdateFootsteps_OnTransitionExterior;
             PlayerEnterExit.OnTransitionDungeonInterior += UpdateFootsteps_OnTransitionDungeonInterior;
+            PlayerEnterExit.OnTransitionDungeonExterior += UpdateFootsteps_OnTransitionExterior;
             DaggerfallUI.UIManager.OnWindowChange += UIManager_RefreshEquipSlotReferencesOnInventoryClose;
 
             // Load Resources
@@ -181,20 +188,20 @@ namespace PhysicalCombatOverhaul
                                         {
                                             if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Wood_Floor", matArchive))
                                             {
-                                                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? WoodFootstepsAlt : WoodFootstepsMain;
                                                 CurrInteriorFloorType = 2;
+                                                UpdateInteriorArmorFootstepSounds();
                                                 return;
                                             }
                                             else if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Stone_Floor", matArchive))
                                             {
-                                                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? PathFootstepsAlt : PathFootstepsMain;
                                                 CurrInteriorFloorType = 1;
+                                                UpdateInteriorArmorFootstepSounds();
                                                 return;
                                             }
                                             else if (ImmersiveFootsteps.CheckBuildingClimateFloorTypeTables("Tile_Floor", matArchive))
                                             {
-                                                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? TileFootstepsAlt : TileFootstepsMain;
                                                 CurrInteriorFloorType = 0;
+                                                UpdateInteriorArmorFootstepSounds();
                                                 return;
                                             }
                                         }
@@ -205,8 +212,8 @@ namespace PhysicalCombatOverhaul
                     }
                 }
                 // If the player is confirmed to be "inside", but another check fails after that, just default the footstep sound to the "Tile" one.
-                ImmersiveFootsteps.Instance.CurrentClimateFootsteps = ImmersiveFootsteps.Instance.altStep ? TileFootstepsAlt : TileFootstepsMain;
                 CurrInteriorFloorType = 0;
+                UpdateInteriorArmorFootstepSounds();
             }
         }
 
@@ -248,8 +255,8 @@ namespace PhysicalCombatOverhaul
 
         public void UpdateFootsteps_OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs args)
         {
-            // Determine tomorrow if I'll just have all dungeons uset he "tile footstep" sound, for ease on my part, will see. Otherwise work on overlaying armor and climate footstep sounds.
-            // Guess start here tomorrow, and do testing and fixing from there? Will see.
+            CurrInteriorFloorType = 0;
+            UpdateInteriorArmorFootstepSounds();
         }
 
         public static void UIManager_RefreshEquipSlotReferencesOnInventoryClose(object sender, EventArgs e)
@@ -333,6 +340,12 @@ namespace PhysicalCombatOverhaul
                 {
                     UpdateInteriorArmorFootstepSounds();
                 }
+                else
+                {
+                    CurrInteriorFloorType = 0;
+                    ImmersiveFootsteps.Instance.lastTileMapIndex = 0;
+                    ImmersiveFootsteps.Instance.DetermineExteriorClimateFootstep();
+                }
             }
         }
 
@@ -350,7 +363,6 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Testing_4", false, out TestFootstepSound[3]);
             success &= modManager.TryGetAsset("Testing_5", false, out TestFootstepSound[4]);
             success &= modManager.TryGetAsset("Testing_6", false, out TestFootstepSound[5]);
-            //success &= modManager.TryGetAsset("Squidward_Walk_2", false, out FootstepSoundDungeon[1]);
 
             success &= modManager.TryGetAsset("Chainmail_Footstep_1", false, out ChainmailFootstepsMain[0]);
             success &= modManager.TryGetAsset("Chainmail_Footstep_2", false, out ChainmailFootstepsMain[1]);
@@ -449,6 +461,20 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Wood_Footstep_4", false, out WoodFootstepsAlt[0]);
             success &= modManager.TryGetAsset("Wood_Footstep_5", false, out WoodFootstepsAlt[1]);
             success &= modManager.TryGetAsset("Wood_Footstep_6", false, out WoodFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Chainmail_Hard_Landing_1", false, out ChainmailHardLanding[0]);
+            success &= modManager.TryGetAsset("Chainmail_Hard_Landing_2", false, out ChainmailHardLanding[1]);
+
+            success &= modManager.TryGetAsset("Leather_Hard_Landing_1", false, out LeatherHardLanding[0]);
+            success &= modManager.TryGetAsset("Leather_Hard_Landing_2", false, out LeatherHardLanding[1]);
+
+            success &= modManager.TryGetAsset("Plate_Hard_Landing_1", false, out PlateHardLanding[0]);
+            success &= modManager.TryGetAsset("Plate_Hard_Landing_2", false, out PlateHardLanding[1]);
+
+            success &= modManager.TryGetAsset("Unarmored_Hard_Landing_1", false, out UnarmoredHardLanding[0]);
+            success &= modManager.TryGetAsset("Unarmored_Hard_Landing_2", false, out UnarmoredHardLanding[1]);
+
+            success &= modManager.TryGetAsset("Water_Landing_1", false, out WaterLandingSound[0]);
 
             if (!success)
                 throw new Exception("LockedLootContainers: Missing sound asset");

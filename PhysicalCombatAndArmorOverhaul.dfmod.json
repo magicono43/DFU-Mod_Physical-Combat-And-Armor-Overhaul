@@ -99,7 +99,16 @@
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Climate_Footsteps/Deep_Water_Footstep_5.mp3",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Climate_Footsteps/Deep_Water_Footstep_3.mp3",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Climate_Footsteps/Deep_Water_Footstep_1.mp3",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Climate_Footsteps/Deep_Water_Footstep_2.mp3"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Climate_Footsteps/Deep_Water_Footstep_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Chainmail_Hard_Landing_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Leather_Hard_Landing_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Water_Landing_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Plate_Hard_Landing_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Unarmored_Hard_Landing_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Chainmail_Hard_Landing_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Leather_Hard_Landing_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Unarmored_Hard_Landing_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Plate_Hard_Landing_2.mp3"
     ],
     "Dependencies": []
 }
