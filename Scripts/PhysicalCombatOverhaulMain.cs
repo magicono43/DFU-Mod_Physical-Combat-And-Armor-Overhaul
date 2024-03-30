@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/28/2024, 10:50 PM
+// Last Edit:		3/29/2024, 11:00 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -54,6 +54,10 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] PlateFootstepsAlt = { null, null, null };
         public static AudioClip[] UnarmoredFootstepsMain = { null, null, null };
         public static AudioClip[] UnarmoredFootstepsAlt = { null, null, null };
+
+        public static AudioClip[] ChainmailSwaying = { null, null, null, null };
+        public static AudioClip[] LeatherSwaying = { null, null, null, null };
+        public static AudioClip[] PlateSwaying = { null, null, null, null };
 
         public static AudioClip[] DeepWaterFootstepsMain = { null, null, null };
         public static AudioClip[] DeepWaterFootstepsAlt = { null, null, null };
@@ -391,6 +395,21 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Unarmored_Footstep_4", false, out UnarmoredFootstepsAlt[0]);
             success &= modManager.TryGetAsset("Unarmored_Footstep_5", false, out UnarmoredFootstepsAlt[1]);
             success &= modManager.TryGetAsset("Unarmored_Footstep_6", false, out UnarmoredFootstepsAlt[2]);
+
+            success &= modManager.TryGetAsset("Chainmail_Swaying_1", false, out ChainmailSwaying[0]);
+            success &= modManager.TryGetAsset("Chainmail_Swaying_2", false, out ChainmailSwaying[1]);
+            success &= modManager.TryGetAsset("Chainmail_Swaying_3", false, out ChainmailSwaying[2]);
+            success &= modManager.TryGetAsset("Chainmail_Swaying_4", false, out ChainmailSwaying[3]);
+
+            success &= modManager.TryGetAsset("Leather_Swaying_1", false, out LeatherSwaying[0]);
+            success &= modManager.TryGetAsset("Leather_Swaying_2", false, out LeatherSwaying[1]);
+            success &= modManager.TryGetAsset("Leather_Swaying_3", false, out LeatherSwaying[2]);
+            success &= modManager.TryGetAsset("Leather_Swaying_4", false, out LeatherSwaying[3]);
+
+            success &= modManager.TryGetAsset("Plate_Swaying_1", false, out PlateSwaying[0]);
+            success &= modManager.TryGetAsset("Plate_Swaying_2", false, out PlateSwaying[1]);
+            success &= modManager.TryGetAsset("Plate_Swaying_3", false, out PlateSwaying[2]);
+            success &= modManager.TryGetAsset("Plate_Swaying_4", false, out PlateSwaying[3]);
 
             success &= modManager.TryGetAsset("Deep_Water_Footstep_1", false, out DeepWaterFootstepsMain[0]);
             success &= modManager.TryGetAsset("Deep_Water_Footstep_2", false, out DeepWaterFootstepsMain[1]);

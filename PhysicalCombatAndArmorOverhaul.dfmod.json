@@ -108,7 +108,19 @@
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Chainmail_Hard_Landing_2.mp3",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Leather_Hard_Landing_1.mp3",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Unarmored_Hard_Landing_1.mp3",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Plate_Hard_Landing_2.mp3"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Fall_Landing/Plate_Hard_Landing_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Leather_Swaying_4.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Chainmail_Swaying_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Leather_Swaying_3.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Plate_Swaying_4.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Plate_Swaying_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Leather_Swaying_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Chainmail_Swaying_4.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Chainmail_Swaying_3.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Plate_Swaying_3.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Chainmail_Swaying_2.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Plate_Swaying_1.mp3",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Audio/Armor_Swaying/Leather_Swaying_2.mp3"
     ],
     "Dependencies": []
 }
