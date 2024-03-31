@@ -22,13 +22,15 @@ namespace PhysicalCombatOverhaul
         public float WalkStepInterval = 2.5f; // Matched to classic. Was 1.6f;
         public float RunStepInterval = 2.5f; // Matched to classic. Was 1.8f;
         public float FootstepVolumeScale = 0.7f;
-        public float stepInterval = 0.5f;
+        public float stepInterval = 0.6f;
+        public float swayInterval = 0.45f;
 
         public float swimInterval = 1.75f;
         public Vector3 lastPosition;
         public float distance = 0f;
 
         public float footstepTimer = 0f;
+        public float armorSwayTimer = 0f;
         public int refreshSlotsTimer = 0;
         public bool isWalking = false;
         public bool altStep = false;
@@ -43,7 +45,8 @@ namespace PhysicalCombatOverhaul
         TransportManager transportManager;
         AudioSource customAudioSource;
 
-        AudioClip[] currentClimateFootsteps = PCO.PathFootstepsMain; // This for now until I do proper detection for non-exterior areas as well.
+        AudioClip[] currentClimateFootsteps = PCO.PathFootstepsMain;
+        AudioClip[] currentSwaySounds = PCO.EmptyAudioList;
 
         DaggerfallDateTime.Seasons lastSeason = DaggerfallDateTime.Seasons.Summer;
         int lastClimateIndex = (int)MapsFile.Climates.Ocean;
@@ -110,6 +113,7 @@ namespace PhysicalCombatOverhaul
             if (playerMotor == null)
             {
                 footstepTimer = 0f;
+                armorSwayTimer = 0f;
                 return;
             }
 
@@ -127,22 +131,26 @@ namespace PhysicalCombatOverhaul
             {
                 // Reset footstepTimer if the character is not moving
                 //footstepTimer = 0f;
+                //armorSwayTimer = 0f;
                 return;
             }
 
             if (playerMotor.IsRunning)
             {
                 footstepTimer += 1.5f * Time.fixedDeltaTime;
+                armorSwayTimer += 1.8f * Time.fixedDeltaTime;
                 volumeScale = 1.25f;
             }
             else if (playerMotor.IsMovingLessThanHalfSpeed)
             {
                 footstepTimer += 0.7f * Time.fixedDeltaTime;
+                armorSwayTimer += 0.5f * Time.fixedDeltaTime;
                 volumeScale = 0.6f;
             }
             else
             {
                 footstepTimer += Time.fixedDeltaTime;
+                armorSwayTimer += Time.fixedDeltaTime;
                 volumeScale = 1f;
             }
 
@@ -166,12 +174,13 @@ namespace PhysicalCombatOverhaul
                         DetermineExteriorClimateFootstep();
                     }
 
-                    dfAudioSource.AudioSource.PlayOneShot(RollRandomAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomFootstepAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
 
                     distance = 0f;
                 }
 
                 footstepTimer = 0f;
+                armorSwayTimer = 0f;
             }
 
             if (footstepTimer >= stepInterval)
@@ -187,7 +196,7 @@ namespace PhysicalCombatOverhaul
                     DetermineExteriorClimateFootstep();
                 }
 
-                dfAudioSource.AudioSource.PlayOneShot(RollRandomAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                dfAudioSource.AudioSource.PlayOneShot(RollRandomFootstepAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
 
                 //dfAudioSource.AudioSource.PlayOneShot(PCO.TestFootstepSound[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
                 //dfAudioSource.AudioSource.PlayOneShot(PCO.TestFootstepSound[0], UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
@@ -236,45 +245,17 @@ namespace PhysicalCombatOverhaul
                 footstepTimer = 0f;
             }
 
-            /*
-            playerSeason = DaggerfallUnity.Instance.WorldTime.Now.SeasonValue;
-            playerClimateIndex = GameManager.Instance.PlayerGPS.CurrentClimateIndex;
-            playerInside = (playerEnterExit == null) ? true : playerEnterExit.IsPlayerInside;
-            playerInBuilding = (playerEnterExit == null) ? false : playerEnterExit.IsPlayerInsideBuilding;
-
-            // Play splash footsteps whether player is walking on or swimming in exterior water
-            playerOnExteriorWater = (GameManager.Instance.PlayerMotor.OnExteriorWater == PlayerMotor.OnExteriorWaterMethod.Swimming || GameManager.Instance.PlayerMotor.OnExteriorWater == PlayerMotor.OnExteriorWaterMethod.WaterWalking);
-
-            playerOnExteriorPath = GameManager.Instance.PlayerMotor.OnExteriorPath;
-            playerOnStaticGeometry = GameManager.Instance.PlayerMotor.OnExteriorStaticGeometry;
-
-            // Change footstep sounds between winter/summer variants, when player enters/exits an interior space, or changes between path, water, or other outdoor ground
-            if (playerSeason != currentSeason || playerClimateIndex != currentClimateIndex || isInside != playerInside || playerOnExteriorWater != isInOutsideWater || playerOnExteriorPath != isInOutsidePath || playerOnStaticGeometry != isOnStaticGeometry)
+            if (armorSwayTimer >= swayInterval)
             {
-                currentSeason = playerSeason;
-                currentClimateIndex = playerClimateIndex;
-                isInside = playerInside;
-                isInOutsideWater = playerOnExteriorWater;
-                isInOutsidePath = playerOnExteriorPath;
-                isOnStaticGeometry = playerOnStaticGeometry;
+                DetermineArmorSwaySounds();
+
+                if (currentSwaySounds.Length > 0)
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(currentSwaySounds), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+
+                // Reset the armorSwayTimer and slightly randomize next swayInterval
+                armorSwayTimer = 0f;
+                swayInterval = UnityEngine.Random.Range(0.5f, 0.8f);
             }
-
-            // Play sound if over distance threshold
-            if (distance > threshold && customAudioSource && clip1 && clip2)
-            {
-                float volumeScale = FootstepVolumeScale;
-                if (playerMotor.IsMovingLessThanHalfSpeed)
-                    volumeScale *= 0.5f;
-
-                if (!alternateStep)
-                    customAudioSource.PlayOneShot(clip1, volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                else
-                    customAudioSource.PlayOneShot(clip2, volumeScale * DaggerfallUnity.Settings.SoundVolume);
-
-                alternateStep = (!alternateStep);
-                distance = 0f;
-            }
-            */
         }
 
         public void DetermineInteriorClimateFootstep()
@@ -406,8 +387,6 @@ namespace PhysicalCombatOverhaul
                 currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain;
             }
 
-            // I guess tomorrow start trying to work on the "armor sway" stuff and see how that goes.
-
             // Work on this order of actions later today.
             // Subscribe To Events For Triggering Changes
             //      Method Calls
@@ -423,6 +402,64 @@ namespace PhysicalCombatOverhaul
             // Woodland Terrain = Woodlands, HauntedWoodlands
             // Swamp Terrain = Swamp, Rainforest
             // Other Terrain = Ocean
+        }
+
+        public void DetermineArmorSwaySounds()
+        {
+            if (playerEnterExit.IsPlayerSwimming)
+            {
+                currentSwaySounds = PCO.EmptyAudioList;
+                return;
+            }
+
+            int bodyPart = RollArmorSwaySoundBodyPart();
+            DaggerfallUnityItem armor = null;
+
+            switch (bodyPart)
+            {
+                case 0: armor = PCO.WornHelmet; break;
+                case 1: armor = PCO.WornRightArm; break;
+                case 2: armor = PCO.WornLeftArm; break;
+                case 3: armor = PCO.WornChestArmor; break;
+                case 4: armor = PCO.WornGloves; break;
+                case 5: armor = PCO.WornLegArmor; break;
+            }
+
+            if (armor != null)
+            {
+                if (armor.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron)
+                {
+                    currentSwaySounds = PCO.PlateSwaying;
+                }
+                else if (armor.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain)
+                {
+                    currentSwaySounds = PCO.ChainmailSwaying;
+                }
+                else
+                {
+                    currentSwaySounds = PCO.LeatherSwaying;
+                }
+            }
+            else
+            {
+                if (PCO.DominantSwaySoundMaterial > 0)
+                {
+                    if (PCO.DominantSwaySoundMaterial >= 3) { currentSwaySounds = PCO.PlateSwaying; }
+                    else if (PCO.DominantSwaySoundMaterial == 2) { currentSwaySounds = PCO.ChainmailSwaying; }
+                    else { currentSwaySounds = PCO.LeatherSwaying; }
+                }
+                else
+                {
+                    currentSwaySounds = PCO.EmptyAudioList;
+                }
+            }
+        }
+
+        public static int RollArmorSwaySoundBodyPart()
+        {
+            // 0 = Head, 1 = Right-Arm, 2 = Left-Arm, 3 = Chest, 4 = Gloves, 5 = Legs, 6 = Feet.
+            int[] bodyParts = { 0, 0, 1, 2, 3, 3, 3, 4, 5, 5, 5, 5 };
+            return bodyParts[UnityEngine.Random.Range(0, bodyParts.Length)];
         }
 
         #region Climate Type Checks
@@ -699,12 +736,13 @@ namespace PhysicalCombatOverhaul
                 return true;
         }
 
-        public static AudioClip RollRandomAudioClip(AudioClip[] clips)
+        // Made these two different methods because I didn't feel like figuring out a "clean" way to use the same one tracking both "LastAudioClipPlayed" values, oh well for now.
+        public static AudioClip RollRandomFootstepAudioClip(AudioClip[] clips)
         {
             int randChoice = UnityEngine.Random.Range(0, clips.Length);
             AudioClip clip = clips[randChoice];
 
-            if (clip == PCO.LastSoundPlayed)
+            if (clip == PCO.LastFootstepPlayed)
             {
                 if (randChoice == 0)
                     randChoice++;
@@ -715,7 +753,28 @@ namespace PhysicalCombatOverhaul
 
                 clip = clips[randChoice];
             }
-            PCO.LastSoundPlayed = clip;
+            PCO.LastFootstepPlayed = clip;
+            return clip;
+        }
+
+        // Made these two different methods because I didn't feel like figuring out a "clean" way to use the same one tracking both "LastAudioClipPlayed" values, oh well for now.
+        public static AudioClip RollRandomArmorSwayAudioClip(AudioClip[] clips)
+        {
+            int randChoice = UnityEngine.Random.Range(0, clips.Length);
+            AudioClip clip = clips[randChoice];
+
+            if (clip == PCO.LastSwaySoundPlayed)
+            {
+                if (randChoice == 0)
+                    randChoice++;
+                else if (randChoice == clips.Length - 1)
+                    randChoice--;
+                else
+                    randChoice = CoinFlip() ? randChoice + 1 : randChoice - 1;
+
+                clip = clips[randChoice];
+            }
+            PCO.LastSwaySoundPlayed = clip;
             return clip;
         }
 
@@ -723,7 +782,7 @@ namespace PhysicalCombatOverhaul
         {
             AudioClip clip = null;
 
-            clip = RollRandomAudioClip(PCO.TestFootstepSound);
+            clip = RollRandomFootstepAudioClip(PCO.TestFootstepSound);
 
             if (clip == null)
                 clip = PCO.TestFootstepSound[0];

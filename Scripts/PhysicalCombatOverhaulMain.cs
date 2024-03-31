@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/29/2024, 11:00 PM
+// Last Edit:		3/30/2024, 9:00 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -33,18 +33,26 @@ namespace PhysicalCombatOverhaul
 
         // Global Variables
         public static ImmersiveFootsteps footstepComponent { get; set; }
-        public static AudioClip LastSoundPlayed { get { return lastSoundPlayed; } set { lastSoundPlayed = value; } }
+        public static AudioClip LastFootstepPlayed { get { return lastFootstepPlayed; } set { lastFootstepPlayed = value; } }
+        public static AudioClip LastSwaySoundPlayed { get { return lastSwaySoundPlayed; } set { lastSwaySoundPlayed = value; } }
         public static IUserInterfaceWindow LastUIWindow { get; set; }
         public static byte CurrInteriorFloorType { get; set; }
+        public static int DominantSwaySoundMaterial { get; set; }
         public static DaggerfallUnityItem WornHelmet { get; set; }
+        public static DaggerfallUnityItem WornRightArm { get; set; }
+        public static DaggerfallUnityItem WornLeftArm { get; set; }
         public static DaggerfallUnityItem WornChestArmor { get; set; }
+        public static DaggerfallUnityItem WornGloves { get; set; }
         public static DaggerfallUnityItem WornLegArmor { get; set; }
         public static DaggerfallUnityItem WornBoots { get; set; }
 
         #region Mod Sound Variables
 
         // Mod Sounds
-        private static AudioClip lastSoundPlayed = null;
+        private static AudioClip lastFootstepPlayed = null;
+        private static AudioClip lastSwaySoundPlayed = null;
+
+        public static AudioClip[] EmptyAudioList = Array.Empty<AudioClip>();
 
         public static AudioClip[] ChainmailFootstepsMain = { null, null, null };
         public static AudioClip[] ChainmailFootstepsAlt = { null, null, null };
@@ -335,10 +343,14 @@ namespace PhysicalCombatOverhaul
             if (player != null)
             {
                 WornHelmet = player.ItemEquipTable.GetItem(EquipSlots.Head);
+                WornRightArm = player.ItemEquipTable.GetItem(EquipSlots.RightArm);
+                WornLeftArm = player.ItemEquipTable.GetItem(EquipSlots.LeftArm);
                 WornChestArmor = player.ItemEquipTable.GetItem(EquipSlots.ChestArmor);
+                WornGloves = player.ItemEquipTable.GetItem(EquipSlots.Gloves);
                 WornLegArmor = player.ItemEquipTable.GetItem(EquipSlots.LegsArmor);
                 WornBoots = player.ItemEquipTable.GetItem(EquipSlots.Feet);
-                // Eventual method call to refresh what sounds should be used based on the equipped items, etc.
+
+                DominantSwaySoundMaterial = FindDominantSwaySoundMaterial();
 
                 if (GameManager.Instance.PlayerEnterExit.IsPlayerInside)
                 {
@@ -353,9 +365,51 @@ namespace PhysicalCombatOverhaul
             }
         }
 
+        public static int FindDominantSwaySoundMaterial()
+        {
+            // 0 = Nothing/Null, 1 = Leather, 2 = Chain, 3 = Plate.
+            int dominantMaterial = 0;
+
+            int[] materialValues = new int[]
+            {
+                GetMaterialValueOrDefault(WornHelmet),
+                GetMaterialValueOrDefault(WornRightArm),
+                GetMaterialValueOrDefault(WornLeftArm),
+                GetMaterialValueOrDefault(WornChestArmor),
+                GetMaterialValueOrDefault(WornGloves),
+                GetMaterialValueOrDefault(WornLegArmor)
+            };
+
+            foreach (int materialValue in materialValues)
+            {
+                int domMat = 0;
+
+                if (materialValue <= -1) { continue; }
+
+                if (dominantMaterial >= 3) { break; }
+
+                if (materialValue >= (int)ArmorMaterialTypes.Iron) { domMat = 3; }
+                else if (materialValue >= (int)ArmorMaterialTypes.Chain) { domMat = 2; }
+                else { domMat = 1; }
+
+                if (domMat > dominantMaterial)
+                {
+                    dominantMaterial = domMat;
+                }
+            }
+
+            return dominantMaterial;
+        }
+
+        // Helper method to get material value or return 0 if armor piece is null
+        public static int GetMaterialValueOrDefault(DaggerfallUnityItem armor)
+        {
+            return armor != null ? armor.NativeMaterialValue : -1;
+        }
+
         #region Load Audio Clips
 
-        
+
         private void LoadAudio() // Example taken from Penwick Papers Mod
         {
             ModManager modManager = ModManager.Instance;
