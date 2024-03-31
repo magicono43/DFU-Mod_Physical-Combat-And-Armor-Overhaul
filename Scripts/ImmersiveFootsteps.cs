@@ -23,14 +23,18 @@ namespace PhysicalCombatOverhaul
         public float RunStepInterval = 2.5f; // Matched to classic. Was 1.8f;
         public float FootstepVolumeScale = 0.7f;
         public float stepInterval = 0.6f;
-        public float swayInterval = 0.45f;
+        public float plateSwayInterval = 0.45f;
+        public float chainSwayInterval = 0.45f;
+        public float leatherSwayInterval = 0.45f;
 
         public float swimInterval = 1.75f;
         public Vector3 lastPosition;
         public float distance = 0f;
 
         public float footstepTimer = 0f;
-        public float armorSwayTimer = 0f;
+        public float plateSwayTimer = 0f;
+        public float chainSwayTimer = 0f;
+        public float leatherSwayTimer = 0f;
         public int refreshSlotsTimer = 0;
         public bool isWalking = false;
         public bool altStep = false;
@@ -113,7 +117,9 @@ namespace PhysicalCombatOverhaul
             if (playerMotor == null)
             {
                 footstepTimer = 0f;
-                armorSwayTimer = 0f;
+                plateSwayTimer = 0f;
+                chainSwayTimer = 0f;
+                leatherSwayTimer = 0f;
                 return;
             }
 
@@ -131,26 +137,34 @@ namespace PhysicalCombatOverhaul
             {
                 // Reset footstepTimer if the character is not moving
                 //footstepTimer = 0f;
-                //armorSwayTimer = 0f;
+                //plateSwayTimer = 0f;
+                //chainSwayTimer = 0f;
+                //leatherSwayTimer = 0f;
                 return;
             }
 
             if (playerMotor.IsRunning)
             {
                 footstepTimer += 1.5f * Time.fixedDeltaTime;
-                armorSwayTimer += 1.8f * Time.fixedDeltaTime;
+                plateSwayTimer += 1.8f * Time.fixedDeltaTime;
+                chainSwayTimer += 1.8f * Time.fixedDeltaTime;
+                leatherSwayTimer += 1.8f * Time.fixedDeltaTime;
                 volumeScale = 1.25f;
             }
             else if (playerMotor.IsMovingLessThanHalfSpeed)
             {
                 footstepTimer += 0.7f * Time.fixedDeltaTime;
-                armorSwayTimer += 0.5f * Time.fixedDeltaTime;
+                plateSwayTimer += 0.5f * Time.fixedDeltaTime;
+                chainSwayTimer += 0.5f * Time.fixedDeltaTime;
+                leatherSwayTimer += 0.5f * Time.fixedDeltaTime;
                 volumeScale = 0.6f;
             }
             else
             {
                 footstepTimer += Time.fixedDeltaTime;
-                armorSwayTimer += Time.fixedDeltaTime;
+                plateSwayTimer += Time.fixedDeltaTime;
+                chainSwayTimer += Time.fixedDeltaTime;
+                leatherSwayTimer += Time.fixedDeltaTime;
                 volumeScale = 1f;
             }
 
@@ -180,7 +194,9 @@ namespace PhysicalCombatOverhaul
                 }
 
                 footstepTimer = 0f;
-                armorSwayTimer = 0f;
+                plateSwayTimer = 0f;
+                chainSwayTimer = 0f;
+                leatherSwayTimer = 0f;
             }
 
             if (footstepTimer >= stepInterval)
@@ -245,16 +261,32 @@ namespace PhysicalCombatOverhaul
                 footstepTimer = 0f;
             }
 
-            if (armorSwayTimer >= swayInterval)
+            if (PCO.leatherWornSwayWeight <= 0) { leatherSwayTimer = 0f; }
+            if (PCO.chainWornSwayWeight <= 0) { chainSwayTimer = 0f; }
+            if (PCO.plateWornSwayWeight <= 0) { plateSwayTimer = 0f; }
+
+            if (leatherSwayTimer >= leatherSwayInterval)
             {
-                DetermineArmorSwaySounds();
+                dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.LeatherSwaying), volumeScale * DaggerfallUnity.Settings.SoundVolume);
 
-                if (currentSwaySounds.Length > 0)
-                    dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(currentSwaySounds), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                leatherSwayTimer = 0f;
+                leatherSwayInterval = UnityEngine.Random.Range(0.8f, 1.1f) - (PCO.leatherWornSwayWeight * 0.025f);
+            }
 
-                // Reset the armorSwayTimer and slightly randomize next swayInterval
-                armorSwayTimer = 0f;
-                swayInterval = UnityEngine.Random.Range(0.5f, 0.8f);
+            if (chainSwayTimer >= chainSwayInterval)
+            {
+                dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.ChainmailSwaying), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+
+                chainSwayTimer = 0f;
+                chainSwayInterval = UnityEngine.Random.Range(0.8f, 1.1f) - (PCO.chainWornSwayWeight * 0.025f);
+            }
+
+            if (plateSwayTimer >= plateSwayInterval)
+            {
+                dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.PlateSwaying), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+
+                plateSwayTimer = 0f;
+                plateSwayInterval = UnityEngine.Random.Range(0.8f, 1.1f) - (PCO.plateWornSwayWeight * 0.025f);
             }
         }
 
@@ -402,64 +434,6 @@ namespace PhysicalCombatOverhaul
             // Woodland Terrain = Woodlands, HauntedWoodlands
             // Swamp Terrain = Swamp, Rainforest
             // Other Terrain = Ocean
-        }
-
-        public void DetermineArmorSwaySounds()
-        {
-            if (playerEnterExit.IsPlayerSwimming)
-            {
-                currentSwaySounds = PCO.EmptyAudioList;
-                return;
-            }
-
-            int bodyPart = RollArmorSwaySoundBodyPart();
-            DaggerfallUnityItem armor = null;
-
-            switch (bodyPart)
-            {
-                case 0: armor = PCO.WornHelmet; break;
-                case 1: armor = PCO.WornRightArm; break;
-                case 2: armor = PCO.WornLeftArm; break;
-                case 3: armor = PCO.WornChestArmor; break;
-                case 4: armor = PCO.WornGloves; break;
-                case 5: armor = PCO.WornLegArmor; break;
-            }
-
-            if (armor != null)
-            {
-                if (armor.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron)
-                {
-                    currentSwaySounds = PCO.PlateSwaying;
-                }
-                else if (armor.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain)
-                {
-                    currentSwaySounds = PCO.ChainmailSwaying;
-                }
-                else
-                {
-                    currentSwaySounds = PCO.LeatherSwaying;
-                }
-            }
-            else
-            {
-                if (PCO.DominantSwaySoundMaterial > 0)
-                {
-                    if (PCO.DominantSwaySoundMaterial >= 3) { currentSwaySounds = PCO.PlateSwaying; }
-                    else if (PCO.DominantSwaySoundMaterial == 2) { currentSwaySounds = PCO.ChainmailSwaying; }
-                    else { currentSwaySounds = PCO.LeatherSwaying; }
-                }
-                else
-                {
-                    currentSwaySounds = PCO.EmptyAudioList;
-                }
-            }
-        }
-
-        public static int RollArmorSwaySoundBodyPart()
-        {
-            // 0 = Head, 1 = Right-Arm, 2 = Left-Arm, 3 = Chest, 4 = Gloves, 5 = Legs, 6 = Feet.
-            int[] bodyParts = { 0, 0, 1, 2, 3, 3, 3, 4, 5, 5, 5, 5 };
-            return bodyParts[UnityEngine.Random.Range(0, bodyParts.Length)];
         }
 
         #region Climate Type Checks

@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/30/2024, 9:00 PM
+// Last Edit:		3/30/2024, 10:40 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -37,7 +37,6 @@ namespace PhysicalCombatOverhaul
         public static AudioClip LastSwaySoundPlayed { get { return lastSwaySoundPlayed; } set { lastSwaySoundPlayed = value; } }
         public static IUserInterfaceWindow LastUIWindow { get; set; }
         public static byte CurrInteriorFloorType { get; set; }
-        public static int DominantSwaySoundMaterial { get; set; }
         public static DaggerfallUnityItem WornHelmet { get; set; }
         public static DaggerfallUnityItem WornRightArm { get; set; }
         public static DaggerfallUnityItem WornLeftArm { get; set; }
@@ -45,6 +44,10 @@ namespace PhysicalCombatOverhaul
         public static DaggerfallUnityItem WornGloves { get; set; }
         public static DaggerfallUnityItem WornLegArmor { get; set; }
         public static DaggerfallUnityItem WornBoots { get; set; }
+
+        public static int plateWornSwayWeight = 0;
+        public static int chainWornSwayWeight = 0;
+        public static int leatherWornSwayWeight = 0;
 
         #region Mod Sound Variables
 
@@ -350,7 +353,7 @@ namespace PhysicalCombatOverhaul
                 WornLegArmor = player.ItemEquipTable.GetItem(EquipSlots.LegsArmor);
                 WornBoots = player.ItemEquipTable.GetItem(EquipSlots.Feet);
 
-                DominantSwaySoundMaterial = FindDominantSwaySoundMaterial();
+                UpdateSwayMaterialWeights();
 
                 if (GameManager.Instance.PlayerEnterExit.IsPlayerInside)
                 {
@@ -365,11 +368,13 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        public static int FindDominantSwaySoundMaterial()
+        public static void UpdateSwayMaterialWeights()
         {
-            // 0 = Nothing/Null, 1 = Leather, 2 = Chain, 3 = Plate.
-            int dominantMaterial = 0;
+            plateWornSwayWeight = 0;
+            chainWornSwayWeight = 0;
+            leatherWornSwayWeight = 0;
 
+            // 0 = Nothing/Null, 1 = Leather, 2 = Chain, 3 = Plate.
             int[] materialValues = new int[]
             {
                 GetMaterialValueOrDefault(WornHelmet),
@@ -380,25 +385,27 @@ namespace PhysicalCombatOverhaul
                 GetMaterialValueOrDefault(WornLegArmor)
             };
 
-            foreach (int materialValue in materialValues)
+            // 0 = Head, 1 = Right-Arm, 2 = Left-Arm, 3 = Chest, 4 = Gloves, 5 = Legs, 6 = Feet.
+            for (int i = 0; i < materialValues.Length; i++)
             {
-                int domMat = 0;
+                int weight = 0;
 
-                if (materialValue <= -1) { continue; }
+                if (materialValues[i] <= -1) { continue; }
 
-                if (dominantMaterial >= 3) { break; }
-
-                if (materialValue >= (int)ArmorMaterialTypes.Iron) { domMat = 3; }
-                else if (materialValue >= (int)ArmorMaterialTypes.Chain) { domMat = 2; }
-                else { domMat = 1; }
-
-                if (domMat > dominantMaterial)
+                switch (i)
                 {
-                    dominantMaterial = domMat;
+                    case 0: weight = 2; break;
+                    case 1:
+                    case 2:
+                    case 4: weight = 1; break;
+                    case 3: weight = 3; break;
+                    case 5: weight = 4; break;
                 }
-            }
 
-            return dominantMaterial;
+                if (materialValues[i] >= (int)ArmorMaterialTypes.Iron) { plateWornSwayWeight += weight; }
+                else if (materialValues[i] >= (int)ArmorMaterialTypes.Chain) { chainWornSwayWeight += weight; }
+                else { leatherWornSwayWeight += weight; }
+            }
         }
 
         // Helper method to get material value or return 0 if armor piece is null
