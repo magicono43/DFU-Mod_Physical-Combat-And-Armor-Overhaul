@@ -93,7 +93,7 @@ namespace PhysicalCombatOverhaul
             dfAudioSource = playerAdvanced.GetComponent<DaggerfallAudioSource>();
             playerMotor = GetComponent<PlayerMotor>();
             playerEnterExit = GetComponent<PlayerEnterExit>();
-            transportManager = GetComponent<TransportManager>();
+            transportManager = GameManager.Instance.TransportManager;
 
             // Set start position
             lastPosition = GetHorizontalPosition();
@@ -168,6 +168,15 @@ namespace PhysicalCombatOverhaul
                 volumeScale = 1f;
             }
 
+            if (transportManager.TransportMode == TransportModes.Horse || transportManager.TransportMode == TransportModes.Cart)
+            {
+                footstepTimer = 0f;
+            }
+
+            // Honestly, for now I think I'm just going to keep the bug where when on the player ship the footstep sounds are not always accurate on the exterior.
+            // The reason being right now I don't feel like having the "TransportManager.IsOnShip" method running every frame, or close to it is worth potentially fixing that.
+            // Maybe I'll try to fix it later if I get many complaints or whatever, but for now I'll just leave it as is, in-case peformance could be impacted.
+            // Hopefully I'll find a better way to resolve this later, but for right now just leave it, oh well.
             if (playerSwimming)
             {
                 // Get distance player travelled horizontally
