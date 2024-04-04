@@ -126,5 +126,11 @@
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Sound/AnimalHorse.wav",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Sound/HorseClop.wav"
     ],
-    "Dependencies": []
+    "Dependencies": [
+        {
+            "Name": "Better Ambience",
+            "IsOptional": true,
+            "IsPeer": false
+        }
+    ]
 }

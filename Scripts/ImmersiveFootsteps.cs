@@ -19,6 +19,8 @@ namespace PhysicalCombatOverhaul
 
         ulong loadID = 0;
 
+        public bool travelOptionsAcceleratedTravelActive = false;
+
         public float WalkStepInterval = 2.5f; // Matched to classic. Was 1.6f;
         public float RunStepInterval = 2.5f; // Matched to classic. Was 1.8f;
         public float FootstepVolumeScale = 0.7f;
@@ -103,6 +105,12 @@ namespace PhysicalCombatOverhaul
         {
             if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
                 return;
+
+            if (PCO.TravelOptionsCheck)
+            {
+                if (CheckForTravelOptionsAcceleratedTravel())
+                    return;
+            }
 
             bool playerSwimming = false;
 
@@ -704,6 +712,18 @@ namespace PhysicalCombatOverhaul
             {
                 return fallDamage ? PCO.UnarmoredHardLanding[1] : PCO.UnarmoredHardLanding[0];
             }
+        }
+
+        public static bool CheckForTravelOptionsAcceleratedTravel()
+        {
+            bool accelTravelActive = false;
+
+            DaggerfallWorkshop.Game.Utility.ModSupport.ModManager.Instance.SendModMessage("TravelOptions", "isTravelActive", null, (string message, object data) =>
+            {
+                accelTravelActive = (bool)data;
+            });
+
+            return accelTravelActive;
         }
 
         private Vector3 GetHorizontalPosition()

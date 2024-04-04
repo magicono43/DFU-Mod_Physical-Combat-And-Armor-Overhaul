@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/2/2024, 11:30 PM
+// Last Edit:		4/3/2024, 11:30 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -30,6 +30,11 @@ namespace PhysicalCombatOverhaul
         public static PhysicalCombatOverhaulMain Instance;
 
         static Mod mod;
+
+        // Mod Compatibility Check Values
+        public static bool BetterAmbienceCheck { get; set; }
+        public static bool BetterAmbienceFootstepsModuleCheck { get; set; }
+        public static bool TravelOptionsCheck { get; set; }
 
         // Global Variables
         public static ImmersiveFootsteps footstepComponent { get; set; }
@@ -130,6 +135,8 @@ namespace PhysicalCombatOverhaul
 
             mod.LoadSettings();
 
+            ModCompatibilityChecking();
+
             //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
 
             PlayerEnterExit.OnTransitionInterior += UpdateFootsteps_OnTransitionInterior;
@@ -154,20 +161,26 @@ namespace PhysicalCombatOverhaul
             //ReverseCycleDirection = mod.GetSettings().GetValue<bool>("GeneralSettings", "ReverseCycleDirections");
         }
 
-        /*
-        private void Update()
+        private void ModCompatibilityChecking()
         {
-            if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
-                return;
-
-            // Handle mouse wheel
-            float mouseScroll = Input.GetAxis("Mouse ScrollWheel");
-            if (mouseScroll != 0)
+            // Better Ambience mod: https://www.nexusmods.com/daggerfallunity/mods/139
+            Mod betterAmbience = ModManager.Instance.GetModFromGUID("d5655077-ba38-4dbc-a41f-2b358cb1d680");
+            if (betterAmbience != null)
             {
-                // sdf
+                BetterAmbienceCheck = true;
+                ModSettings betterAmbienceSettings = betterAmbience.GetSettings();
+                BetterAmbienceFootstepsModuleCheck = betterAmbienceSettings.GetBool("Better Footsteps", "enable");
             }
+            else { BetterAmbienceCheck = false; }
+
+            // Tomorrow, work on some logic to show a warning message when Better Ambience is active with the "Better Footsteps" setting active, will maybe subscribe to
+            // "OnLoad" or whatever and see how that works. Will test that out tomorrow, as well as the Travel Options thing I just added so sounds from this mod
+            // would not play while in Travel Options "Accelerated Travel" mode, will see if that actually works or not.
+
+            // Travel Options mod: https://www.nexusmods.com/daggerfallunity/mods/122
+            Mod travelOptions = ModManager.Instance.GetModFromGUID("93f3ad1c-83cc-40ac-b762-96d2f47f2e05");
+            TravelOptionsCheck = travelOptions != null ? true : false;
         }
-        */
 
         public void UpdateFootsteps_OnTransitionInterior(PlayerEnterExit.TransitionEventArgs args)
         {
