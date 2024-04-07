@@ -5,7 +5,6 @@ using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Serialization;
 using DaggerfallWorkshop.Utility;
-using DaggerfallConnect;
 using System.Collections.Generic;
 using PCO = PhysicalCombatOverhaul.PhysicalCombatOverhaulMain;
 
@@ -16,18 +15,6 @@ namespace PhysicalCombatOverhaul
         public static ImmersiveFootsteps Instance;
 
         #region Fields
-
-        ulong loadID = 0;
-
-        public bool travelOptionsAcceleratedTravelActive = false;
-
-        public float WalkStepInterval = 2.5f; // Matched to classic. Was 1.6f;
-        public float RunStepInterval = 2.5f; // Matched to classic. Was 1.8f;
-        public float FootstepVolumeScale = 0.7f;
-        public float stepInterval = 0.6f;
-        public float plateSwayInterval = 0.45f;
-        public float chainSwayInterval = 0.45f;
-        public float leatherSwayInterval = 0.45f;
 
         public float swimInterval = 1.75f;
         public Vector3 lastPosition;
@@ -44,15 +31,12 @@ namespace PhysicalCombatOverhaul
         public float volumeScale = 1f;
 
         GameObject playerAdvanced;
-        PlayerGPS playerGPS;
         DaggerfallAudioSource dfAudioSource;
         PlayerMotor playerMotor;
         PlayerEnterExit playerEnterExit;
         TransportManager transportManager;
-        AudioSource customAudioSource;
 
         AudioClip[] currentClimateFootsteps = PCO.PathFootstepsMain;
-        AudioClip[] currentSwaySounds = PCO.EmptyAudioList;
 
         DaggerfallDateTime.Seasons lastSeason = DaggerfallDateTime.Seasons.Summer;
         int lastClimateIndex = (int)MapsFile.Climates.Ocean;
@@ -63,20 +47,10 @@ namespace PhysicalCombatOverhaul
         int currentTileMapIndex = 0;
 
         bool isInside = false;
-        bool isInBuilding = false;
-        bool onExteriorWater = false;
-        bool onExteriorPath = false;
-        bool oStaticGeometry = false;
 
         #endregion
 
         #region Properties
-
-        public ulong LoadID
-        {
-            get { return loadID; }
-            set { loadID = value; }
-        }
 
         public AudioClip[] CurrentClimateFootsteps
         {
@@ -91,7 +65,6 @@ namespace PhysicalCombatOverhaul
             Instance = this;
 
             playerAdvanced = GameManager.Instance.PlayerObject;
-            playerGPS = GameManager.Instance.PlayerGPS;
             dfAudioSource = playerAdvanced.GetComponent<DaggerfallAudioSource>();
             playerMotor = GetComponent<PlayerMotor>();
             playerEnterExit = GetComponent<PlayerEnterExit>();
@@ -119,7 +92,8 @@ namespace PhysicalCombatOverhaul
             if (refreshSlotsTimer >= 250) // 50 FixedUpdates is approximately equal to 1 second since each FixedUpdate happens every 0.02 seconds, that's what Unity docs say at least.
             {
                 refreshSlotsTimer = 0;
-                PCO.RefreshEquipmentSlotReferences();
+                if (PCO.AllowFootstepSounds || PCO.AllowArmorSwaySounds) { PCO.RefreshEquipmentSlotReferences(); }
+                else { } // Do nothing if both armor sound options are disabled, since there is no point in updating these values in that case.
             }
 
             if (playerMotor == null)
@@ -143,11 +117,6 @@ namespace PhysicalCombatOverhaul
 
             if (playerMotor.IsStandingStill)
             {
-                // Reset footstepTimer if the character is not moving
-                //footstepTimer = 0f;
-                //plateSwayTimer = 0f;
-                //chainSwayTimer = 0f;
-                //leatherSwayTimer = 0f;
                 return;
             }
 
@@ -181,7 +150,19 @@ namespace PhysicalCombatOverhaul
                 footstepTimer = 0f;
             }
 
-            // Honestly, for now I think I'm just going to keep the bug where when on the player ship the footstep sounds are not always accurate on the exterior.
+            if (!PCO.AllowFootstepSounds)
+            {
+                footstepTimer = 0f;
+            }
+
+            if (!PCO.AllowArmorSwaySounds)
+            {
+                plateSwayTimer = 0f;
+                chainSwayTimer = 0f;
+                leatherSwayTimer = 0f;
+            }    
+
+            // Honestly, for now I think I'm just going to keep the bug where when on the player ship the footstep sounds are not always accurate on the player ship exterior.
             // The reason being right now I don't feel like having the "TransportManager.IsOnShip" method running every frame, or close to it is worth potentially fixing that.
             // Maybe I'll try to fix it later if I get many complaints or whatever, but for now I'll just leave it as is, in-case peformance could be impacted.
             // Hopefully I'll find a better way to resolve this later, but for right now just leave it, oh well.
@@ -205,7 +186,7 @@ namespace PhysicalCombatOverhaul
                         DetermineExteriorClimateFootstep();
                     }
 
-                    dfAudioSource.AudioSource.PlayOneShot(RollRandomFootstepAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomFootstepAudioClip(currentClimateFootsteps), volumeScale * PCO.FootstepVolumeMulti * DaggerfallUnity.Settings.SoundVolume);
 
                     distance = 0f;
                 }
@@ -216,7 +197,7 @@ namespace PhysicalCombatOverhaul
                 leatherSwayTimer = 0f;
             }
 
-            if (footstepTimer >= stepInterval)
+            if (footstepTimer >= PCO.stepInterval)
             {
                 isInside = (playerEnterExit == null) ? true : playerEnterExit.IsPlayerInside;
 
@@ -229,50 +210,10 @@ namespace PhysicalCombatOverhaul
                     DetermineExteriorClimateFootstep();
                 }
 
-                dfAudioSource.AudioSource.PlayOneShot(RollRandomFootstepAudioClip(currentClimateFootsteps), volumeScale * DaggerfallUnity.Settings.SoundVolume);
-
-                //dfAudioSource.AudioSource.PlayOneShot(PCO.TestFootstepSound[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                //dfAudioSource.AudioSource.PlayOneShot(PCO.TestFootstepSound[0], UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
-                //dfAudioSource.AudioSource.PlayOneShot(GetTestFootstepClip(), volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                //dfAudioSource.AudioSource.PlayOneShot(GetTestFootstepClip(), UnityEngine.Random.Range(0.85f, 1.1f) * DaggerfallUnity.Settings.SoundVolume);
-
-                /*
-                if (PCO.WornBoots == null)
+                if (PCO.AllowFootstepSounds)
                 {
-                    // Play footstep sound
-                    if (!altStep)
-                    {
-                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundDungeon[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        altStep = true;
-                    }
-                    else
-                    {
-                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundDungeon[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        altStep = false;
-                    }
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomFootstepAudioClip(currentClimateFootsteps), volumeScale * PCO.FootstepVolumeMulti * DaggerfallUnity.Settings.SoundVolume);
                 }
-                else
-                {
-                    // Play footstep sound
-                    if (!altStep)
-                    {
-                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundBuilding[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[0], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        altStep = true;
-                    }
-                    else
-                    {
-                        dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundBuilding[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        //dfAudioSource.AudioSource.PlayOneShot(PCO.FootstepSoundSnow[1], volumeScale * DaggerfallUnity.Settings.SoundVolume);
-                        altStep = false;
-                    }
-                }
-                */
-
-                //dfAudioSource.PlayOneShot(SoundClips.ActivateLockUnlock, 1, 1 * DaggerfallUnity.Settings.SoundVolume);
-                //customAudioSource.PlayOneShot(clip1, volumeScale * DaggerfallUnity.Settings.SoundVolume);
 
                 // Reset the footstepTimer
                 footstepTimer = 0f;
@@ -282,28 +223,31 @@ namespace PhysicalCombatOverhaul
             if (PCO.chainWornSwayWeight <= 0) { chainSwayTimer = 0f; }
             if (PCO.plateWornSwayWeight <= 0) { plateSwayTimer = 0f; }
 
-            if (leatherSwayTimer >= leatherSwayInterval)
+            if (leatherSwayTimer >= PCO.leatherSwayInterval)
             {
-                dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.LeatherSwaying), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                if (PCO.AllowArmorSwaySounds)
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.LeatherSwaying), volumeScale * PCO.ArmorSwayVolumeMulti * DaggerfallUnity.Settings.SoundVolume);
 
                 leatherSwayTimer = 0f;
-                leatherSwayInterval = UnityEngine.Random.Range(0.8f, 1.1f) - (PCO.leatherWornSwayWeight * 0.025f);
+                PCO.leatherSwayInterval = UnityEngine.Random.Range(PCO.ArmorSwayFrequency + 0.1f, PCO.ArmorSwayFrequency + 0.4f) - (PCO.leatherWornSwayWeight * 0.02f);
             }
 
-            if (chainSwayTimer >= chainSwayInterval)
+            if (chainSwayTimer >= PCO.chainSwayInterval)
             {
-                dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.ChainmailSwaying), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                if (PCO.AllowArmorSwaySounds)
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.ChainmailSwaying), volumeScale * PCO.ArmorSwayVolumeMulti * DaggerfallUnity.Settings.SoundVolume);
 
                 chainSwayTimer = 0f;
-                chainSwayInterval = UnityEngine.Random.Range(0.8f, 1.1f) - (PCO.chainWornSwayWeight * 0.025f);
+                PCO.leatherSwayInterval = UnityEngine.Random.Range(PCO.ArmorSwayFrequency + 0.1f, PCO.ArmorSwayFrequency + 0.4f) - (PCO.leatherWornSwayWeight * 0.02f);
             }
 
-            if (plateSwayTimer >= plateSwayInterval)
+            if (plateSwayTimer >= PCO.plateSwayInterval)
             {
-                dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.PlateSwaying), volumeScale * DaggerfallUnity.Settings.SoundVolume);
+                if (PCO.AllowArmorSwaySounds)
+                    dfAudioSource.AudioSource.PlayOneShot(RollRandomArmorSwayAudioClip(PCO.PlateSwaying), volumeScale * PCO.ArmorSwayVolumeMulti * DaggerfallUnity.Settings.SoundVolume);
 
                 plateSwayTimer = 0f;
-                plateSwayInterval = UnityEngine.Random.Range(0.8f, 1.1f) - (PCO.plateWornSwayWeight * 0.025f);
+                PCO.leatherSwayInterval = UnityEngine.Random.Range(PCO.ArmorSwayFrequency + 0.1f, PCO.ArmorSwayFrequency + 0.4f) - (PCO.leatherWornSwayWeight * 0.02f);
             }
         }
 
@@ -327,54 +271,6 @@ namespace PhysicalCombatOverhaul
                     CheckToUseArmorFootsteps();
                 }
             }
-
-            /*
-             * Interior Tile Floors:
-             * 16_3
-             * 37_3
-             * 40_3
-             * 41_0, 41_1, 41_2, 41_3
-             * 44_3
-             * 63_3
-             * 111_2, 111_3
-             * 137_3
-             * 141_0, 141_1, 141_2, 141_3
-             * 144_3
-             * 311_3
-             * 337_3
-             * 341_0, 341_1, 341_2, 341_3
-             * 363_3
-             * 411_3
-             * 437_3
-             * 440_3
-             * 444_3
-             * 463_3
-             * 
-             * Interior Stone Floors:
-             * 60_3
-             * 140_3
-             * 160_3
-             * 163_3
-             * 340_3
-             * 360_3
-             * 366_3
-             * 416_3
-             * 460_3
-             * 466_3
-             * 
-             * Interior Wood Floors:
-             * 28_3
-             * 66_3
-             * 116_3
-             * 128_3
-             * 166_3
-             * 171_3
-             * 316_3
-             * 328_3
-             * 344_3
-             * 428_3
-             * 
-            */
         }
 
         public void DetermineExteriorClimateFootstep()
@@ -435,22 +331,6 @@ namespace PhysicalCombatOverhaul
             {
                 currentClimateFootsteps = altStep ? PCO.PathFootstepsAlt : PCO.PathFootstepsMain;
             }
-
-            // Work on this order of actions later today.
-            // Subscribe To Events For Triggering Changes
-            //      Method Calls
-            //          Season
-            //              Climate
-            // (Could Eventually Have Weather In Here As Well, Will See.)
-            //                  Tile Index
-            //                      Sound To Play
-            // Might be another step? But I'll just have to check/remember later.
-
-            // Desert Terrain = Desert, Desert2, Subtropical
-            // Mountain Terrain = Mountain, MountainWoods
-            // Woodland Terrain = Woodlands, HauntedWoodlands
-            // Swamp Terrain = Swamp, Rainforest
-            // Other Terrain = Ocean
         }
 
         #region Climate Type Checks

@@ -128,7 +128,7 @@
     ],
     "Dependencies": [
         {
-            "Name": "Better Ambience",
+            "Name": "better ambience",
             "IsOptional": true,
             "IsPeer": false
         }

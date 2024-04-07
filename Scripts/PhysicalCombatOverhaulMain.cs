@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/3/2024, 11:30 PM
+// Last Edit:		4/7/2024, 8:00 PM
 // Version:			2.00
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -14,13 +14,14 @@ using DaggerfallWorkshop.Game.Utility.ModSupport;
 using DaggerfallWorkshop.Game.Serialization;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
-using DaggerfallWorkshop.Game.Formulas;
 using System;
 using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using DaggerfallWorkshop.Game.UserInterface;
+using DaggerfallWorkshop.Game.Utility;
 using DaggerfallConnect;
+using DaggerfallConnect.Arena2;
 using System.Text.RegularExpressions;
 
 namespace PhysicalCombatOverhaul
@@ -30,6 +31,17 @@ namespace PhysicalCombatOverhaul
         public static PhysicalCombatOverhaulMain Instance;
 
         static Mod mod;
+
+        // Options
+        public static bool AllowFootstepSounds { get; set; }
+        public static float FootstepVolumeMulti { get; set; }
+        public static float FootstepFrequency { get; set; }
+
+        public static bool AllowArmorSwaySounds { get; set; }
+        public static float ArmorSwayVolumeMulti { get; set; }
+        public static float ArmorSwayFrequency { get; set; }
+
+        public static bool AllowCompatibilityWarnings { get; set; }
 
         // Mod Compatibility Check Values
         public static bool BetterAmbienceCheck { get; set; }
@@ -53,6 +65,11 @@ namespace PhysicalCombatOverhaul
         public static int plateWornSwayWeight = 0;
         public static int chainWornSwayWeight = 0;
         public static int leatherWornSwayWeight = 0;
+
+        public static float stepInterval = 0.6f;
+        public static float plateSwayInterval = 0.6f;
+        public static float chainSwayInterval = 0.6f;
+        public static float leatherSwayInterval = 0.6f;
 
         #region Mod Sound Variables
 
@@ -137,13 +154,14 @@ namespace PhysicalCombatOverhaul
 
             ModCompatibilityChecking();
 
-            //FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
-
             PlayerEnterExit.OnTransitionInterior += UpdateFootsteps_OnTransitionInterior;
             PlayerEnterExit.OnTransitionExterior += UpdateFootsteps_OnTransitionExterior;
             PlayerEnterExit.OnTransitionDungeonInterior += UpdateFootsteps_OnTransitionDungeonInterior;
             PlayerEnterExit.OnTransitionDungeonExterior += UpdateFootsteps_OnTransitionExterior;
             DaggerfallUI.UIManager.OnWindowChange += UIManager_RefreshEquipSlotReferencesOnInventoryClose;
+
+            SaveLoadManager.OnLoad += ModCompatibilityWarning_OnLoadSave;
+            StartGameBehaviour.OnStartGame += ModCompatibilityWarning_OnStartGame;
 
             // Load Resources
             LoadAudio();
@@ -158,7 +176,20 @@ namespace PhysicalCombatOverhaul
 
         private static void LoadSettings(ModSettings modSettings, ModSettingsChange change)
         {
-            //ReverseCycleDirection = mod.GetSettings().GetValue<bool>("GeneralSettings", "ReverseCycleDirections");
+            AllowFootstepSounds = mod.GetSettings().GetValue<bool>("FootstepSettings", "AllowFootstepSounds");
+            FootstepVolumeMulti = mod.GetSettings().GetValue<float>("FootstepSettings", "FootstepVolumeMulti");
+            FootstepFrequency = mod.GetSettings().GetValue<float>("FootstepSettings", "FootstepFrequency");
+
+            AllowArmorSwaySounds = mod.GetSettings().GetValue<bool>("ArmorSwaySettings", "AllowArmorSwaySounds");
+            ArmorSwayVolumeMulti = mod.GetSettings().GetValue<float>("ArmorSwaySettings", "ArmorSwayVolumeMulti");
+            ArmorSwayFrequency = mod.GetSettings().GetValue<float>("ArmorSwaySettings", "ArmorSwayFrequency");
+
+            AllowCompatibilityWarnings = mod.GetSettings().GetValue<bool>("CompatibilityWarningSettings", "AllowModCompatWarnings");
+
+            stepInterval = FootstepFrequency;
+            plateSwayInterval = ArmorSwayFrequency;
+            chainSwayInterval = ArmorSwayFrequency;
+            leatherSwayInterval = ArmorSwayFrequency;
         }
 
         private void ModCompatibilityChecking()
@@ -172,10 +203,6 @@ namespace PhysicalCombatOverhaul
                 BetterAmbienceFootstepsModuleCheck = betterAmbienceSettings.GetBool("Better Footsteps", "enable");
             }
             else { BetterAmbienceCheck = false; }
-
-            // Tomorrow, work on some logic to show a warning message when Better Ambience is active with the "Better Footsteps" setting active, will maybe subscribe to
-            // "OnLoad" or whatever and see how that works. Will test that out tomorrow, as well as the Travel Options thing I just added so sounds from this mod
-            // would not play while in Travel Options "Accelerated Travel" mode, will see if that actually works or not.
 
             // Travel Options mod: https://www.nexusmods.com/daggerfallunity/mods/122
             Mod travelOptions = ModManager.Instance.GetModFromGUID("93f3ad1c-83cc-40ac-b762-96d2f47f2e05");
@@ -299,8 +326,46 @@ namespace PhysicalCombatOverhaul
 
                 if (DaggerfallUI.UIManager.WindowCount == 0 && LastUIWindow is DaggerfallInventoryWindow)
                 {
-                    RefreshEquipmentSlotReferences();
+                    if (AllowFootstepSounds || AllowArmorSwaySounds) { RefreshEquipmentSlotReferences(); }
+                    else { } // Do nothing if both armor sound options are disabled, since there is no point in updating these values in that case.
                 }
+            }
+        }
+
+        public void ModCompatibilityWarning_OnLoadSave(SaveData_v1 saveData)
+        {
+            ReportModCompatibilityIssues();
+        }
+
+        public void ModCompatibilityWarning_OnStartGame(object sender, EventArgs e)
+        {
+            ReportModCompatibilityIssues();
+        }
+
+        public void ReportModCompatibilityIssues()
+        {
+            if (AllowCompatibilityWarnings && BetterAmbienceCheck && BetterAmbienceFootstepsModuleCheck)
+            {
+                Debug.Log("[Warning] Immersive Footsteps: The 'Better Ambience' mod is currently active, more importantly, the 'Better Footsteps' module for that mod is also enabled.");
+                Debug.Log("While using the Immersive Footsteps mod, you should always have Better Ambience's 'Better Footsteps' setting disabled, otherwise you will be constantly...");
+                Debug.Log("hearing overlapping footstep sounds, turn this feature off in Better Ambience's settings to resolve this issue.");
+                Debug.Log("You can also turn these warnings off in 'Immersive Footsteps' settings, if you wish.");
+
+                TextFile.Token[] tokens = DaggerfallUnity.Instance.TextProvider.CreateTokens(
+                            TextFile.Formatting.JustifyCenter,
+                            "! WARNING !",
+                            "Compatibility Issue Detected",
+                            "Immersive Footsteps:",
+                            "",
+                            "Disable the 'Better Footsteps' setting for the Better Ambience mod.",
+                            "Otherwise footstep sounds will be constantly overlapping each other.",
+                            "",
+                            "(These automatic warnings can be disabled in Immersive Footsteps settings)");
+                DaggerfallMessageBox modCompatibilityWarningPopup = new DaggerfallMessageBox(DaggerfallUI.UIManager);
+
+                modCompatibilityWarningPopup.SetTextTokens(tokens);
+                modCompatibilityWarningPopup.ClickAnywhereToClose = true;
+                DaggerfallUI.UIManager.PushWindow(modCompatibilityWarningPopup);
             }
         }
 
@@ -430,7 +495,7 @@ namespace PhysicalCombatOverhaul
         #region Load Audio Clips
 
 
-        private void LoadAudio() // Example taken from Penwick Papers Mod
+        private void LoadAudio()
         {
             ModManager modManager = ModManager.Instance;
             bool success = true;
@@ -570,16 +635,11 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Water_Landing_1", false, out WaterLandingSound[0]);
 
             if (!success)
-                throw new Exception("LockedLootContainers: Missing sound asset");
+                throw new Exception("PhysicalCombatAndArmorOverhaul: Missing sound asset");
         }
         
 
         #endregion
-
-        private static int CalculateAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
-        {
-            return 0;
-        }
 
         private void DisableVanillaFootsteps()
         {
