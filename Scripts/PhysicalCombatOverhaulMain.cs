@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/18/2024, 12:50 AM
+// Last Edit:		4/19/2024, 12:40 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -357,6 +357,25 @@ namespace PhysicalCombatOverhaul
                     weapon.poisonType = Poisons.None;
                 }
             }
+
+            damage = Mathf.Max(0, damage); // I think this is just here to keep damage from outputting a negative value.
+
+            if (critSuccess)
+            {
+                damage = (int)Mathf.Round(damage * critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
+            }
+
+            float damCheckBeforeMatMod = damage;
+
+            damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
+
+            float damCheckAfterMatMod = damage;
+
+            if (softMatRequireModuleCheck)
+            {
+                if (damCheckBeforeMatMod > 0 && (damCheckAfterMatMod / damCheckBeforeMatMod) <= 0.45f)
+                    DaggerfallUI.AddHUDText("This Weapon Is Not Very Effective Against This Creature.", 1.00f);
+            }
         }
 
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -453,8 +472,6 @@ namespace PhysicalCombatOverhaul
                         wepType = monsterWeapon.GetWeaponSkillIDAsShort();
                     }
 
-                    // Continue working below here tomorrow.
-
                     // Handle multiple attacks by AI
                     int minBaseDamage = 0;
                     int maxBaseDamage = 0;
@@ -463,54 +480,46 @@ namespace PhysicalCombatOverhaul
                     {
                         if (attackNumber == 0)
                         {
-                            minBaseDamage = AIAttacker.MobileEnemy.MinDamage;
-                            maxBaseDamage = AIAttacker.MobileEnemy.MaxDamage;
+                            minBaseDamage = attacker.MobileEnemy.MinDamage;
+                            maxBaseDamage = attacker.MobileEnemy.MaxDamage;
                         }
                         else if (attackNumber == 1)
                         {
-                            minBaseDamage = AIAttacker.MobileEnemy.MinDamage2;
-                            maxBaseDamage = AIAttacker.MobileEnemy.MaxDamage2;
+                            minBaseDamage = attacker.MobileEnemy.MinDamage2;
+                            maxBaseDamage = attacker.MobileEnemy.MaxDamage2;
                         }
                         else if (attackNumber == 2)
                         {
-                            minBaseDamage = AIAttacker.MobileEnemy.MinDamage3;
-                            maxBaseDamage = AIAttacker.MobileEnemy.MaxDamage3;
+                            minBaseDamage = attacker.MobileEnemy.MinDamage3;
+                            maxBaseDamage = attacker.MobileEnemy.MaxDamage3;
                         }
 
-                        int reflexesChance = 50 - (10 * ((int)player.Reflexes - 2));
+                        int reflexesChance = 50 - (10 * ((int)target.Reflexes - 2));
 
                         if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
                         {
                             int hitDamage = UnityEngine.Random.Range(minBaseDamage, maxBaseDamage + 1);
                             // Apply special monster attack effects
-                            if (hitDamage > 0)
-                                FormulaHelper.OnMonsterHit(AIAttacker, target, hitDamage);
+                            if (hitDamage > 0 && attackNumber == 0)
+                                FormulaHelper.OnMonsterHit(attacker, target, hitDamage);
 
                             damage += hitDamage;
                         }
                         ++attackNumber;
                     }
                     if (damage >= 1)
-                        damage = CalculateHandToHandAttackDamage(attacker, target, damage, attacker == player); // Added my own, non-overriden version of this method for modification.
+                        damage = CalculateHandToHandAttackDamage(attacker, target, damage, false); // Added my own, non-overriden version of this method for modification.
                 }
             }
             // Handle weapon attacks
             else if (weapon != null)
             {
-                weaponAttack = true; // Check for later on if weapon is being used.
-
                 // Apply weapon material modifier.
                 chanceToHitMod += CalculateWeaponToHit(weapon);
-
-                // Mod hook for adjusting final hit chance mod. (is a no-op in DFU)
-                if (archeryModuleCheck)
-                    chanceToHitMod = AdjustWeaponHitChanceMod(attacker, target, chanceToHitMod, weaponAnimTime, weapon);
 
                 if (CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
                 {
                     damage = CalculateWeaponAttackDamage(attacker, target, damageModifiers, weaponAnimTime, weapon);
-
-                    damage = CalculateBackstabDamage(damage, backstabChance);
                 }
 
                 // Handle poisoned weapons
@@ -520,6 +529,15 @@ namespace PhysicalCombatOverhaul
                     weapon.poisonType = Poisons.None;
                 }
             }
+
+            damage = Mathf.Max(0, damage); // I think this is just here to keep damage from outputting a negative value.
+
+            if (critSuccess)
+            {
+                damage = (int)Mathf.Round(damage * critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
+            }
+
+            damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
         }
 
         public static int CalcMonsterVsMonsterAttack(EnemyEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -624,54 +642,46 @@ namespace PhysicalCombatOverhaul
                     {
                         if (attackNumber == 0)
                         {
-                            minBaseDamage = AIAttacker.MobileEnemy.MinDamage;
-                            maxBaseDamage = AIAttacker.MobileEnemy.MaxDamage;
+                            minBaseDamage = attacker.MobileEnemy.MinDamage;
+                            maxBaseDamage = attacker.MobileEnemy.MaxDamage;
                         }
                         else if (attackNumber == 1)
                         {
-                            minBaseDamage = AIAttacker.MobileEnemy.MinDamage2;
-                            maxBaseDamage = AIAttacker.MobileEnemy.MaxDamage2;
+                            minBaseDamage = attacker.MobileEnemy.MinDamage2;
+                            maxBaseDamage = attacker.MobileEnemy.MaxDamage2;
                         }
                         else if (attackNumber == 2)
                         {
-                            minBaseDamage = AIAttacker.MobileEnemy.MinDamage3;
-                            maxBaseDamage = AIAttacker.MobileEnemy.MaxDamage3;
+                            minBaseDamage = attacker.MobileEnemy.MinDamage3;
+                            maxBaseDamage = attacker.MobileEnemy.MaxDamage3;
                         }
 
-                        int reflexesChance = 50 - (10 * ((int)player.Reflexes - 2));
+                        int reflexesChance = 50 - (10 * ((int)GameManager.Instance.PlayerEntity.Reflexes - 2));
 
                         if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
                         {
                             int hitDamage = UnityEngine.Random.Range(minBaseDamage, maxBaseDamage + 1);
                             // Apply special monster attack effects
-                            if (hitDamage > 0)
-                                FormulaHelper.OnMonsterHit(AIAttacker, target, hitDamage);
+                            if (hitDamage > 0 && attackNumber == 0)
+                                FormulaHelper.OnMonsterHit(attacker, target, hitDamage);
 
                             damage += hitDamage;
                         }
                         ++attackNumber;
                     }
                     if (damage >= 1)
-                        damage = CalculateHandToHandAttackDamage(attacker, target, damage, attacker == player); // Added my own, non-overriden version of this method for modification.
+                        damage = CalculateHandToHandAttackDamage(attacker, target, damage, false); // Added my own, non-overriden version of this method for modification.
                 }
             }
             // Handle weapon attacks
             else if (weapon != null)
             {
-                weaponAttack = true; // Check for later on if weapon is being used.
-
                 // Apply weapon material modifier.
                 chanceToHitMod += CalculateWeaponToHit(weapon);
-
-                // Mod hook for adjusting final hit chance mod. (is a no-op in DFU)
-                if (archeryModuleCheck)
-                    chanceToHitMod = AdjustWeaponHitChanceMod(attacker, target, chanceToHitMod, weaponAnimTime, weapon);
 
                 if (CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
                 {
                     damage = CalculateWeaponAttackDamage(attacker, target, damageModifiers, weaponAnimTime, weapon);
-
-                    damage = CalculateBackstabDamage(damage, backstabChance);
                 }
 
                 // Handle poisoned weapons
@@ -681,6 +691,15 @@ namespace PhysicalCombatOverhaul
                     weapon.poisonType = Poisons.None;
                 }
             }
+
+            damage = Mathf.Max(0, damage); // I think this is just here to keep damage from outputting a negative value.
+
+            if (critSuccess)
+            {
+                damage = (int)Mathf.Round(damage * critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
+            }
+
+            damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
         }
 
         // -- Newly Added Stuff 4-17-2024 --
@@ -742,37 +761,7 @@ namespace PhysicalCombatOverhaul
             AITarget = target as EnemyEntity;
 
             // Continue from here below.
-
-            damage = Mathf.Max(0, damage); // I think this is just here to keep damage from outputting a negative value.
-
-            //Debug.LogFormat("4. Here is damage value before crit modifier is applied = {0}", damage);
-
-            if (critSuccess) // Since the critSuccess variable only ever becomes true inside when the module is active, this is always false when that module is disabled.
-            {
-                damage = (int)Mathf.Round(damage * critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
-                                                                  //Debug.LogFormat("5. Here is damage value AFTER crit modifier is applied = {0}", damage);
-            }
-
-            //if (attacker == player)
-            //Debug.LogFormat("2. Here is damage value BEFORE soft material requirement modifier is applied = {0}", damage);
-
-            float damCheckBeforeMatMod = damage;
-
-            damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
-
-            //if (attacker == player)
-            //Debug.LogFormat("3. Here is damage value AFTER soft material requirement modifier is applied = {0}", damage);
-
-            float damCheckAfterMatMod = damage;
-
-            if (softMatRequireModuleCheck)
-            {
-                if (attacker == player)
-                {
-                    if (damCheckBeforeMatMod > 0 && (damCheckAfterMatMod / damCheckBeforeMatMod) <= 0.45f)
-                        DaggerfallUI.AddHUDText("This Weapon Is Not Very Effective Against This Creature.", 1.00f);
-                }
-            }
+            // Continue here tomorrow I suppose.
 
             int targetEndur = target.Stats.LiveEndurance - 50;
             int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
@@ -1324,7 +1313,7 @@ namespace PhysicalCombatOverhaul
                 damage += GetBonusOrPenaltyByEnemyType(attacker, target); // Added my own, non-overriden version of this method for modification.
 
             // Mod hook for adjusting final damage. (is a no-op in DFU)
-            if (archeryModuleCheck)
+            if (attacker == player && archeryModuleCheck)
                 damage = AdjustWeaponAttackDamage(attacker, target, damage, weaponAnimTime, weapon);
 
             return damage;
