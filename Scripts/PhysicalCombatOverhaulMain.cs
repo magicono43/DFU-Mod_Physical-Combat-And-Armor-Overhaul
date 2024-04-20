@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/19/2024, 12:40 AM
+// Last Edit:		4/19/2024, 11:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -38,7 +38,6 @@ namespace PhysicalCombatOverhaul
         public static bool armorHitFormulaModuleCheck { get; set; }
         public static bool condBasedEffectModuleCheck { get; set; }
         public static bool softMatRequireModuleCheck { get; set; }
-        public static bool shieldBlockSuccess { get; set; }
 
         // Mod Compatibility Check Values
         public static bool RolePlayRealismArcheryModuleCheck { get; set; }
@@ -376,6 +375,34 @@ namespace PhysicalCombatOverhaul
                 if (damCheckBeforeMatMod > 0 && (damCheckAfterMatMod / damCheckBeforeMatMod) <= 0.45f)
                     DaggerfallUI.AddHUDText("This Weapon Is Not Very Effective Against This Creature.", 1.00f);
             }
+
+            int targetEndur = target.Stats.LiveEndurance - 50;
+            int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
+            int targetWillp = target.Stats.LiveWillpower - 50;
+
+            float naturalDamResist = (targetEndur * .002f);
+            naturalDamResist += (targetStren * .001f);
+            naturalDamResist += (targetWillp * .001f);
+
+            Mathf.Clamp(naturalDamResist, -0.2f, 0.2f);
+
+            DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
+            bool shieldStrongSpot = false;
+            bool shieldBlockSuccess = false;
+            if (shield != null)
+            {
+                BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
+
+                for (int i = 0; (i < protectedBodyParts.Length) && !shieldStrongSpot; i++)
+                {
+                    if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
+                        shieldStrongSpot = true;
+                }
+                shieldBlockSuccess = ShieldBlockChanceCalculation(target, shieldStrongSpot, shield);
+
+                if (shieldBlockSuccess)
+                    shieldBlockSuccess = CompareShieldToUnderArmor(target, shield, struckBodyPart, naturalDamResist);
+            }
         }
 
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -538,6 +565,16 @@ namespace PhysicalCombatOverhaul
             }
 
             damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
+
+            int targetEndur = target.Stats.LiveEndurance - 50;
+            int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
+            int targetWillp = target.Stats.LiveWillpower - 50;
+
+            float naturalDamResist = (targetEndur * .002f);
+            naturalDamResist += (targetStren * .001f);
+            naturalDamResist += (targetWillp * .001f);
+
+            Mathf.Clamp(naturalDamResist, -0.2f, 0.2f);
         }
 
         public static int CalcMonsterVsMonsterAttack(EnemyEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -700,6 +737,16 @@ namespace PhysicalCombatOverhaul
             }
 
             damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
+
+            int targetEndur = target.Stats.LiveEndurance - 50;
+            int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
+            int targetWillp = target.Stats.LiveWillpower - 50;
+
+            float naturalDamResist = (targetEndur * .002f);
+            naturalDamResist += (targetStren * .001f);
+            naturalDamResist += (targetWillp * .001f);
+
+            Mathf.Clamp(naturalDamResist, -0.2f, 0.2f);
         }
 
         // -- Newly Added Stuff 4-17-2024 --
@@ -762,35 +809,6 @@ namespace PhysicalCombatOverhaul
 
             // Continue from here below.
             // Continue here tomorrow I suppose.
-
-            int targetEndur = target.Stats.LiveEndurance - 50;
-            int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
-            int targetWillp = target.Stats.LiveWillpower - 50;
-
-            float naturalDamResist = (targetEndur * .002f);
-            naturalDamResist += (targetStren * .001f);
-            naturalDamResist += (targetWillp * .001f);
-
-            Mathf.Clamp(naturalDamResist, -0.2f, 0.2f); // This is to keep other mods that allow over 100 attribute points from allowing damage reduction values to go over 20%. May actually remove this cap for monsters, possibly, since some of the higher level ones have over 100 attribute points.
-                                                        //Debug.LogFormat("Natural Damage Resist = {0}", naturalDamResist);
-
-            DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
-            bool shieldStrongSpot = false;
-            shieldBlockSuccess = false;
-            if (shield != null)
-            {
-                BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
-
-                for (int i = 0; (i < protectedBodyParts.Length) && !shieldStrongSpot; i++)
-                {
-                    if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
-                        shieldStrongSpot = true;
-                }
-                shieldBlockSuccess = ShieldBlockChanceCalculation(target, shieldStrongSpot, shield);
-
-                if (shieldBlockSuccess)
-                    shieldBlockSuccess = CompareShieldToUnderArmor(target, struckBodyPart, naturalDamResist);
-            }
 
             if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active. As well if a weapon is even being used.
             {
@@ -1354,7 +1372,7 @@ namespace PhysicalCombatOverhaul
             return Dice100.SuccessRoll(chanceToHit);
         }
 
-        // This is where specific monsters will be given a true or false, depending on if said monster is clearly holding a type of weapon in their sprite.
+        /// <summary>This is where specific monsters will be given a true or false, depending on if said monster is clearly holding a type of weapon in their sprite.</summary>
         public static bool SpecialWeaponCheckForMonsters(DaggerfallEntity attacker)
         {
             EnemyEntity AIAttacker = attacker as EnemyEntity;
@@ -1383,7 +1401,7 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        // This is where specific monsters will be given a pre-defined weapon object for purposes of the rest of the formula, based on their level and sprite weapon appearance.
+        /// <summary>This is where specific monsters will be given a pre-defined weapon object for purposes of the rest of the formula, based on their level and sprite weapon appearance.</summary>
         public static DummyDFUItem MonsterWeaponAssign(DaggerfallEntity attacker)
         {
             EnemyEntity AIAttacker = attacker as EnemyEntity;
@@ -1500,6 +1518,318 @@ namespace PhysicalCombatOverhaul
             return chanceToHitMod;
         }
 
+        /// <summary>Checks for if a shield block was successful and returns true if so, false if not.</summary>
+        public static bool ShieldBlockChanceCalculation(DaggerfallEntity target, bool shieldStrongSpot, DaggerfallUnityItem shield)
+        {
+            float hardBlockChance = 0f;
+            float softBlockChance = 0f;
+            int targetAgili = target.Stats.LiveAgility - 50;
+            int targetSpeed = target.Stats.LiveSpeed - 50;
+            int targetStren = target.Stats.LiveStrength - 50;
+            int targetEndur = target.Stats.LiveEndurance - 50;
+            int targetWillp = target.Stats.LiveWillpower - 50;
+            int targetLuck = target.Stats.LiveLuck - 50;
+
+            switch (shield.TemplateIndex)
+            {
+                case (int)Armor.Buckler:
+                    hardBlockChance = 30f;
+                    softBlockChance = 20f;
+                    break;
+                case (int)Armor.Round_Shield:
+                    hardBlockChance = 35f;
+                    softBlockChance = 10f;
+                    break;
+                case (int)Armor.Kite_Shield:
+                    hardBlockChance = 45f;
+                    softBlockChance = 5f;
+                    break;
+                case (int)Armor.Tower_Shield:
+                    hardBlockChance = 55f;
+                    softBlockChance = -5f;
+                    break;
+                default:
+                    hardBlockChance = 40f;
+                    softBlockChance = 0f;
+                    break;
+            }
+
+            if (shieldStrongSpot)
+            {
+                hardBlockChance += (targetAgili * .3f);
+                hardBlockChance += (targetSpeed * .3f);
+                hardBlockChance += (targetStren * .3f);
+                hardBlockChance += (targetEndur * .2f);
+                hardBlockChance += (targetWillp * .1f);
+                hardBlockChance += (targetLuck * .1f);
+
+                Mathf.Clamp(hardBlockChance, 7f, 95f);
+                int blockChanceInt = (int)Mathf.Round(hardBlockChance);
+
+                if (Dice100.SuccessRoll(blockChanceInt))
+                {
+                    //Debug.LogFormat("$$$. Shield Blocked A Hard-Point, Chance Was {0}%", blockChanceInt);
+                    return true;
+                }
+                else
+                {
+                    //Debug.LogFormat("!!!. Shield FAILED To Block A Hard-Point, Chance Was {0}%", blockChanceInt);
+                    return false;
+                }
+            }
+            else
+            {
+                softBlockChance += (targetAgili * .3f);
+                softBlockChance += (targetSpeed * .2f);
+                softBlockChance += (targetStren * .2f);
+                softBlockChance += (targetEndur * .1f);
+                softBlockChance += (targetWillp * .1f);
+                softBlockChance += (targetLuck * .1f);
+
+                Mathf.Clamp(softBlockChance, 0f, 50f);
+                int blockChanceInt = (int)Mathf.Round(softBlockChance);
+
+                if (Dice100.SuccessRoll(blockChanceInt))
+                {
+                    //Debug.LogFormat("$$$. Shield Blocked A Soft-Point, Chance Was {0}%", blockChanceInt);
+                    return true;
+                }
+                else
+                {
+                    //Debug.LogFormat("!!!. Shield FAILED To Block A Soft-Point, Chance Was {0}%", blockChanceInt);
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>Compares the damage reduction of the struck shield, with the armor under the part that was struck, and returns true if the shield has the higher reduction value, or false if the armor under has a higher reduction value. This is to keep a full-suit of daedric armor from being worse while wearing a leather shield, which when a block is successful, would actually take more damage than if not wearing a shield.</summary>
+        public static bool CompareShieldToUnderArmor(DaggerfallEntity target, DaggerfallUnityItem shield, int struckBodyPart, float naturalDamResist)
+        {
+            int redDamShield = 100;
+            int redDamUnderArmor = 100;
+            short[] armorProps = new short[] {-1, -1};
+            bool shieldQuickCheck = true;
+
+            ArmorMaterialIdentifier(shield, ref armorProps);
+
+            // Suppose continue from here tomorrow.
+
+            redDamShield = PercentageReductionAverage(shield, armorMaterial, redDamShield, naturalDamResist, shieldQuickCheck);
+            shieldQuickCheck = false;
+
+
+            EquipSlots hitSlot = DaggerfallUnityItem.GetEquipSlotForBodyPart((BodyParts)struckBodyPart);
+            DaggerfallUnityItem armor = target.ItemEquipTable.GetItem(hitSlot);
+            if (armor != null)
+            {
+                ArmorMaterialIdentifier(armor, ref armorProps);
+
+                redDamUnderArmor = PercentageReductionAverage(armor, armorMaterial, redDamUnderArmor, naturalDamResist, shieldQuickCheck);
+            }
+            else // If the body part struck in 'naked' IE has no armor protecting it.
+            {
+                redDamUnderArmor = (int)Mathf.Round(redDamUnderArmor * (1f - naturalDamResist));
+            }
+
+            if (redDamShield <= redDamUnderArmor)
+            {
+                //Debug.Log("$$$: Shield Is Stronger Than Under Armor, Shield Being Used");
+                return true;
+            }
+            else
+            {
+                //Debug.Log("!!!: Shield Is Weaker Than Under Armor, Armor Being Used Instead");
+                return false;
+            }
+        }
+
+        /// <summary>Finds the material that an armor item is made from, then returns the multiplier that will be used later based on this material check.</summary>
+        public static void ArmorMaterialIdentifier(DaggerfallUnityItem armor, ref short[] armorProps)
+        {
+            if (armor == null)
+            {
+                armorProps[0] = -1;
+                armorProps[1] = -1;
+            }
+            else
+            {
+                armorProps[0] = GetArmorMatType(armor);
+                armorProps[1] = GetArmorMaterial(armor);
+            }
+        }
+
+        public static short GetArmorMatType(DaggerfallUnityItem armor)
+        {
+            int tIdx = armor.TemplateIndex;
+            int mat = armor.NativeMaterialValue;
+
+            if (!armor.IsShield)
+            {
+                if (mat >= (int)ArmorMaterialTypes.Iron && mat <= (int)ArmorMaterialTypes.Daedric)
+                    return 2;
+                else if (mat == (int)ArmorMaterialTypes.Chain || mat == (int)ArmorMaterialTypes.Chain2)
+                    return 1;
+                else if (mat == (int)ArmorMaterialTypes.Leather)
+                    return 0;
+                else
+                    return -1;
+            }
+            else
+            {
+                if (tIdx >= (int)HeavyArmor.Cuirass && tIdx <= (int)HeavyArmor.Boots)
+                    return 2;
+                else if (tIdx >= (int)MediumArmor.Hauberk && tIdx <= (int)MediumArmor.Sollerets)
+                    return 1;
+                else if (tIdx >= (int)LightArmor.Jerkin && tIdx <= (int)LightArmor.Right_Vambrace)
+                    return 0;
+                else
+                    return -1;
+            }
+        }
+
+        public static short GetArmorMaterial(DaggerfallUnityItem armor)
+        {
+            int mat = armor.NativeMaterialValue;
+
+            switch (mat)
+            {
+                case (int)ArmorMaterialTypes.Leather:
+                    return 0;
+                case (int)ArmorMaterialTypes.Chain:
+                case (int)ArmorMaterialTypes.Chain2:
+                    return 1;
+                case (int)ArmorMaterialTypes.Iron:
+                    return 2;
+                case (int)ArmorMaterialTypes.Steel:
+                case (int)ArmorMaterialTypes.Silver:
+                    return 3;
+                case (int)ArmorMaterialTypes.Elven:
+                    return 4;
+                case (int)ArmorMaterialTypes.Dwarven:
+                    return 5;
+                case (int)ArmorMaterialTypes.Mithril:
+                case (int)ArmorMaterialTypes.Adamantium:
+                    return 6;
+                case (int)ArmorMaterialTypes.Ebony:
+                    return 7;
+                case (int)ArmorMaterialTypes.Orcish:
+                    return 8;
+                case (int)ArmorMaterialTypes.Daedric:
+                    return 9;
+                default:
+                    return -1;
+            }
+        }
+
+        /// <summary>Currently being used to compare the damage reduction of a shield to the under armor it is covering. This is the average of all different types of damage reduction for simplification of this.</summary>
+        public static int PercentageReductionAverage(DaggerfallUnityItem item, int armorMaterial, int damage, float naturalDamResist, bool shieldQuickCheck)
+        {
+            float condMulti = 1f;
+
+            if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active.
+            {
+                condMulti = AlterArmorReducBasedOnItemCondition(item);
+                //Debug.LogFormat("Average Reduction Multiplier Due To Condition = {0}", condMulti);
+            }
+
+            if (shieldQuickCheck)
+            {
+                switch (armorMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (Mathf.Min((.68f * condMulti), .81f) - naturalDamResist));
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (Mathf.Min((.64f * condMulti), .77f) - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .70f) - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (Mathf.Min((.52f * condMulti), .66f) - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (Mathf.Min((.49f * condMulti), .62f) - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (Mathf.Min((.45f * condMulti), .61f) - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (Mathf.Min((.41f * condMulti), .54f) - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (Mathf.Min((.38f * condMulti), .47f) - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (Mathf.Min((.34f * condMulti), .41f) - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (Mathf.Min((.30f * condMulti), .35f) - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
+                }
+            }
+            else
+            {
+                switch (armorMaterial)
+                {
+                    case 1: // leather
+                        return (int)Mathf.Round(damage * (Mathf.Min((.83f * condMulti), .93f) - naturalDamResist));
+                    case 2: // chains 1 and 2
+                        return (int)Mathf.Round(damage * (Mathf.Min((.81f * condMulti), .93f) - naturalDamResist));
+                    case 3: // iron
+                        return (int)Mathf.Round(damage * (Mathf.Min((.86f * condMulti), .92f) - naturalDamResist));
+                    case 4: // steel and silver
+                        return (int)Mathf.Round(damage * (Mathf.Min((.78f * condMulti), .90f) - naturalDamResist));
+                    case 5: // elven
+                        return (int)Mathf.Round(damage * (Mathf.Min((.73f * condMulti), .87f) - naturalDamResist));
+                    case 6: // dwarven
+                        return (int)Mathf.Round(damage * (Mathf.Min((.65f * condMulti), .84f) - naturalDamResist));
+                    case 7: // mithril and adamantium
+                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .81f) - naturalDamResist));
+                    case 8: // ebony
+                        return (int)Mathf.Round(damage * (Mathf.Min((.51f * condMulti), .76f) - naturalDamResist));
+                    case 9: // orcish
+                        return (int)Mathf.Round(damage * (Mathf.Min((.42f * condMulti), .65f) - naturalDamResist));
+                    case 10: // daedric
+                        return (int)Mathf.Round(damage * (Mathf.Min((.35f * condMulti), .56f) - naturalDamResist));
+                    default:
+                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Includes the light/leather armor added by Roleplay Realism: Items.
+        /// </summary>
+        public enum LightArmor
+        {
+            Jerkin = 520,
+            Cuisse = 521,
+            Helmet = 522,
+            Boots = 523,
+            Gloves = 524,
+            Left_Vambrace = 525,
+            Right_Vambrace = 526,
+        }
+
+        /// <summary>
+        /// Includes the medium/chain armor added by Roleplay Realism: Items.
+        /// </summary>
+        public enum MediumArmor
+        {
+            Hauberk = 515,
+            Chausses = 516,
+            Left_Spaulders = 517,
+            Right_Spaulders = 518,
+            Sollerets = 519,
+        }
+
+        /// <summary>
+        /// Includes the vanilla item IDs for the body covering armor pieces for now atleast.
+        /// </summary>
+        public enum HeavyArmor
+        {
+            Cuirass = 102,
+            Gauntlets = 103,
+            Greaves = 104,
+            Left_Pauldron = 105,
+            Right_Pauldron = 106,
+            Helm = 107,
+            Boots = 108,
+        }
+
         private static int CalculateAdjustmentsToHit(DaggerfallEntity attacker, DaggerfallEntity target)
         {
             PlayerEntity player = GameManager.Instance.PlayerEntity;
@@ -1525,7 +1855,7 @@ namespace PhysicalCombatOverhaul
             return chanceToHitMod;
         }
 
-        /// Allocate any equipment damage from a strike, and reduce item condition.
+        /// <summary>Allocate any equipment damage from a strike, and reduce item condition.</summary>
         private static bool DamageEquipment(DaggerfallEntity attacker, DaggerfallEntity target, int damage, DaggerfallUnityItem weapon, int struckBodyPart)
         {
             int atkStrength = attacker.Stats.LiveStrength;
