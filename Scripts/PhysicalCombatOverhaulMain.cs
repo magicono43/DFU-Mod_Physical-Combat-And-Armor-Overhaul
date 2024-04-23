@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/19/2024, 11:00 PM
+// Last Edit:		4/22/2024, 11:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -140,6 +140,13 @@ namespace PhysicalCombatOverhaul
             public DFCareer enemyCareer;
             public DaggerfallUnityItem mainHandItem;
             public DaggerfallUnityItem offHandItem;
+            public BodySize bodySize;
+            public int strn;
+            public int will;
+            public int agil;
+            public int endu;
+            public int sped;
+            public int luck;
         }
 
         /// <summary>'PlayerCombatProps' Struct for various combat related values and properties of the player.</summary>
@@ -147,6 +154,88 @@ namespace PhysicalCombatOverhaul
         {
             public PlayerEntity entityObj;
             public DFCareer playerCareer;
+            public BodySize bodySize;
+            public int strn;
+            public int will;
+            public int agil;
+            public int endu;
+            public int sped;
+            public int luck;
+        }
+
+        /// <summary>Fill in basic data for a new 'EnemyCombatProps' struct variable.</summary>
+        public static ECP GetEnemyCombatProps(EnemyEntity enemy)
+        {
+            ECP ecp = new ECP();
+            ecp.entityObj = enemy;
+            ecp.enemyData = enemy.MobileEnemy;
+            ecp.enemyCareer = enemy.Career;
+            ecp.bodySize = GetCreatureBodySize(enemy);
+            ecp.strn = enemy.Stats.LiveStrength;
+            ecp.will = enemy.Stats.LiveWillpower;
+            ecp.agil = enemy.Stats.LiveAgility;
+            ecp.endu = enemy.Stats.LiveEndurance;
+            ecp.sped = enemy.Stats.LiveSpeed;
+            ecp.luck = enemy.Stats.LiveLuck;
+
+            return ecp;
+        }
+
+        /// <summary>Fill in basic data for a new 'PlayerCombatProps' struct variable.</summary>
+        public static PCP GetPlayerCombatProps(PlayerEntity player)
+        {
+            PCP pcp = new PCP();
+            pcp.entityObj = player;
+            pcp.playerCareer = player.Career;
+            pcp.bodySize = GetPlayerBodySize(player);
+            pcp.strn = player.Stats.LiveStrength;
+            pcp.will = player.Stats.LiveWillpower;
+            pcp.agil = player.Stats.LiveAgility;
+            pcp.endu = player.Stats.LiveEndurance;
+            pcp.sped = player.Stats.LiveSpeed;
+            pcp.luck = player.Stats.LiveLuck;
+
+            return pcp;
+        }
+
+        /// <summary>Return the size category of the provided creature.</summary>
+        public static BodySize GetCreatureBodySize(EnemyEntity enemy)
+        {
+            if (enemy.EntityType == EntityTypes.EnemyClass)
+            {
+                return BodySize.Average;
+            }
+            else
+            {
+                switch (enemy.CareerIndex)
+                {
+                    case (int)MonsterCareers.Imp:
+                        return BodySize.Tiny;
+                    case (int)MonsterCareers.Rat:
+                    case (int)MonsterCareers.GiantBat:
+                    case (int)MonsterCareers.Spider:
+                    case (int)MonsterCareers.Slaughterfish:
+                        return BodySize.Small;
+                    default:
+                        return BodySize.Average;
+                    case (int)MonsterCareers.GrizzlyBear:
+                    case (int)MonsterCareers.SabertoothTiger:
+                    case (int)MonsterCareers.GiantScorpion:
+                    case (int)MonsterCareers.Centaur:
+                    case (int)MonsterCareers.Gargoyle:
+                    case (int)MonsterCareers.Giant:
+                    case (int)MonsterCareers.Daedroth:
+                        return BodySize.Large;
+                    case (int)MonsterCareers.Dragonling_Alternate:
+                        return BodySize.Huge;
+                }
+            }
+        }
+
+        /// <summary>Return the size category of the player.</summary>
+        public static BodySize GetPlayerBodySize(PlayerEntity player)
+        {
+            return BodySize.Average;
         }
 
         /// <summary>Class to hopefully keep from spamming new UID values from enemies being assigned 'fake' weapons, will see if it works or not.</summary>
@@ -257,6 +346,12 @@ namespace PhysicalCombatOverhaul
             int damage = 0;
             bool unarmedAttack = false;
 
+            PCP pProps = GetPlayerCombatProps(attacker);
+            ECP eProps = GetEnemyCombatProps(target);
+
+            // Now that I have the "body size" thing, maybe have that effect the hit chances somewhat depending on the size of the attacker compared to the target, will see.
+            // Also maybe have the material requirement stuff only factor in after armor is actually penetrated, if at all? Once again, will see.
+
             if (weapon != null)
             {
                 wepType = weapon.GetWeaponSkillIDAsShort();
@@ -364,6 +459,29 @@ namespace PhysicalCombatOverhaul
                 damage = (int)Mathf.Round(damage * critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
             }
 
+            // I'm thinking of having the armor and shield stuff happen before all the mat-damage reduction and natural dam reduction. The idea being those parts would only really
+            // be taken into consideration once the protection of the armor fails or is penetrated in someway to actually harm the wearer in someway, that's the idea atleast.
+            DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
+            bool shieldStrongSpot = false;
+            bool shieldBlockSuccess = false;
+            if (shield != null)
+            {
+                BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
+
+                for (int i = 0; (i < protectedBodyParts.Length) && !shieldStrongSpot; i++)
+                {
+                    if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
+                        shieldStrongSpot = true;
+                }
+                shieldBlockSuccess = ShieldBlockChanceCalculation(target, attacker, shieldStrongSpot, shield, weapon);
+                // Guess continue reworking this aspect tomorrow, will see. What I'm thinking is maybe having a block actually be a full block of an attack, but obviously alot less likely to happen.
+                // And "hardpoint" spots will just act as damage reduction and damage threshold if you don't "fully block" an attack, and it lands in a spot that shield type considers
+                // a "hardpoint." Also maybe make it not 100% in those cases, but some smaller percentage that it instead hits the armor below the shield, if any, that sort of thing, will see.
+
+                if (shieldBlockSuccess)
+                    shieldBlockSuccess = CompareShieldToUnderArmor(target, shield, struckBodyPart, naturalDamResist);
+            }
+
             float damCheckBeforeMatMod = damage;
 
             damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
@@ -385,24 +503,6 @@ namespace PhysicalCombatOverhaul
             naturalDamResist += (targetWillp * .001f);
 
             Mathf.Clamp(naturalDamResist, -0.2f, 0.2f);
-
-            DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
-            bool shieldStrongSpot = false;
-            bool shieldBlockSuccess = false;
-            if (shield != null)
-            {
-                BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
-
-                for (int i = 0; (i < protectedBodyParts.Length) && !shieldStrongSpot; i++)
-                {
-                    if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
-                        shieldStrongSpot = true;
-                }
-                shieldBlockSuccess = ShieldBlockChanceCalculation(target, shieldStrongSpot, shield);
-
-                if (shieldBlockSuccess)
-                    shieldBlockSuccess = CompareShieldToUnderArmor(target, shield, struckBodyPart, naturalDamResist);
-            }
         }
 
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -1519,8 +1619,19 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Checks for if a shield block was successful and returns true if so, false if not.</summary>
-        public static bool ShieldBlockChanceCalculation(DaggerfallEntity target, bool shieldStrongSpot, DaggerfallUnityItem shield)
+        public static bool ShieldBlockChanceCalculation(DaggerfallEntity target, DaggerfallEntity attacker, bool shieldStrongSpot, DaggerfallUnityItem shield, DaggerfallUnityItem weapon)
         {
+            if (weapon == null)
+            {
+                // Just make sure to check if weapon is null or not.
+                // Might have the weapon being used have some influence if an attack goes through a shield hard-point and hits the armor under instead?
+                // May not though, will see.
+            }
+
+            int atkAgility = attacker.Stats.LiveAgility - 50;
+            int atkSpeed = attacker.Stats.LiveSpeed - 50;
+            int atkLuck = attacker.Stats.LiveLuck - 50;
+
             float hardBlockChance = 0f;
             float softBlockChance = 0f;
             int targetAgili = target.Stats.LiveAgility - 50;
@@ -1530,9 +1641,12 @@ namespace PhysicalCombatOverhaul
             int targetWillp = target.Stats.LiveWillpower - 50;
             int targetLuck = target.Stats.LiveLuck - 50;
 
+            chanceToHitMod += ((attacker.Stats.LiveAgility - target.Stats.LiveAgility) / 4);
+
             switch (shield.TemplateIndex)
             {
                 case (int)Armor.Buckler:
+                    fullBlockChance = (targetAgili * 1f) - atkAgility;
                     hardBlockChance = 30f;
                     softBlockChance = 20f;
                     break;
@@ -1611,8 +1725,6 @@ namespace PhysicalCombatOverhaul
             bool shieldQuickCheck = true;
 
             ArmorMaterialIdentifier(shield, ref armorProps);
-
-            // Suppose continue from here tomorrow.
 
             redDamShield = PercentageReductionAverage(shield, armorMaterial, redDamShield, naturalDamResist, shieldQuickCheck);
             shieldQuickCheck = false;
@@ -1788,6 +1900,19 @@ namespace PhysicalCombatOverhaul
                         return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
                 }
             }
+        }
+
+        /// <summary>
+        /// Size categories for any creatures, used in some combat formula.
+        /// </summary>
+        public enum BodySize
+        {
+            None = -1,
+            Tiny = 0,
+            Small = 1,
+            Average = 2,
+            Large = 3,
+            Huge = 4,
         }
 
         /// <summary>
