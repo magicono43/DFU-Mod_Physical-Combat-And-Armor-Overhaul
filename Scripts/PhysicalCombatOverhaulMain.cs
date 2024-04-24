@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/22/2024, 11:30 PM
+// Last Edit:		4/23/2024, 10:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -130,72 +130,99 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        // -- Newly Added Stuff 4-17-2024 --
+        // -- Newly Added Stuff 4-23-2024 --
 
-        /// <summary>'EnemyCombatProps' Struct for various combat related values and properties of an enemy.</summary>
-        public struct ECP
+        /// <summary>'CombatVariables' Struct for various combat related values and properties of this current attack.</summary>
+        public struct CVARS
         {
-            public EnemyEntity entityObj;
-            public MobileEnemy enemyData;
-            public DFCareer enemyCareer;
-            public DaggerfallUnityItem mainHandItem;
-            public DaggerfallUnityItem offHandItem;
-            public BodySize bodySize;
-            public int strn;
-            public int will;
-            public int agil;
-            public int endu;
-            public int sped;
-            public int luck;
+            public short wepType;
+            public float matReqDamMulti;
+            public int chanceToHitMod;
+            public bool critSuccess;
+            public float critDamMulti;
+            public int critHitAddi;
+            public int damageModifiers;
+            public int backstabChance;
+            public int damage;
+            public bool unarmedAttack;
+
+            public bool shieldStrongSpot;
+            public bool shieldBlockSuccess;
+            public float shieldDTAmount;
+            public float shieldDRAmount;
+            public int shieldMaterial;
+
+            public float armorDTAmount;
+            public float armorDRAmount;
+            public int armorMaterial;
+            public int armorType;
+
+            public int aStrn;
+            public int aWill;
+            public int aAgil;
+            public int aEndu;
+            public int aSped;
+            public int aLuck;
+
+            public int tStrn;
+            public int tWill;
+            public int tAgil;
+            public int tEndu;
+            public int tSped;
+            public int tLuck;
+
+            public BodySize atkSize;
+            public BodySize tarSize;
+            public bool fullBlock;
+            public bool partBlock;
         }
 
-        /// <summary>'PlayerCombatProps' Struct for various combat related values and properties of the player.</summary>
-        public struct PCP
+        /// <summary>Fill in basic data for a new 'CombatVariables' struct variable.</summary>
+        public static CVARS GetCombatVariables(DaggerfallEntity attacker, DaggerfallEntity target)
         {
-            public PlayerEntity entityObj;
-            public DFCareer playerCareer;
-            public BodySize bodySize;
-            public int strn;
-            public int will;
-            public int agil;
-            public int endu;
-            public int sped;
-            public int luck;
-        }
+            CVARS cvars = new CVARS();
+            cvars.wepType = 30;
+            cvars.matReqDamMulti = 1f;
+            cvars.chanceToHitMod = 0;
+            cvars.critSuccess = false;
+            cvars.critDamMulti = 1f;
+            cvars.critHitAddi = 0;
+            cvars.damageModifiers = 0;
+            cvars.backstabChance = 0;
+            cvars.damage = 0;
+            cvars.unarmedAttack = false;
 
-        /// <summary>Fill in basic data for a new 'EnemyCombatProps' struct variable.</summary>
-        public static ECP GetEnemyCombatProps(EnemyEntity enemy)
-        {
-            ECP ecp = new ECP();
-            ecp.entityObj = enemy;
-            ecp.enemyData = enemy.MobileEnemy;
-            ecp.enemyCareer = enemy.Career;
-            ecp.bodySize = GetCreatureBodySize(enemy);
-            ecp.strn = enemy.Stats.LiveStrength;
-            ecp.will = enemy.Stats.LiveWillpower;
-            ecp.agil = enemy.Stats.LiveAgility;
-            ecp.endu = enemy.Stats.LiveEndurance;
-            ecp.sped = enemy.Stats.LiveSpeed;
-            ecp.luck = enemy.Stats.LiveLuck;
+            cvars.shieldStrongSpot = false;
+            cvars.shieldBlockSuccess = false;
+            cvars.shieldDTAmount = 0;
+            cvars.shieldDRAmount = 0;
+            cvars.shieldMaterial = -1;
 
-            return ecp;
-        }
+            cvars.armorDTAmount = 0;
+            cvars.armorDRAmount = 0;
+            cvars.armorMaterial = -1;
+            cvars.armorType = -1;
 
-        /// <summary>Fill in basic data for a new 'PlayerCombatProps' struct variable.</summary>
-        public static PCP GetPlayerCombatProps(PlayerEntity player)
-        {
-            PCP pcp = new PCP();
-            pcp.entityObj = player;
-            pcp.playerCareer = player.Career;
-            pcp.bodySize = GetPlayerBodySize(player);
-            pcp.strn = player.Stats.LiveStrength;
-            pcp.will = player.Stats.LiveWillpower;
-            pcp.agil = player.Stats.LiveAgility;
-            pcp.endu = player.Stats.LiveEndurance;
-            pcp.sped = player.Stats.LiveSpeed;
-            pcp.luck = player.Stats.LiveLuck;
+            cvars.aStrn = attacker.Stats.LiveStrength - 50;
+            cvars.aWill = attacker.Stats.LiveWillpower - 50;
+            cvars.aAgil = attacker.Stats.LiveAgility - 50;
+            cvars.aEndu = attacker.Stats.LiveEndurance - 50;
+            cvars.aSped = attacker.Stats.LiveSpeed - 50;
+            cvars.aLuck = attacker.Stats.LiveLuck - 50;
 
-            return pcp;
+            cvars.tStrn = target.Stats.LiveStrength - 50;
+            cvars.tWill = target.Stats.LiveWillpower - 50;
+            cvars.tAgil = target.Stats.LiveAgility - 50;
+            cvars.tEndu = target.Stats.LiveEndurance - 50;
+            cvars.tSped = target.Stats.LiveSpeed - 50;
+            cvars.tLuck = target.Stats.LiveLuck - 50;
+
+            cvars.atkSize = BodySize.Average;
+            cvars.tarSize = BodySize.Average;
+            cvars.fullBlock = false;
+            cvars.partBlock = false;
+
+            return cvars;
         }
 
         /// <summary>Return the size category of the provided creature.</summary>
@@ -335,26 +362,16 @@ namespace PhysicalCombatOverhaul
 
         public static int CalcPlayerVsMonsterAttack(PlayerEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
-            short wepType = 30;
-            float matReqDamMulti = 1f;
-            int chanceToHitMod = 0;
-            bool critSuccess = false;
-            float critDamMulti = 1f;
-            int critHitAddi = 0;
-            int damageModifiers = 0;
-            int backstabChance = 0;
-            int damage = 0;
-            bool unarmedAttack = false;
-
-            PCP pProps = GetPlayerCombatProps(attacker);
-            ECP eProps = GetEnemyCombatProps(target);
+            CVARS cVars = GetCombatVariables(attacker, target);
+            cVars.atkSize = GetPlayerBodySize(attacker);
+            cVars.tarSize = GetCreatureBodySize(target);
 
             // Now that I have the "body size" thing, maybe have that effect the hit chances somewhat depending on the size of the attacker compared to the target, will see.
             // Also maybe have the material requirement stuff only factor in after armor is actually penetrated, if at all? Once again, will see.
 
             if (weapon != null)
             {
-                wepType = weapon.GetWeaponSkillIDAsShort();
+                cVars.wepType = weapon.GetWeaponSkillIDAsShort();
 
                 if (softMatRequireModuleCheck)
                 {
@@ -362,12 +379,12 @@ namespace PhysicalCombatOverhaul
                     {
                         int targetMatRequire = (int)target.MinMetalToHit;
                         int weaponMatValue = weapon.NativeMaterialValue;
-                        matReqDamMulti = targetMatRequire - weaponMatValue;
+                        cVars.matReqDamMulti = targetMatRequire - weaponMatValue;
 
-                        if (matReqDamMulti <= 0) // There is no "bonus" damage for meeting material requirements, nor for exceeding them, just normal unmodded damage.
-                            matReqDamMulti = 1;
+                        if (cVars.matReqDamMulti <= 0) // There is no "bonus" damage for meeting material requirements, nor for exceeding them, just normal unmodded damage.
+                            cVars.matReqDamMulti = 1;
                         else // There is a damage penalty for attacking a target with below the minimum material requirements of that target, more as the difference between becomes greater.
-                            matReqDamMulti = (Mathf.Min(matReqDamMulti * 0.2f, 0.9f) - 1) * -1; // Keeps the damage multiplier penalty from going above 90% reduced damage.
+                            cVars.matReqDamMulti = (Mathf.Min(cVars.matReqDamMulti * 0.2f, 0.9f) - 1) * -1; // Keeps the damage multiplier penalty from going above 90% reduced damage.
                     }
                 }
                 else
@@ -380,113 +397,111 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            int playerWeaponSkill = attacker.Skills.GetLiveSkillValue(wepType);
+            int playerWeaponSkill = attacker.Skills.GetLiveSkillValue(cVars.wepType);
             playerWeaponSkill = (int)Mathf.Ceil(playerWeaponSkill * 1.5f); // Makes it so player weapon skill has 150% of the effect it normally would on hit chance. So now instead of 50 weapon skill adding +50 to the end, 50 will now add +75.
-            chanceToHitMod = playerWeaponSkill;
+            cVars.chanceToHitMod = playerWeaponSkill;
 
-            critSuccess = CriticalStrikeHandler(attacker);
+            cVars.critSuccess = CriticalStrikeHandler(attacker);
 
-            if (critSuccess)
+            if (cVars.critSuccess)
             {
-                critDamMulti = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 5);
-                critHitAddi = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 4);
+                cVars.critDamMulti = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 5);
+                cVars.critHitAddi = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 4);
 
-                critDamMulti = (critDamMulti * .05f) + 1;
-                chanceToHitMod += critHitAddi;
+                cVars.critDamMulti = (cVars.critDamMulti * .05f) + 1;
+                cVars.chanceToHitMod += cVars.critHitAddi;
             }
 
             // Apply swing modifiers
             ToHitAndDamageMods swingMods = CalculateSwingModifiers(GameManager.Instance.WeaponManager.ScreenWeapon);
-            damageModifiers += swingMods.damageMod;
-            chanceToHitMod += swingMods.toHitMod;
+            cVars.damageModifiers += swingMods.damageMod;
+            cVars.chanceToHitMod += swingMods.toHitMod;
 
             // Apply proficiency modifiers
             ToHitAndDamageMods proficiencyMods = CalculateProficiencyModifiers(attacker, weapon);
-            damageModifiers += proficiencyMods.damageMod;
-            chanceToHitMod += proficiencyMods.toHitMod;
+            cVars.damageModifiers += proficiencyMods.damageMod;
+            cVars.chanceToHitMod += proficiencyMods.toHitMod;
 
             // Apply racial bonuses
             ToHitAndDamageMods racialMods = CalculateRacialModifiers(attacker, weapon, attacker);
-            damageModifiers += racialMods.damageMod;
-            chanceToHitMod += racialMods.toHitMod;
+            cVars.damageModifiers += racialMods.damageMod;
+            cVars.chanceToHitMod += racialMods.toHitMod;
 
-            backstabChance = CalculateBackstabChance(attacker, null, enemyAnimStateRecord);
-            chanceToHitMod += backstabChance;
+            cVars.backstabChance = CalculateBackstabChance(attacker, null, enemyAnimStateRecord);
+            cVars.chanceToHitMod += cVars.backstabChance;
 
             int struckBodyPart = CalculateStruckBodyPart();
 
             // Get damage for weaponless attacks
-            if (wepType == (short)DFCareer.Skills.HandToHand)
+            if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
             {
-                unarmedAttack = true;
+                cVars.unarmedAttack = true;
 
-                if (CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
+                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
                 {
-                    damage = CalculateHandToHandAttackDamage(attacker, target, damageModifiers, true); // Added my own, non-overriden version of this method for modification.
+                    cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damageModifiers, true); // Added my own, non-overriden version of this method for modification.
 
-                    damage = CalculateBackstabDamage(damage, backstabChance);
+                    cVars.damage = CalculateBackstabDamage(cVars.damage, cVars.backstabChance);
                 }
             }
             // Handle weapon attacks
             else if (weapon != null)
             {
                 // Apply weapon material modifier.
-                chanceToHitMod += CalculateWeaponToHit(weapon);
+                cVars.chanceToHitMod += CalculateWeaponToHit(weapon);
 
                 // Mod hook for adjusting final hit chance mod. (is a no-op in DFU)
                 if (archeryModuleCheck)
-                    chanceToHitMod = AdjustWeaponHitChanceMod(attacker, target, chanceToHitMod, weaponAnimTime, weapon);
+                    cVars.chanceToHitMod = AdjustWeaponHitChanceMod(attacker, target, cVars.chanceToHitMod, weaponAnimTime, weapon);
 
-                if (CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
+                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
                 {
-                    damage = CalculateWeaponAttackDamage(attacker, target, damageModifiers, weaponAnimTime, weapon);
+                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
 
-                    damage = CalculateBackstabDamage(damage, backstabChance);
+                    cVars.damage = CalculateBackstabDamage(cVars.damage, cVars.backstabChance);
                 }
 
                 // Handle poisoned weapons
-                if (damage > 0 && weapon.poisonType != Poisons.None)
+                if (cVars.damage > 0 && weapon.poisonType != Poisons.None)
                 {
                     FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
                     weapon.poisonType = Poisons.None;
                 }
             }
 
-            damage = Mathf.Max(0, damage); // I think this is just here to keep damage from outputting a negative value.
+            cVars.damage = Mathf.Max(0, cVars.damage); // I think this is just here to keep damage from outputting a negative value.
 
-            if (critSuccess)
+            if (cVars.critSuccess)
             {
-                damage = (int)Mathf.Round(damage * critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
+                cVars.damage = (int)Mathf.Round(cVars.damage * cVars.critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
             }
 
             // I'm thinking of having the armor and shield stuff happen before all the mat-damage reduction and natural dam reduction. The idea being those parts would only really
             // be taken into consideration once the protection of the armor fails or is penetrated in someway to actually harm the wearer in someway, that's the idea atleast.
             DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
-            bool shieldStrongSpot = false;
-            bool shieldBlockSuccess = false;
             if (shield != null)
             {
                 BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
 
-                for (int i = 0; (i < protectedBodyParts.Length) && !shieldStrongSpot; i++)
+                for (int i = 0; (i < protectedBodyParts.Length) && !cVars.shieldStrongSpot; i++)
                 {
                     if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
-                        shieldStrongSpot = true;
+                        cVars.shieldStrongSpot = true;
                 }
-                shieldBlockSuccess = ShieldBlockChanceCalculation(target, attacker, shieldStrongSpot, shield, weapon);
+                ShieldBlockChanceCalculation(shield, weapon, ref cVars);
                 // Guess continue reworking this aspect tomorrow, will see. What I'm thinking is maybe having a block actually be a full block of an attack, but obviously alot less likely to happen.
                 // And "hardpoint" spots will just act as damage reduction and damage threshold if you don't "fully block" an attack, and it lands in a spot that shield type considers
                 // a "hardpoint." Also maybe make it not 100% in those cases, but some smaller percentage that it instead hits the armor below the shield, if any, that sort of thing, will see.
 
-                if (shieldBlockSuccess)
-                    shieldBlockSuccess = CompareShieldToUnderArmor(target, shield, struckBodyPart, naturalDamResist);
+                if (cVars.shieldBlockSuccess)
+                    cVars.shieldBlockSuccess = CompareShieldToUnderArmor(target, shield, struckBodyPart, naturalDamResist);
             }
 
-            float damCheckBeforeMatMod = damage;
+            float damCheckBeforeMatMod = cVars.damage;
 
-            damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
+            cVars.damage = (int)Mathf.Round(cVars.damage * cVars.matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
 
-            float damCheckAfterMatMod = damage;
+            float damCheckAfterMatMod = cVars.damage;
 
             if (softMatRequireModuleCheck)
             {
@@ -1619,7 +1634,7 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Checks for if a shield block was successful and returns true if so, false if not.</summary>
-        public static bool ShieldBlockChanceCalculation(DaggerfallEntity target, DaggerfallEntity attacker, bool shieldStrongSpot, DaggerfallUnityItem shield, DaggerfallUnityItem weapon)
+        public static void ShieldBlockChanceCalculation(DaggerfallUnityItem shield, DaggerfallUnityItem weapon, ref CVARS cVars)
         {
             if (weapon == null)
             {
@@ -1628,90 +1643,268 @@ namespace PhysicalCombatOverhaul
                 // May not though, will see.
             }
 
-            int atkAgility = attacker.Stats.LiveAgility - 50;
-            int atkSpeed = attacker.Stats.LiveSpeed - 50;
-            int atkLuck = attacker.Stats.LiveLuck - 50;
+            float fullBlockChance = 0;
 
-            float hardBlockChance = 0f;
-            float softBlockChance = 0f;
-            int targetAgili = target.Stats.LiveAgility - 50;
-            int targetSpeed = target.Stats.LiveSpeed - 50;
-            int targetStren = target.Stats.LiveStrength - 50;
-            int targetEndur = target.Stats.LiveEndurance - 50;
-            int targetWillp = target.Stats.LiveWillpower - 50;
-            int targetLuck = target.Stats.LiveLuck - 50;
-
-            chanceToHitMod += ((attacker.Stats.LiveAgility - target.Stats.LiveAgility) / 4);
+            // Body size difference either gives a bonus or penalty to defender's chances of blocking.
+            if (cVars.tarSize != cVars.atkSize)
+            {
+                fullBlockChance -= (cVars.tarSize - cVars.atkSize) * 15f;
+            }
 
             switch (shield.TemplateIndex)
             {
                 case (int)Armor.Buckler:
-                    fullBlockChance = (targetAgili * 1f) - atkAgility;
-                    hardBlockChance = 30f;
-                    softBlockChance = 20f;
-                    break;
+                    fullBlockChance = 35;
+                    fullBlockChance += Mathf.Clamp(cVars.tAgil * 0.7f, 0, 35);
+                    fullBlockChance += Mathf.Clamp(cVars.tSped * 0.3f, 0, 15);
+                    fullBlockChance += Mathf.Clamp((cVars.tAgil - cVars.aAgil) * 0.5f, -50, 0);
+                    fullBlockChance += Mathf.Clamp((cVars.tSped - cVars.aSped) * 0.15f, -50, 0); break;
                 case (int)Armor.Round_Shield:
-                    hardBlockChance = 35f;
-                    softBlockChance = 10f;
-                    break;
+                    fullBlockChance = 25;
+                    fullBlockChance += Mathf.Clamp(cVars.tStrn * 0.2f, 0, 10);
+                    fullBlockChance += Mathf.Clamp(cVars.tAgil * 0.5f, 0, 25);
+                    fullBlockChance += Mathf.Clamp(cVars.tSped * 0.2f, 0, 10);
+                    fullBlockChance += Mathf.Clamp((cVars.tAgil - cVars.aAgil) * 0.35f, -50, 0);
+                    fullBlockChance += Mathf.Clamp((cVars.tSped - cVars.aSped) * 0.2f, -50, 0); break;
                 case (int)Armor.Kite_Shield:
-                    hardBlockChance = 45f;
-                    softBlockChance = 5f;
-                    break;
+                    fullBlockChance = 20;
+                    fullBlockChance += Mathf.Clamp(cVars.tStrn * 0.2f, 0, 15);
+                    fullBlockChance += Mathf.Clamp(cVars.tEndu * 0.1f, 0, 10);
+                    fullBlockChance += Mathf.Clamp(cVars.tAgil * 0.5f, 0, 15);
+                    fullBlockChance += Mathf.Clamp(cVars.tSped * 0.2f, 0, 5);
+                    fullBlockChance += Mathf.Clamp((cVars.tAgil - cVars.aAgil) * 0.3f, -50, 0);
+                    fullBlockChance += Mathf.Clamp((cVars.tSped - cVars.aSped) * 0.25f, -50, 0); break;
                 case (int)Armor.Tower_Shield:
-                    hardBlockChance = 55f;
-                    softBlockChance = -5f;
-                    break;
+                    fullBlockChance = 10;
+                    fullBlockChance += Mathf.Clamp(cVars.tStrn * 0.2f, 0, 25);
+                    fullBlockChance += Mathf.Clamp(cVars.tEndu * 0.1f, 0, 15);
+                    fullBlockChance += Mathf.Clamp(cVars.tAgil * 0.5f, 0, 5);
+                    fullBlockChance += Mathf.Clamp((cVars.tAgil - cVars.aAgil) * 0.2f, -50, 0);
+                    fullBlockChance += Mathf.Clamp((cVars.tSped - cVars.aSped) * 0.3f, -50, 0); break;
                 default:
-                    hardBlockChance = 40f;
-                    softBlockChance = 0f;
-                    break;
+                    fullBlockChance = 15;
+                    fullBlockChance += Mathf.Clamp(cVars.tStrn * 0.2f, 0, 10);
+                    fullBlockChance += Mathf.Clamp(cVars.tEndu * 0.1f, 0, 5);
+                    fullBlockChance += Mathf.Clamp(cVars.tAgil * 0.5f, 0, 20);
+                    fullBlockChance += Mathf.Clamp(cVars.tSped * 0.2f, 0, 10);
+                    fullBlockChance += Mathf.Clamp((cVars.tAgil - cVars.aAgil) * 0.2f, -50, 0);
+                    fullBlockChance += Mathf.Clamp((cVars.tSped - cVars.aSped) * 0.25f, -50, 0); break;
             }
 
-            if (shieldStrongSpot)
+            fullBlockChance = Mathf.Clamp(fullBlockChance, 0, 90f);
+            if (Dice100.SuccessRoll(Mathf.RoundToInt(fullBlockChance)))
             {
-                hardBlockChance += (targetAgili * .3f);
-                hardBlockChance += (targetSpeed * .3f);
-                hardBlockChance += (targetStren * .3f);
-                hardBlockChance += (targetEndur * .2f);
-                hardBlockChance += (targetWillp * .1f);
-                hardBlockChance += (targetLuck * .1f);
+                // Block Success
+                cVars.shieldBlockSuccess = true;
+                cVars.shieldDTAmount = GetBaseDTAmount(shield, ref cVars);
+                cVars.shieldDRAmount = GetBaseDRAmount(shield, ref cVars);
+                // Guess continue working on this tomorrow from here probably.
+                // Likely have body size difference and strength values compared against each other to reduce DT amount from a block, possibly?
+            }
+            else if (cVars.shieldStrongSpot)
+            {
+                // Block Failed, but body-part hit is a hard-point for the shield. Roll for chances of shield taking most of hit rather than armor under it.
+            }
+            else
+            {
+                // Block Failed and shield completely avoided, hit armor under it.
+            }
+        }
 
-                Mathf.Clamp(hardBlockChance, 7f, 95f);
-                int blockChanceInt = (int)Mathf.Round(hardBlockChance);
+        public static float GetBaseDTAmount(DaggerfallUnityItem armor, ref CVARS cVars)
+        {
+            if (armor.IsShield)
+            {
+                cVars.shieldMaterial = GetArmorMaterial(armor);
 
-                if (Dice100.SuccessRoll(blockChanceInt))
+                switch (cVars.shieldMaterial)
                 {
-                    //Debug.LogFormat("$$$. Shield Blocked A Hard-Point, Chance Was {0}%", blockChanceInt);
-                    return true;
+                    case (int)ArmorMats.Leather: return 3.5f;
+                    case (int)ArmorMats.Chain: return 4.5f;
+                    case (int)ArmorMats.Iron: return 6f;
+                    case (int)ArmorMats.Steel_Silver: return 6.5f;
+                    case (int)ArmorMats.Elven: return 7f;
+                    case (int)ArmorMats.Dwarven: return 7.5f;
+                    case (int)ArmorMats.Mithril_Adam: return 8f;
+                    case (int)ArmorMats.Ebony: return 8.5f;
+                    case (int)ArmorMats.Orcish: return 9f;
+                    case (int)ArmorMats.Daedric: return 9.5f;
+                    default: return 0f;
                 }
-                else
+
+                // Possibly modify somewhat based on the shield-type? Not sure, will see.
+                switch (armor.TemplateIndex)
                 {
-                    //Debug.LogFormat("!!!. Shield FAILED To Block A Hard-Point, Chance Was {0}%", blockChanceInt);
-                    return false;
+                    case (int)Armor.Buckler:
+                        break;
+                    case (int)Armor.Round_Shield:
+                        break;
+                    case (int)Armor.Kite_Shield:
+                        break;
+                    case (int)Armor.Tower_Shield:
+                        break;
+                    default:
+                        break;
                 }
             }
             else
             {
-                softBlockChance += (targetAgili * .3f);
-                softBlockChance += (targetSpeed * .2f);
-                softBlockChance += (targetStren * .2f);
-                softBlockChance += (targetEndur * .1f);
-                softBlockChance += (targetWillp * .1f);
-                softBlockChance += (targetLuck * .1f);
+                cVars.armorMaterial = GetArmorMaterial(armor);
+                cVars.armorType = GetArmorMatType(armor);
 
-                Mathf.Clamp(softBlockChance, 0f, 50f);
-                int blockChanceInt = (int)Mathf.Round(softBlockChance);
-
-                if (Dice100.SuccessRoll(blockChanceInt))
+                if (cVars.armorType == 0)
                 {
-                    //Debug.LogFormat("$$$. Shield Blocked A Soft-Point, Chance Was {0}%", blockChanceInt);
-                    return true;
+                    switch (cVars.armorMaterial)
+                    {
+                        case (int)ArmorMats.Leather: return 2f;
+                        case (int)ArmorMats.Chain: return 2f;
+                        case (int)ArmorMats.Iron: return 2.25f;
+                        case (int)ArmorMats.Steel_Silver: return 2.5f;
+                        case (int)ArmorMats.Elven: return 2.75f;
+                        case (int)ArmorMats.Dwarven: return 3f;
+                        case (int)ArmorMats.Mithril_Adam: return 3.25f;
+                        case (int)ArmorMats.Ebony: return 3.5f;
+                        case (int)ArmorMats.Orcish: return 3.75f;
+                        case (int)ArmorMats.Daedric: return 4f;
+                        default: return 0f;
+                    }
+                }
+                else if (cVars.armorType == 1)
+                {
+                    switch (cVars.armorMaterial)
+                    {
+                        case (int)ArmorMats.Leather: return 2.5f;
+                        case (int)ArmorMats.Chain: return 2.5f;
+                        case (int)ArmorMats.Iron: return 3f;
+                        case (int)ArmorMats.Steel_Silver: return 3.5f;
+                        case (int)ArmorMats.Elven: return 4f;
+                        case (int)ArmorMats.Dwarven: return 4.5f;
+                        case (int)ArmorMats.Mithril_Adam: return 5f;
+                        case (int)ArmorMats.Ebony: return 5.5f;
+                        case (int)ArmorMats.Orcish: return 6f;
+                        case (int)ArmorMats.Daedric: return 6.5f;
+                        default: return 0f;
+                    }
+                }
+                else if (cVars.armorType == 2)
+                {
+                    switch (cVars.armorMaterial)
+                    {
+                        case (int)ArmorMats.Leather: return 3.5f;
+                        case (int)ArmorMats.Chain: return 3.5f;
+                        case (int)ArmorMats.Iron: return 3.5f;
+                        case (int)ArmorMats.Steel_Silver: return 4.25f;
+                        case (int)ArmorMats.Elven: return 5f;
+                        case (int)ArmorMats.Dwarven: return 5.75f;
+                        case (int)ArmorMats.Mithril_Adam: return 6.5f;
+                        case (int)ArmorMats.Ebony: return 7.25f;
+                        case (int)ArmorMats.Orcish: return 8f;
+                        case (int)ArmorMats.Daedric: return 8.75f;
+                        default: return 0f;
+                    }
                 }
                 else
                 {
-                    //Debug.LogFormat("!!!. Shield FAILED To Block A Soft-Point, Chance Was {0}%", blockChanceInt);
-                    return false;
+                    return 0f;
+                }
+            }
+        }
+
+        public static float GetBaseDRAmount(DaggerfallUnityItem armor, ref CVARS cVars)
+        {
+            if (armor.IsShield)
+            {
+                cVars.shieldMaterial = GetArmorMaterial(armor);
+
+                switch (cVars.shieldMaterial)
+                {
+                    case (int)ArmorMats.Leather: return 0.15f;
+                    case (int)ArmorMats.Chain: return 0.2f;
+                    case (int)ArmorMats.Iron: return 0.25f;
+                    case (int)ArmorMats.Steel_Silver: return 0.275f;
+                    case (int)ArmorMats.Elven: return 0.3f;
+                    case (int)ArmorMats.Dwarven: return 0.325f;
+                    case (int)ArmorMats.Mithril_Adam: return 0.35f;
+                    case (int)ArmorMats.Ebony: return 0.375f;
+                    case (int)ArmorMats.Orcish: return 0.4f;
+                    case (int)ArmorMats.Daedric: return 0.425f;
+                    default: return 0f;
+                }
+
+                // Possibly modify somewhat based on the shield-type? Not sure, will see.
+                switch (armor.TemplateIndex)
+                {
+                    case (int)Armor.Buckler:
+                        break;
+                    case (int)Armor.Round_Shield:
+                        break;
+                    case (int)Armor.Kite_Shield:
+                        break;
+                    case (int)Armor.Tower_Shield:
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                cVars.armorMaterial = GetArmorMaterial(armor);
+                cVars.armorType = GetArmorMatType(armor);
+
+                if (cVars.armorType == 0)
+                {
+                    switch (cVars.armorMaterial)
+                    {
+                        case (int)ArmorMats.Leather: return 0f;
+                        case (int)ArmorMats.Chain: return 0f;
+                        case (int)ArmorMats.Iron: return 0.05f;
+                        case (int)ArmorMats.Steel_Silver: return 0.075f;
+                        case (int)ArmorMats.Elven: return 0.1f;
+                        case (int)ArmorMats.Dwarven: return 0.125f;
+                        case (int)ArmorMats.Mithril_Adam: return 0.15f;
+                        case (int)ArmorMats.Ebony: return 0.175f;
+                        case (int)ArmorMats.Orcish: return 0.2f;
+                        case (int)ArmorMats.Daedric: return 0.225f;
+                        default: return 0f;
+                    }
+                }
+                else if (cVars.armorType == 1)
+                {
+                    switch (cVars.armorMaterial)
+                    {
+                        case (int)ArmorMats.Leather: return 0.075f;
+                        case (int)ArmorMats.Chain: return 0.075f;
+                        case (int)ArmorMats.Iron: return 0.1f;
+                        case (int)ArmorMats.Steel_Silver: return 0.125f;
+                        case (int)ArmorMats.Elven: return 0.15f;
+                        case (int)ArmorMats.Dwarven: return 0.175f;
+                        case (int)ArmorMats.Mithril_Adam: return 0.2f;
+                        case (int)ArmorMats.Ebony: return 0.225f;
+                        case (int)ArmorMats.Orcish: return 0.25f;
+                        case (int)ArmorMats.Daedric: return 0.275f;
+                        default: return 0f;
+                    }
+                }
+                else if (cVars.armorType == 2)
+                {
+                    switch (cVars.armorMaterial)
+                    {
+                        case (int)ArmorMats.Leather: return 0.175f;
+                        case (int)ArmorMats.Chain: return 0.175f;
+                        case (int)ArmorMats.Iron: return 0.175f;
+                        case (int)ArmorMats.Steel_Silver: return 0.2f;
+                        case (int)ArmorMats.Elven: return 0.225f;
+                        case (int)ArmorMats.Dwarven: return 0.25f;
+                        case (int)ArmorMats.Mithril_Adam: return 0.275f;
+                        case (int)ArmorMats.Ebony: return 0.3f;
+                        case (int)ArmorMats.Orcish: return 0.325f;
+                        case (int)ArmorMats.Daedric: return 0.35f;
+                        default: return 0f;
+                    }
+                }
+                else
+                {
+                    return 0f;
                 }
             }
         }
@@ -1721,7 +1914,7 @@ namespace PhysicalCombatOverhaul
         {
             int redDamShield = 100;
             int redDamUnderArmor = 100;
-            short[] armorProps = new short[] {-1, -1};
+            int[] armorProps = new int[] {-1, -1};
             bool shieldQuickCheck = true;
 
             ArmorMaterialIdentifier(shield, ref armorProps);
@@ -1756,7 +1949,7 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Finds the material that an armor item is made from, then returns the multiplier that will be used later based on this material check.</summary>
-        public static void ArmorMaterialIdentifier(DaggerfallUnityItem armor, ref short[] armorProps)
+        public static void ArmorMaterialIdentifier(DaggerfallUnityItem armor, ref int[] armorProps)
         {
             if (armor == null)
             {
@@ -1770,7 +1963,7 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        public static short GetArmorMatType(DaggerfallUnityItem armor)
+        public static int GetArmorMatType(DaggerfallUnityItem armor)
         {
             int tIdx = armor.TemplateIndex;
             int mat = armor.NativeMaterialValue;
@@ -1799,7 +1992,7 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        public static short GetArmorMaterial(DaggerfallUnityItem armor)
+        public static int GetArmorMaterial(DaggerfallUnityItem armor)
         {
             int mat = armor.NativeMaterialValue;
 
@@ -1953,6 +2146,35 @@ namespace PhysicalCombatOverhaul
             Right_Pauldron = 106,
             Helm = 107,
             Boots = 108,
+        }
+
+        /// <summary>
+        /// The vanilla armor materials, but in an index format more useful for this mod's logic.
+        /// </summary>
+        public enum ArmorMats
+        {
+            None = -1,
+            Leather = 0,
+            Chain = 1,
+            Iron = 2,
+            Steel_Silver = 3,
+            Elven = 4,
+            Dwarven = 5,
+            Mithril_Adam = 6,
+            Ebony = 7,
+            Orcish = 8,
+            Daedric = 9,
+        }
+
+        /// <summary>
+        /// The modded armor materials 'types', added by Roleplay Realism: Items.
+        /// </summary>
+        public enum ArmorType
+        {
+            None = -1,
+            Leather = 0,
+            Chain = 1,
+            Plate = 2,
         }
 
         private static int CalculateAdjustmentsToHit(DaggerfallEntity attacker, DaggerfallEntity target)
