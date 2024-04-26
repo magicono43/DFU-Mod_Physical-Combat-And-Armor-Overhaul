@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/23/2024, 10:00 PM
+// Last Edit:		4/26/2024, 12:10 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -148,6 +148,7 @@ namespace PhysicalCombatOverhaul
 
             public bool shieldStrongSpot;
             public bool shieldBlockSuccess;
+            public bool hitShield;
             public float shieldDTAmount;
             public float shieldDRAmount;
             public int shieldMaterial;
@@ -194,6 +195,7 @@ namespace PhysicalCombatOverhaul
 
             cvars.shieldStrongSpot = false;
             cvars.shieldBlockSuccess = false;
+            cvars.hitShield = false;
             cvars.shieldDTAmount = 0;
             cvars.shieldDRAmount = 0;
             cvars.shieldMaterial = -1;
@@ -1646,10 +1648,7 @@ namespace PhysicalCombatOverhaul
             float fullBlockChance = 0;
 
             // Body size difference either gives a bonus or penalty to defender's chances of blocking.
-            if (cVars.tarSize != cVars.atkSize)
-            {
-                fullBlockChance -= (cVars.tarSize - cVars.atkSize) * 15f;
-            }
+            fullBlockChance -= (cVars.tarSize - cVars.atkSize) * 15f;
 
             switch (shield.TemplateIndex)
             {
@@ -1692,21 +1691,51 @@ namespace PhysicalCombatOverhaul
             }
 
             fullBlockChance = Mathf.Clamp(fullBlockChance, 0, 90f);
-            if (Dice100.SuccessRoll(Mathf.RoundToInt(fullBlockChance)))
+            if (Dice100.SuccessRoll(Mathf.RoundToInt(fullBlockChance))) // Block Success
             {
-                // Block Success
+                float dTMod = 1f;
                 cVars.shieldBlockSuccess = true;
                 cVars.shieldDTAmount = GetBaseDTAmount(shield, ref cVars);
                 cVars.shieldDRAmount = GetBaseDRAmount(shield, ref cVars);
-                // Guess continue working on this tomorrow from here probably.
-                // Likely have body size difference and strength values compared against each other to reduce DT amount from a block, possibly?
+                cVars.shieldDTAmount *= 2;
+
+                if (cVars.tarSize < cVars.atkSize)
+                {
+                    dTMod -= (cVars.atkSize - cVars.tarSize) * 0.2f;
+                }
+                dTMod -= (cVars.aStrn - cVars.tStrn) * 0.004f;
+
+                cVars.shieldDTAmount *= dTMod;
             }
-            else if (cVars.shieldStrongSpot)
+            else if (cVars.shieldStrongSpot) // Block Failed, but body-part hit is a hard-point for the shield. Roll for chances of shield taking most of hit rather than armor under it.
             {
-                // Block Failed, but body-part hit is a hard-point for the shield. Roll for chances of shield taking most of hit rather than armor under it.
+                float hitShieldChance = 75 + Mathf.Clamp(cVars.tLuck * 0.5f, -25, 25);
+                hitShieldChance -= (cVars.tarSize - cVars.atkSize) * 15f;
+                hitShieldChance -= Mathf.Clamp(cVars.aAgil * 0.4f, 0, 20);
+                hitShieldChance -= Mathf.Clamp(cVars.aLuck * 0.2f, -10, 10);
+                hitShieldChance -= cVars.wepType == (short)DFCareer.Skills.ShortBlade ? 15 : 0;
+
+                hitShieldChance = Mathf.Clamp(hitShieldChance, 10f, 95f);
+                if (Dice100.SuccessRoll(Mathf.RoundToInt(hitShieldChance)))
+                {
+                    float dTMod = 1f;
+                    cVars.shieldBlockSuccess = false;
+                    cVars.hitShield = true;
+                    cVars.shieldDTAmount = GetBaseDTAmount(shield, ref cVars);
+                    cVars.shieldDRAmount = GetBaseDRAmount(shield, ref cVars);
+
+                    if (cVars.tarSize < cVars.atkSize)
+                    {
+                        dTMod -= (cVars.atkSize - cVars.tarSize) * 0.1f;
+                    }
+                    dTMod -= (cVars.aStrn - cVars.tStrn) * 0.002f;
+
+                    cVars.shieldDTAmount *= dTMod;
+                }
             }
             else
             {
+                // Suppose continue from here tomorrow, will have to see how I plan on doing this part, maybe add similar variables to the shield in cVars and pass those here?
                 // Block Failed and shield completely avoided, hit armor under it.
             }
         }
