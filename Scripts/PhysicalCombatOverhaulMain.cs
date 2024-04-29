@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/26/2024, 12:10 AM
+// Last Edit:		4/28/2024, 11:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -153,11 +153,16 @@ namespace PhysicalCombatOverhaul
             public float shieldDRAmount;
             public int shieldMaterial;
 
+            public int struckBodyPart;
             public float armorDTAmount;
             public float armorDRAmount;
             public int armorMaterial;
             public int armorType;
 
+            public float finalDTAmount;
+            public float finalDRAmount;
+
+            public DaggerfallEntity aEntity;
             public int aStrn;
             public int aWill;
             public int aAgil;
@@ -165,6 +170,7 @@ namespace PhysicalCombatOverhaul
             public int aSped;
             public int aLuck;
 
+            public DaggerfallEntity tEntity;
             public int tStrn;
             public int tWill;
             public int tAgil;
@@ -200,11 +206,16 @@ namespace PhysicalCombatOverhaul
             cvars.shieldDRAmount = 0;
             cvars.shieldMaterial = -1;
 
+            cvars.struckBodyPart = -1;
             cvars.armorDTAmount = 0;
             cvars.armorDRAmount = 0;
             cvars.armorMaterial = -1;
             cvars.armorType = -1;
 
+            cvars.finalDTAmount = 0;
+            cvars.finalDRAmount = 0;
+
+            cvars.aEntity = attacker;
             cvars.aStrn = attacker.Stats.LiveStrength - 50;
             cvars.aWill = attacker.Stats.LiveWillpower - 50;
             cvars.aAgil = attacker.Stats.LiveAgility - 50;
@@ -212,6 +223,7 @@ namespace PhysicalCombatOverhaul
             cvars.aSped = attacker.Stats.LiveSpeed - 50;
             cvars.aLuck = attacker.Stats.LiveLuck - 50;
 
+            cvars.tEntity = target;
             cvars.tStrn = target.Stats.LiveStrength - 50;
             cvars.tWill = target.Stats.LiveWillpower - 50;
             cvars.tAgil = target.Stats.LiveAgility - 50;
@@ -432,14 +444,14 @@ namespace PhysicalCombatOverhaul
             cVars.backstabChance = CalculateBackstabChance(attacker, null, enemyAnimStateRecord);
             cVars.chanceToHitMod += cVars.backstabChance;
 
-            int struckBodyPart = CalculateStruckBodyPart();
+            cVars.struckBodyPart = CalculateStruckBodyPart();
 
             // Get damage for weaponless attacks
             if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
             {
                 cVars.unarmedAttack = true;
 
-                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, cVars.struckBodyPart))
                 {
                     cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damageModifiers, true); // Added my own, non-overriden version of this method for modification.
 
@@ -456,7 +468,7 @@ namespace PhysicalCombatOverhaul
                 if (archeryModuleCheck)
                     cVars.chanceToHitMod = AdjustWeaponHitChanceMod(attacker, target, cVars.chanceToHitMod, weaponAnimTime, weapon);
 
-                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, cVars.struckBodyPart))
                 {
                     cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
 
@@ -478,6 +490,14 @@ namespace PhysicalCombatOverhaul
                 cVars.damage = (int)Mathf.Round(cVars.damage * cVars.critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
             }
 
+            EquipSlots hitSlot = DaggerfallUnityItem.GetEquipSlotForBodyPart((BodyParts)cVars.struckBodyPart);
+            DaggerfallUnityItem armor = cVars.tEntity.ItemEquipTable.GetItem(hitSlot);
+            if (armor != null)
+            {
+                cVars.armorDTAmount = GetBaseDTAmount(armor, ref cVars);
+                cVars.armorDRAmount = GetBaseDRAmount(armor, ref cVars);
+            }
+
             // I'm thinking of having the armor and shield stuff happen before all the mat-damage reduction and natural dam reduction. The idea being those parts would only really
             // be taken into consideration once the protection of the armor fails or is penetrated in someway to actually harm the wearer in someway, that's the idea atleast.
             DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
@@ -485,19 +505,23 @@ namespace PhysicalCombatOverhaul
             {
                 BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
 
-                for (int i = 0; (i < protectedBodyParts.Length) && !cVars.shieldStrongSpot; i++)
+                if (protectedBodyParts.Length > 0)
                 {
-                    if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
-                        cVars.shieldStrongSpot = true;
+                    for (int i = 0; (i < protectedBodyParts.Length) && !cVars.shieldStrongSpot; i++)
+                    {
+                        if (protectedBodyParts[i] == (BodyParts)cVars.struckBodyPart)
+                            cVars.shieldStrongSpot = true;
+                    }
+                    ShieldBlockChanceCalculation(shield, ref cVars);
                 }
-                ShieldBlockChanceCalculation(shield, weapon, ref cVars);
-                // Guess continue reworking this aspect tomorrow, will see. What I'm thinking is maybe having a block actually be a full block of an attack, but obviously alot less likely to happen.
-                // And "hardpoint" spots will just act as damage reduction and damage threshold if you don't "fully block" an attack, and it lands in a spot that shield type considers
-                // a "hardpoint." Also maybe make it not 100% in those cases, but some smaller percentage that it instead hits the armor below the shield, if any, that sort of thing, will see.
 
-                if (cVars.shieldBlockSuccess)
-                    cVars.shieldBlockSuccess = CompareShieldToUnderArmor(target, shield, struckBodyPart, naturalDamResist);
+                if (armor != null)
+                {
+                    CompareShieldToUnderArmor(shield, armor, ref cVars);
+                }
             }
+
+            // Continue from here tomorrow, I suppose. Maybe finally check DR and DT against the "final" values established from the above methods and do something with those? Will see.
 
             float damCheckBeforeMatMod = cVars.damage;
 
@@ -1636,15 +1660,8 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Checks for if a shield block was successful and returns true if so, false if not.</summary>
-        public static void ShieldBlockChanceCalculation(DaggerfallUnityItem shield, DaggerfallUnityItem weapon, ref CVARS cVars)
+        public static void ShieldBlockChanceCalculation(DaggerfallUnityItem shield, ref CVARS cVars)
         {
-            if (weapon == null)
-            {
-                // Just make sure to check if weapon is null or not.
-                // Might have the weapon being used have some influence if an attack goes through a shield hard-point and hits the armor under instead?
-                // May not though, will see.
-            }
-
             float fullBlockChance = 0;
 
             // Body size difference either gives a bonus or penalty to defender's chances of blocking.
@@ -1732,11 +1749,16 @@ namespace PhysicalCombatOverhaul
 
                     cVars.shieldDTAmount *= dTMod;
                 }
+                else
+                {
+                    cVars.shieldBlockSuccess = false;
+                    cVars.hitShield = false;
+                }
             }
-            else
+            else // Block Failed and shield completely avoided, hit armor under it.
             {
-                // Suppose continue from here tomorrow, will have to see how I plan on doing this part, maybe add similar variables to the shield in cVars and pass those here?
-                // Block Failed and shield completely avoided, hit armor under it.
+                cVars.shieldBlockSuccess = false;
+                cVars.hitShield = false;
             }
         }
 
@@ -1938,42 +1960,30 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        /// <summary>Compares the damage reduction of the struck shield, with the armor under the part that was struck, and returns true if the shield has the higher reduction value, or false if the armor under has a higher reduction value. This is to keep a full-suit of daedric armor from being worse while wearing a leather shield, which when a block is successful, would actually take more damage than if not wearing a shield.</summary>
-        public static bool CompareShieldToUnderArmor(DaggerfallEntity target, DaggerfallUnityItem shield, int struckBodyPart, float naturalDamResist)
+        /// <summary>Compares the damage reduction of the struck shield, with the armor under the part that was struck. This is to keep a full-suit of daedric armor from being worse while wearing a leather shield, which when a block is successful, would actually take more damage than if not wearing a shield.</summary>
+        public static void CompareShieldToUnderArmor(DaggerfallUnityItem shield, DaggerfallUnityItem armor, ref CVARS cVars)
         {
-            int redDamShield = 100;
-            int redDamUnderArmor = 100;
-            int[] armorProps = new int[] {-1, -1};
-            bool shieldQuickCheck = true;
-
-            ArmorMaterialIdentifier(shield, ref armorProps);
-
-            redDamShield = PercentageReductionAverage(shield, armorMaterial, redDamShield, naturalDamResist, shieldQuickCheck);
-            shieldQuickCheck = false;
-
-
-            EquipSlots hitSlot = DaggerfallUnityItem.GetEquipSlotForBodyPart((BodyParts)struckBodyPart);
-            DaggerfallUnityItem armor = target.ItemEquipTable.GetItem(hitSlot);
-            if (armor != null)
+            // Will potentially change this later, so that the shield always gets hit if it does, but add the under-armor amount to it or something to compensate? Will see.
+            if (cVars.armorDTAmount >= cVars.shieldDTAmount)
             {
-                ArmorMaterialIdentifier(armor, ref armorProps);
-
-                redDamUnderArmor = PercentageReductionAverage(armor, armorMaterial, redDamUnderArmor, naturalDamResist, shieldQuickCheck);
-            }
-            else // If the body part struck in 'naked' IE has no armor protecting it.
-            {
-                redDamUnderArmor = (int)Mathf.Round(redDamUnderArmor * (1f - naturalDamResist));
-            }
-
-            if (redDamShield <= redDamUnderArmor)
-            {
-                //Debug.Log("$$$: Shield Is Stronger Than Under Armor, Shield Being Used");
-                return true;
+                cVars.finalDTAmount = cVars.armorDTAmount;
+                cVars.shieldBlockSuccess = false;
+                cVars.hitShield = false;
             }
             else
             {
-                //Debug.Log("!!!: Shield Is Weaker Than Under Armor, Armor Being Used Instead");
-                return false;
+                cVars.finalDTAmount = cVars.shieldDTAmount;
+            }
+
+            if (cVars.armorDRAmount >= cVars.shieldDRAmount)
+            {
+                cVars.finalDRAmount = cVars.armorDRAmount;
+                cVars.shieldBlockSuccess = false;
+                cVars.hitShield = false;
+            }
+            else
+            {
+                cVars.finalDRAmount = cVars.shieldDRAmount;
             }
         }
 
