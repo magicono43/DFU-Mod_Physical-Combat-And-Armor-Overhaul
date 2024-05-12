@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		4/28/2024, 11:30 PM
+// Last Edit:		5/11/2024, 11:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -521,7 +521,23 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            // Continue from here tomorrow, I suppose. Maybe finally check DR and DT against the "final" values established from the above methods and do something with those? Will see.
+            if (cVars.damage > 0 && (cVars.finalDTAmount > 0 || cVars.finalDRAmount > 0))
+            {
+                float damAfterDR = cVars.damage * Mathf.Abs(cVars.finalDRAmount - 1);
+                float dTAfterRound = cVars.finalDTAmount;
+                float damRemainder = damAfterDR % 1;
+                float dTRemainder = cVars.finalDTAmount % 1;
+
+                damAfterDR = (float)Math.Truncate(damAfterDR);
+                if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
+                    ++damAfterDR;
+
+                dTAfterRound = (float)Math.Truncate(dTAfterRound);
+                if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
+                    ++dTAfterRound;
+
+                // Continue from here tomorrow, I suppose. Maybe finally check DR and DT against the "final" values established from the above methods and do something with those? Will see.
+            }
 
             float damCheckBeforeMatMod = cVars.damage;
 
