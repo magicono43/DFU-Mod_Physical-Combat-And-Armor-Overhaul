@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		5/11/2024, 11:30 PM
+// Last Edit:		5/15/2024, 10:10 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -162,6 +162,9 @@ namespace PhysicalCombatOverhaul
             public float finalDTAmount;
             public float finalDRAmount;
 
+            public float damBeforeDT;
+            public float damAfterDT;
+
             public DaggerfallEntity aEntity;
             public int aStrn;
             public int aWill;
@@ -214,6 +217,9 @@ namespace PhysicalCombatOverhaul
 
             cvars.finalDTAmount = 0;
             cvars.finalDRAmount = 0;
+
+            cvars.damBeforeDT = 0;
+            cvars.damAfterDT = 0;
 
             cvars.aEntity = attacker;
             cvars.aStrn = attacker.Stats.LiveStrength - 50;
@@ -536,7 +542,63 @@ namespace PhysicalCombatOverhaul
                 if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
                     ++dTAfterRound;
 
+                cVars.damBeforeDT = damAfterDR;
+                cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
+
+                if (dTAfterRound >= damAfterDR) // Attack was completely negated by shield or armor.
+                {
+                    if (cVars.shieldBlockSuccess)
+                    {
+                        if (shield != null)
+                        {
+                            DamageEquipment(weapon, shield, ref cVars);
+                        }
+                    }
+                    else if (cVars.hitShield)
+                    {
+                        if (shield != null)
+                        {
+                            //
+                        }
+                    }
+                    else
+                    {
+                        if (armor != null)
+                        {
+                            //
+                        }
+                    }
+                }
+                else // Attack was only partially reduced by shield or armor, so the DT value was overcome.
+                {
+                    if (cVars.shieldBlockSuccess)
+                    {
+                        if (shield != null)
+                        {
+                            //
+                        }
+                    }
+                    else if (cVars.hitShield)
+                    {
+                        if (shield != null)
+                        {
+                            //
+                        }
+                    }
+                    else
+                    {
+                        if (armor != null)
+                        {
+                            //
+                        }
+                    }
+                }
+
                 // Continue from here tomorrow, I suppose. Maybe finally check DR and DT against the "final" values established from the above methods and do something with those? Will see.
+            }
+            else
+            {
+                //
             }
 
             float damCheckBeforeMatMod = cVars.damage;
@@ -2150,6 +2212,69 @@ namespace PhysicalCombatOverhaul
             }
         }
 
+        /// <summary>Retrieves the multiplier based on the condition modifier of a material, the idea being that items will take around the same amount of damage as other items in that category.</summary>
+        public static int EqualizeMaterialConditions(DaggerfallUnityItem item)
+        {
+            int itemMat = item.NativeMaterialValue;
+
+            if (itemMat <= 9 && itemMat >= 0) // Checks if the item material is for weapons, and leather armor.
+            {
+                switch (itemMat)
+                {
+                    case (int)WeaponMaterialTypes.Iron:
+                    case (int)WeaponMaterialTypes.Steel:
+                    case (int)WeaponMaterialTypes.Silver:
+                        return 1;
+                    case (int)WeaponMaterialTypes.Elven:
+                        return 2;
+                    case (int)WeaponMaterialTypes.Dwarven:
+                        return 3;
+                    case (int)WeaponMaterialTypes.Mithril:
+                        return 4;
+                    case (int)WeaponMaterialTypes.Adamantium:
+                        return 5;
+                    case (int)WeaponMaterialTypes.Ebony:
+                        return 6;
+                    case (int)WeaponMaterialTypes.Orcish:
+                        return 7;
+                    case (int)WeaponMaterialTypes.Daedric:
+                        return 8;
+                    default:
+                        return 1; // Leather should default to this.
+                }
+            }
+            else if (itemMat <= 521 && itemMat >= 256) // Checks if the item material is for armors.
+            {
+                switch (itemMat)
+                {
+                    case (int)ArmorMaterialTypes.Chain:
+                    case (int)ArmorMaterialTypes.Chain2:
+                    case (int)ArmorMaterialTypes.Iron:
+                    case (int)ArmorMaterialTypes.Steel:
+                    case (int)ArmorMaterialTypes.Silver:
+                        return 1;
+                    case (int)ArmorMaterialTypes.Elven:
+                        return 2;
+                    case (int)ArmorMaterialTypes.Dwarven:
+                        return 3;
+                    case (int)ArmorMaterialTypes.Mithril:
+                        return 4;
+                    case (int)ArmorMaterialTypes.Adamantium:
+                        return 5;
+                    case (int)ArmorMaterialTypes.Ebony:
+                        return 6;
+                    case (int)ArmorMaterialTypes.Orcish:
+                        return 7;
+                    case (int)ArmorMaterialTypes.Daedric:
+                        return 8;
+                    default:
+                        return 1;
+                }
+            }
+            else
+                return 1;
+        }
+
         /// <summary>
         /// Size categories for any creatures, used in some combat formula.
         /// </summary>
@@ -2258,9 +2383,8 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Allocate any equipment damage from a strike, and reduce item condition.</summary>
-        private static bool DamageEquipment(DaggerfallEntity attacker, DaggerfallEntity target, int damage, DaggerfallUnityItem weapon, int struckBodyPart)
+        private static void DamageEquipment(DaggerfallUnityItem weapon, DaggerfallUnityItem armor, ref CVARS cVars)
         {
-            int atkStrength = attacker.Stats.LiveStrength;
             int tarMatMod = 0;
             int matDifference = 0;
             bool bluntWep = false;
@@ -2272,25 +2396,11 @@ namespace PhysicalCombatOverhaul
             float armorDamResist = 1f;
             int startItemCondPer = 0;
 
-            if (!armorHitFormulaModuleCheck) // Uses the regular shield formula if the "armorHitFormula" Module is disabled in settings, but the equipment damage module is still active.
-            {
-                DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
-                shieldBlockSuccess = false;
-                if (shield != null)
-                {
-                    BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
-
-                    for (int i = 0; (i < protectedBodyParts.Length) && !shieldBlockSuccess; i++)
-                    {
-                        if (protectedBodyParts[i] == (BodyParts)struckBodyPart)
-                            shieldBlockSuccess = true;
-                    }
-                }
-            }
-
             // If damage was done by a weapon, damage the weapon and armor of the hit body part.
-            if (weapon != null && damage > 0)
+            if (weapon != null)
             {
+                // Continue from here tomorrow, I suppose. Likely work on the equipment damage stuff, since it is here after all, will see.
+
                 int atkMatMod = weapon.GetWeaponMaterialModifier() + 2;
                 int wepDam = damage;
                 wepEqualize = EqualizeMaterialConditions(weapon);
