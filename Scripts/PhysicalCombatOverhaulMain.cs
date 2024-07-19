@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		5/15/2024, 10:10 PM
+// Last Edit:		7/18/2024, 10:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -379,7 +379,7 @@ namespace PhysicalCombatOverhaul
 
             return newItem;
         }
-
+        
         public static int CalcPlayerVsMonsterAttack(PlayerEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             CVARS cVars = GetCombatVariables(attacker, target);
@@ -551,7 +551,7 @@ namespace PhysicalCombatOverhaul
                     {
                         if (shield != null)
                         {
-                            DamageEquipment(weapon, shield, ref cVars);
+                            DamageEquipment(weapon, shield, attacker, target, ref cVars);
                         }
                     }
                     else if (cVars.hitShield)
@@ -623,7 +623,7 @@ namespace PhysicalCombatOverhaul
 
             Mathf.Clamp(naturalDamResist, -0.2f, 0.2f);
         }
-
+        
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             short wepType = 30;
@@ -971,7 +971,7 @@ namespace PhysicalCombatOverhaul
         // -- Newly Added Stuff 4-17-2024 --
 
         #region Overridden Base Methods
-
+        
         private static int CalculateAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             if (attacker == null || target == null)
@@ -2143,6 +2143,35 @@ namespace PhysicalCombatOverhaul
             }
         }
 
+        public static int GetWeaponMaterial(DaggerfallUnityItem weapon)
+        {
+            int mat = weapon.NativeMaterialValue;
+
+            switch (mat)
+            {
+                case (int)WeaponMaterialTypes.Iron:
+                    return 0;
+                case (int)WeaponMaterialTypes.Steel:
+                case (int)WeaponMaterialTypes.Silver:
+                    return 1;
+                case (int)WeaponMaterialTypes.Elven:
+                    return 2;
+                case (int)WeaponMaterialTypes.Dwarven:
+                    return 3;
+                case (int)WeaponMaterialTypes.Mithril:
+                case (int)WeaponMaterialTypes.Adamantium:
+                    return 4;
+                case (int)WeaponMaterialTypes.Ebony:
+                    return 5;
+                case (int)WeaponMaterialTypes.Orcish:
+                    return 6;
+                case (int)WeaponMaterialTypes.Daedric:
+                    return 7;
+                default:
+                    return -1;
+            }
+        }
+
         /// <summary>Currently being used to compare the damage reduction of a shield to the under armor it is covering. This is the average of all different types of damage reduction for simplification of this.</summary>
         public static int PercentageReductionAverage(DaggerfallUnityItem item, int armorMaterial, int damage, float naturalDamResist, bool shieldQuickCheck)
         {
@@ -2383,157 +2412,91 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Allocate any equipment damage from a strike, and reduce item condition.</summary>
-        private static void DamageEquipment(DaggerfallUnityItem weapon, DaggerfallUnityItem armor, ref CVARS cVars)
+        private static void DamageEquipment(DaggerfallUnityItem weapon, DaggerfallUnityItem armor, DaggerfallEntity attacker, DaggerfallEntity target, ref CVARS cVars)
         {
-            int tarMatMod = 0;
-            int matDifference = 0;
-            bool bluntWep = false;
-            bool shtbladeWep = false;
-            bool missileWep = false;
-            int wepEqualize = 1;
-            int wepWeight = 1;
-            float wepDamResist = 1f;
-            float armorDamResist = 1f;
-            int startItemCondPer = 0;
+            // Continue from here tomorrow, I suppose. Likely work on the equipment damage stuff, since it is here after all, will see. Starting fresh for this one, previous was a complete mess.
+
+            ItemCollection attackerItems = attacker.Items;
+            ItemCollection targetItems = target.Items;
+
+            float damRedByDT = Mathf.Abs(cVars.damBeforeDT - cVars.damAfterDT);
+            float matDiff = 0;
 
             // If damage was done by a weapon, damage the weapon and armor of the hit body part.
             if (weapon != null)
             {
-                // Continue from here tomorrow, I suppose. Likely work on the equipment damage stuff, since it is here after all, will see.
-
-                int atkMatMod = weapon.GetWeaponMaterialModifier() + 2;
-                int wepDam = damage;
-                wepEqualize = EqualizeMaterialConditions(weapon);
-                wepDam *= wepEqualize;
-
-                if (weapon.GetWeaponSkillIDAsShort() == 32) // Checks if the weapon being used is in the Blunt Weapon category, then sets a bool value to true.
+                if (cVars.wepType == (short)Skills.Archery)
                 {
-                    wepDam += (atkStrength / 10);
-                    wepDamResist = (wepEqualize * .20f) + 1;
-                    wepDam = (int)Mathf.Ceil(wepDam / wepDamResist);
-                    bluntWep = true;
-                    wepWeight = (int)Mathf.Ceil(weapon.EffectiveUnitWeightInKg());
-
-                    startItemCondPer = weapon.ConditionPercentage;
-                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+                    // Likely won't do any damage to the bow, that should happen when fired, hit or miss.
                 }
-                else if (weapon.GetWeaponSkillIDAsShort() == 28) // Checks if the weapon being used is in the Short Blade category, then sets a bool value to true.
+                else if (cVars.wepType == (short)Skills.BluntWeapon)
                 {
-                    if (weapon.TemplateIndex == (int)Weapons.Dagger || weapon.TemplateIndex == (int)Weapons.Tanto)
-                    {
-                        wepDam += (atkStrength / 30);
-                        wepDamResist = (wepEqualize * .90f) + 1;
-                        wepDam = (int)Mathf.Ceil(wepDam / wepDamResist);
-                        shtbladeWep = true;
-                    }
-                    else
-                    {
-                        wepDam += (atkStrength / 30);
-                        wepDamResist = (wepEqualize * .30f) + 1;
-                        wepDam = (int)Mathf.Ceil(wepDam / wepDamResist);
-                        shtbladeWep = true;
-                    }
-
-                    startItemCondPer = weapon.ConditionPercentage;
-                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.04f) - 2f) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 2.4f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
+                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
+                    //
+                    // Likely will mostly do damage to armor based on weight of the weapon, also probably do less damage to blunt weapon condition compared to blades.
                 }
-                else if (weapon.GetWeaponSkillIDAsShort() == 33) // Checks if the weapon being used is in the Missile Weapon category, then sets a bool value to true.
+                else if (cVars.wepType == (short)Skills.Axe)
                 {
-                    missileWep = true;
-
-                    startItemCondPer = weapon.ConditionPercentage;
-                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.03f)) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 2.7f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
+                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
+                    //
+                    // Likely an in-between of blunt and longblades in terms of condition damage characteristics.
                 }
-                else // If all other weapons categories have not been found, it defaults to this, which currently includes long blades and axes.
+                else if (cVars.wepType == (short)Skills.LongBlade)
                 {
-                    wepDam += (atkStrength / 10);
-                    wepDamResist = (wepEqualize * .20f) + 1;
-                    wepDam = (int)Mathf.Ceil(wepDam / wepDamResist);
-
-                    startItemCondPer = weapon.ConditionPercentage;
-                    ApplyConditionDamageThroughWeaponDamage(weapon, attacker, wepDam, bluntWep, shtbladeWep, missileWep, wepEqualize); // Does condition damage to the attackers weapon.
+                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 3f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
+                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
+                    //
                 }
-
-                if (attacker == GameManager.Instance.PlayerEntity)
-                    WarningMessagePlayerEquipmentCondition(weapon, startItemCondPer);
-
-                if (shieldBlockSuccess)
+                else if (cVars.wepType == (short)Skills.ShortBlade)
                 {
-                    DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand);
-                    int shieldEqualize = EqualizeMaterialConditions(shield);
-                    damage *= shieldEqualize;
-                    tarMatMod = ArmorMaterialModifierFinder(shield);
-                    matDifference = tarMatMod - atkMatMod;
-                    damage = MaterialDifferenceDamageCalculation(shield, matDifference, atkStrength, damage, bluntWep, wepWeight, shieldBlockSuccess);
-
-                    startItemCondPer = shield.ConditionPercentage;
-                    ApplyConditionDamageThroughWeaponDamage(shield, target, damage, bluntWep, shtbladeWep, missileWep, wepEqualize);
-
-                    if (target == GameManager.Instance.PlayerEntity)
-                        WarningMessagePlayerEquipmentCondition(shield, startItemCondPer);
+                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.013f) + 1.5f) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 2.4f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
+                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
+                    //
                 }
                 else
                 {
-                    EquipSlots hitSlot = DaggerfallUnityItem.GetEquipSlotForBodyPart((BodyParts)struckBodyPart);
-                    DaggerfallUnityItem armor = target.ItemEquipTable.GetItem(hitSlot);
-                    if (armor != null)
-                    {
-                        int armorEqualize = EqualizeMaterialConditions(armor);
-                        damage *= armorEqualize;
-                        tarMatMod = ArmorMaterialModifierFinder(armor);
-                        matDifference = tarMatMod - atkMatMod;
-                        damage = MaterialDifferenceDamageCalculation(armor, matDifference, atkStrength, damage, bluntWep, wepWeight, shieldBlockSuccess);
-
-                        startItemCondPer = armor.ConditionPercentage;
-                        ApplyConditionDamageThroughWeaponDamage(armor, target, damage, bluntWep, shtbladeWep, missileWep, wepEqualize);
-
-                        if (target == GameManager.Instance.PlayerEntity)
-                            WarningMessagePlayerEquipmentCondition(armor, startItemCondPer);
-                    }
+                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 3f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
+                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
+                    //
+                    // I guess tomorrow try to figure out the damage to the target's armor, if they had any, will see.
                 }
-                return false;
             }
-            else if (weapon == null && damage > 0) // Handles Unarmed attacks.
+            else // Handles Unarmed attacks.
             {
-                if (shieldBlockSuccess)
-                {
-                    DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand);
-                    int shieldEqualize = EqualizeMaterialConditions(shield);
-                    damage *= shieldEqualize;
-                    tarMatMod = ArmorMaterialModifierFinder(shield);
-                    atkStrength /= 5;
-                    armorDamResist = (tarMatMod * .40f) + 1;
-                    damage = (int)Mathf.Ceil((damage + atkStrength) / armorDamResist);
-
-                    startItemCondPer = shield.ConditionPercentage;
-                    ApplyConditionDamageThroughUnarmedDamage(shield, target, damage);
-
-                    if (target == GameManager.Instance.PlayerEntity)
-                        WarningMessagePlayerEquipmentCondition(shield, startItemCondPer);
-                }
-                else
-                {
-                    EquipSlots hitSlot = DaggerfallUnityItem.GetEquipSlotForBodyPart((BodyParts)struckBodyPart);
-                    DaggerfallUnityItem armor = target.ItemEquipTable.GetItem(hitSlot);
-                    if (armor != null)
-                    {
-                        int armorEqualize = EqualizeMaterialConditions(armor);
-                        damage *= armorEqualize;
-                        tarMatMod = ArmorMaterialModifierFinder(armor);
-                        atkStrength /= 5;
-                        armorDamResist = (tarMatMod * .20f) + 1;
-                        damage = (int)Mathf.Ceil((damage + atkStrength) / armorDamResist);
-
-                        startItemCondPer = armor.ConditionPercentage;
-                        ApplyConditionDamageThroughUnarmedDamage(armor, target, damage);
-
-                        if (target == GameManager.Instance.PlayerEntity)
-                            WarningMessagePlayerEquipmentCondition(armor, startItemCondPer);
-                    }
-                }
-                return false;
+                //
             }
-            return false;
+        }
+
+        /// <summary>Handles the actual work of damaging the condition of an item.</summary>
+        private static void HandleItemConditionDamage(DaggerfallUnityItem item, DaggerfallEntity owner, ItemCollection ownerItems, int damValue)
+        {
+            if (item != null && owner != null)
+            {
+                if (damValue > 0)
+                {
+                    if (item.IsEnchanted && ownerItems != null) // If the Weapon or Armor piece is enchanted, when broken it will be Destroyed from the owner's inventory.
+                        item.LowerCondition(damValue, owner, ownerItems);
+                    else
+                        item.LowerCondition(damValue, owner);
+                }
+            }
         }
 
         private static int AdjustWeaponHitChanceMod(DaggerfallEntity attacker, DaggerfallEntity target, int hitChanceMod, int weaponAnimTime, DaggerfallUnityItem weapon)
