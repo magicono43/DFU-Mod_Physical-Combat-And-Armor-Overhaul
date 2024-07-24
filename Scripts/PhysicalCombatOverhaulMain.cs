@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		7/18/2024, 10:50 PM
+// Last Edit:		7/23/2024, 11:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -183,6 +183,8 @@ namespace PhysicalCombatOverhaul
 
             public BodySize atkSize;
             public BodySize tarSize;
+            public int atkCareer;
+            public int tarCareer;
             public bool fullBlock;
             public bool partBlock;
         }
@@ -239,6 +241,8 @@ namespace PhysicalCombatOverhaul
 
             cvars.atkSize = BodySize.Average;
             cvars.tarSize = BodySize.Average;
+            cvars.atkCareer = -1;
+            cvars.tarCareer = -1;
             cvars.fullBlock = false;
             cvars.partBlock = false;
 
@@ -283,6 +287,25 @@ namespace PhysicalCombatOverhaul
         public static BodySize GetPlayerBodySize(PlayerEntity player)
         {
             return BodySize.Average;
+        }
+
+        /// <summary>Return the career of the player.</summary>
+        public static int GetPlayerCareer(PlayerEntity player)
+        {
+            return -2;
+        }
+
+        /// <summary>Return the career of the provided creature.</summary>
+        public static int GetCreatureCareer(EnemyEntity enemy)
+        {
+            if (enemy.EntityType == EntityTypes.EnemyClass)
+            {
+                return -1;
+            }
+            else
+            {
+                return enemy.CareerIndex;
+            }
         }
 
         /// <summary>Class to hopefully keep from spamming new UID values from enemies being assigned 'fake' weapons, will see if it works or not.</summary>
@@ -385,6 +408,8 @@ namespace PhysicalCombatOverhaul
             CVARS cVars = GetCombatVariables(attacker, target);
             cVars.atkSize = GetPlayerBodySize(attacker);
             cVars.tarSize = GetCreatureBodySize(target);
+            cVars.atkCareer = GetPlayerCareer(attacker);
+            cVars.tarCareer = GetCreatureCareer(target);
 
             // Now that I have the "body size" thing, maybe have that effect the hit chances somewhat depending on the size of the attacker compared to the target, will see.
             // Also maybe have the material requirement stuff only factor in after armor is actually penetrated, if at all? Once again, will see.
@@ -2172,6 +2197,66 @@ namespace PhysicalCombatOverhaul
             }
         }
 
+        public static int GetCreatureBodyMaterial(int creatureCareer)
+        {
+            switch (creatureCareer)
+            {
+                case (int)MonsterCareers.Ghost:
+                case (int)MonsterCareers.Wraith:
+                    return -2; // For incorporeal enemies such as the ghost.
+                default:
+                case -2:
+                case -1:
+                case (int)MonsterCareers.Rat:
+                case (int)MonsterCareers.Imp:
+                case (int)MonsterCareers.GiantBat:
+                case (int)MonsterCareers.Orc:
+                case (int)MonsterCareers.Centaur:
+                case (int)MonsterCareers.Nymph:
+                case (int)MonsterCareers.OrcSergeant:
+                case (int)MonsterCareers.Harpy:
+                case (int)MonsterCareers.Giant:
+                case (int)MonsterCareers.Zombie:
+                case (int)MonsterCareers.Mummy:
+                case (int)MonsterCareers.OrcShaman:
+                case (int)MonsterCareers.OrcWarlord:
+                case (int)MonsterCareers.Vampire:
+                case (int)MonsterCareers.DaedraSeducer:
+                case (int)MonsterCareers.VampireAncient:
+                case (int)MonsterCareers.DaedraLord:
+                    return -1; // For the player and human enemies, unmodified by stats and such.
+                case (int)MonsterCareers.GrizzlyBear:
+                case (int)MonsterCareers.SabertoothTiger:
+                case (int)MonsterCareers.Spider:
+                case (int)MonsterCareers.Werewolf:
+                case (int)MonsterCareers.Slaughterfish:
+                case (int)MonsterCareers.Wereboar:
+                case (int)MonsterCareers.FleshAtronach:
+                case (int)MonsterCareers.Lamia:
+                    return 0; // For I guess slightly more bulky "natural armor" such as thick fur or fat or something.
+                case (int)MonsterCareers.GiantScorpion:
+                case (int)MonsterCareers.Spriggan:
+                case (int)MonsterCareers.SkeletalWarrior:
+                case (int)MonsterCareers.Lich:
+                case (int)MonsterCareers.AncientLich:
+                case (int)MonsterCareers.Dragonling:
+                case (int)MonsterCareers.Dreugh:
+                    return 1; // For more significant "natural armor" such as exoskeleton chitin or scales, etc.
+                case (int)MonsterCareers.Daedroth:
+                case (int)MonsterCareers.FireAtronach:
+                case (int)MonsterCareers.Dragonling_Alternate:
+                    return 2;
+                case (int)MonsterCareers.FireDaedra:
+                case (int)MonsterCareers.IceAtronach:
+                    return 3;
+                case (int)MonsterCareers.Gargoyle:
+                case (int)MonsterCareers.FrostDaedra:
+                    return 4;
+                case (int)MonsterCareers.IronAtronach:
+                    return 5;
+            }
+        }
+
         /// <summary>Currently being used to compare the damage reduction of a shield to the under armor it is covering. This is the average of all different types of damage reduction for simplification of this.</summary>
         public static int PercentageReductionAverage(DaggerfallUnityItem item, int armorMaterial, int damage, float naturalDamResist, bool shieldQuickCheck)
         {
@@ -2420,7 +2505,9 @@ namespace PhysicalCombatOverhaul
             ItemCollection targetItems = target.Items;
 
             float damRedByDT = Mathf.Abs(cVars.damBeforeDT - cVars.damAfterDT);
-            float matDiff = 0;
+            float damToBody = Mathf.Abs(cVars.damAfterDT);
+            float matDiffArmor = 0;
+            float matDiffBody = 0;
 
             // If damage was done by a weapon, damage the weapon and armor of the hit body part.
             if (weapon != null)
@@ -2431,8 +2518,8 @@ namespace PhysicalCombatOverhaul
                 }
                 else if (cVars.wepType == (short)Skills.BluntWeapon)
                 {
-                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.04f) - 2f) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 2.4f);
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.04f) - 2f) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
                     // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
                     HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
@@ -2441,8 +2528,8 @@ namespace PhysicalCombatOverhaul
                 }
                 else if (cVars.wepType == (short)Skills.Axe)
                 {
-                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.03f)) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 2.7f);
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.03f)) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.7f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
                     // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
                     HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
@@ -2451,17 +2538,23 @@ namespace PhysicalCombatOverhaul
                 }
                 else if (cVars.wepType == (short)Skills.LongBlade)
                 {
-                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 3f);
-                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
-                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
-                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
-                    //
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                    float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 3f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
+
+                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.01f));
+                    float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.4f + (matDiffArmor * 0.2f), 5f) : Mathf.Max(0.4f + (matDiffArmor * 0.075f), 0.1f);
+                    int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
+
+                    int totalConditionDam = damByDT + damByBody;
+
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, totalConditionDam);
+                    // Suppose continue here tomorrow with doing the rest of the weapon types, maybe even reduce most of this down into a single method call or something.
                 }
                 else if (cVars.wepType == (short)Skills.ShortBlade)
                 {
-                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.013f) + 1.5f) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 2.4f);
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.013f) + 1.5f) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
                     // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
                     HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
@@ -2469,17 +2562,29 @@ namespace PhysicalCombatOverhaul
                 }
                 else
                 {
-                    matDiff = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiff * 0.2f), 0.3f, 3f);
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 3f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
                     // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
                     HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
                     //
-                    // I guess tomorrow try to figure out the damage to the target's armor, if they had any, will see.
+                    // I'm thinking for the damage caused due to damaging the actual target, whatever is under the armor. Maybe have some mostly arbitrary case-switch method for all enemies,
+                    // and just define what "tier" of material their skin/body is made from and use that as a way to determine how much condition damage the weapon takes, similar to armor, etc.
+                    // Suppose could also modify it slightly depending on their strength and endurance stats or something also.
+                    // Now with the vanilla enemies "body materials" defined, I guess I can continue on whatever this part was tomorrow, probably.
                 }
             }
             else // Handles Unarmed attacks.
             {
+                //
+            }
+
+            if (armor != null)
+            {
+                // When I get to the mod compatibility stuff, I'll want to take Roleplay Realism: Items armor types into account, most likely.
+                float conDamMod = Mathf.Clamp(1f + (-1f * matDiffArmor * 0.3f), 0.5f, 5f);
+                int armorDam = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
+                HandleItemConditionDamage(armor, target, targetItems, armorDam);
                 //
             }
         }
