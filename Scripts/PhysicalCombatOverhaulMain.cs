@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		7/23/2024, 11:30 PM
+// Last Edit:		7/30/2024, 5:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -552,79 +552,100 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            if (cVars.damage > 0 && (cVars.finalDTAmount > 0 || cVars.finalDRAmount > 0))
+            if (cVars.damage > 0)
             {
-                float damAfterDR = cVars.damage * Mathf.Abs(cVars.finalDRAmount - 1);
-                float dTAfterRound = cVars.finalDTAmount;
-                float damRemainder = damAfterDR % 1;
-                float dTRemainder = cVars.finalDTAmount % 1;
-
-                damAfterDR = (float)Math.Truncate(damAfterDR);
-                if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
-                    ++damAfterDR;
-
-                dTAfterRound = (float)Math.Truncate(dTAfterRound);
-                if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
-                    ++dTAfterRound;
-
-                cVars.damBeforeDT = damAfterDR;
-                cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
-
-                if (dTAfterRound >= damAfterDR) // Attack was completely negated by shield or armor.
+                if (cVars.finalDTAmount > 0 || cVars.finalDRAmount > 0)
                 {
-                    if (cVars.shieldBlockSuccess)
+                    float damAfterDR = cVars.damage * Mathf.Abs(cVars.finalDRAmount - 1);
+                    float dTAfterRound = cVars.finalDTAmount;
+                    float damRemainder = damAfterDR % 1;
+                    float dTRemainder = cVars.finalDTAmount % 1;
+
+                    damAfterDR = (float)Math.Truncate(damAfterDR);
+                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
+                        ++damAfterDR;
+
+                    dTAfterRound = (float)Math.Truncate(dTAfterRound);
+                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
+                        ++dTAfterRound;
+
+                    cVars.damBeforeDT = damAfterDR;
+                    cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
+
+                    if (dTAfterRound >= damAfterDR) // Attack was completely negated by shield or armor.
                     {
-                        if (shield != null)
+                        if (cVars.shieldBlockSuccess)
                         {
-                            DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                            if (shield != null)
+                            {
+                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                                // Play block sound and maybe animation when that is a thing?
+                            }
+                        }
+                        else if (cVars.hitShield)
+                        {
+                            if (shield != null)
+                            {
+                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                                // Play sound for attack hitting a shield and completely glancing off, but not a proper block.
+                            }
+                        }
+                        else
+                        {
+                            if (armor != null)
+                            {
+                                DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                                // Play sound for attack hitting armor and it completely glancing off.
+                            }
                         }
                     }
-                    else if (cVars.hitShield)
+                    else // Attack was only partially reduced by shield or armor, so the DT value was overcome.
                     {
-                        if (shield != null)
+                        if (cVars.shieldBlockSuccess)
                         {
-                            //
+                            if (shield != null)
+                            {
+                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                                // Play block sound but attack still going through somewhat, and maybe animation when that is a thing?
+                            }
                         }
-                    }
-                    else
-                    {
-                        if (armor != null)
+                        else if (cVars.hitShield)
                         {
-                            //
+                            if (shield != null)
+                            {
+                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                                // Play sound for attacking hitting a shield and still going through somewhat.
+                            }
+                        }
+                        else
+                        {
+                            if (armor != null)
+                            {
+                                DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                                // Play sound for attack hitting armor and still going through somewhat.
+                            }
                         }
                     }
                 }
-                else // Attack was only partially reduced by shield or armor, so the DT value was overcome.
+                else
                 {
-                    if (cVars.shieldBlockSuccess)
-                    {
-                        if (shield != null)
-                        {
-                            //
-                        }
-                    }
-                    else if (cVars.hitShield)
-                    {
-                        if (shield != null)
-                        {
-                            //
-                        }
-                    }
-                    else
-                    {
-                        if (armor != null)
-                        {
-                            //
-                        }
-                    }
-                }
+                    // I think here if damage was dealt, but there was no armor or shield to reduce any of it.
+                    cVars.damBeforeDT = cVars.damage;
+                    cVars.damAfterDT = cVars.damage;
 
-                // Continue from here tomorrow, I suppose. Maybe finally check DR and DT against the "final" values established from the above methods and do something with those? Will see.
+                    DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                    // Play sound for attack hitting target without any armor?
+                }
             }
             else
             {
-                //
+                // If no damage was dealt?
+                // Play sound for attack missing or being dodged?
+                // Also possibly end method short here?
             }
+
+            // Next natural armor damage calculations go here.
+            // Continue from here tomorrow, I suppose. Maybe take the target's "natural armor" into account? If that is going to be a thing atleast, will see. Then after that deal the damage if any?
 
             float damCheckBeforeMatMod = cVars.damage;
 
@@ -2499,7 +2520,7 @@ namespace PhysicalCombatOverhaul
         /// <summary>Allocate any equipment damage from a strike, and reduce item condition.</summary>
         private static void DamageEquipment(DaggerfallUnityItem weapon, DaggerfallUnityItem armor, DaggerfallEntity attacker, DaggerfallEntity target, ref CVARS cVars)
         {
-            // Continue from here tomorrow, I suppose. Likely work on the equipment damage stuff, since it is here after all, will see. Starting fresh for this one, previous was a complete mess.
+            // Will obviously need to work on this more later, for stuff like different armor types, weapon types, and even how much using a shield and blocking completely changes the condition damage caused, etc.
 
             ItemCollection attackerItems = attacker.Items;
             ItemCollection targetItems = target.Items;
@@ -2519,21 +2540,31 @@ namespace PhysicalCombatOverhaul
                 else if (cVars.wepType == (short)Skills.BluntWeapon)
                 {
                     matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.04f) - 2f) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
-                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
-                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
-                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
-                    //
+                    float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
+
+                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f));
+                    float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.7f + (matDiffArmor * 0.35f), 2.7f) : Mathf.Max(0.7f + (matDiffArmor * 0.15f), 0.1f);
+                    int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
+
+                    int totalConditionDam = damByDT + damByBody;
+
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, totalConditionDam);
                     // Likely will mostly do damage to armor based on weight of the weapon, also probably do less damage to blunt weapon condition compared to blades.
                 }
                 else if (cVars.wepType == (short)Skills.Axe)
                 {
                     matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.03f)) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.7f);
-                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
-                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
-                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
-                    //
+                    float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.7f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
+
+                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.015f));
+                    float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.5f + (matDiffArmor * 0.25f), 3.5f) : Mathf.Max(0.5f + (matDiffArmor * 0.1f), 0.1f);
+                    int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
+
+                    int totalConditionDam = damByDT + damByBody;
+
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, totalConditionDam);
                     // Likely an in-between of blunt and longblades in terms of condition damage characteristics.
                 }
                 else if (cVars.wepType == (short)Skills.LongBlade)
@@ -2549,24 +2580,34 @@ namespace PhysicalCombatOverhaul
                     int totalConditionDam = damByDT + damByBody;
 
                     HandleItemConditionDamage(weapon, attacker, attackerItems, totalConditionDam);
-                    // Suppose continue here tomorrow with doing the rest of the weapon types, maybe even reduce most of this down into a single method call or something.
                 }
                 else if (cVars.wepType == (short)Skills.ShortBlade)
                 {
-                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.013f) + 1.5f) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
-                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
-                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
-                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
-                    //
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.013f)) : 0;
+                    float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
+
+                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.0065f));
+                    float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.3f + (matDiffArmor * 0.15f), 4f) : Mathf.Max(0.3f + (matDiffArmor * 0.05f), 0.1f);
+                    int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
+
+                    int totalConditionDam = damByDT + damByBody;
+
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, totalConditionDam);
                 }
                 else
                 {
                     matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
-                    float conDamMod = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 3f);
-                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
-                    // I guess next try and calc. the rest of the potential condition damage caused by the non-armored hit, if there was any that got through the DT that is, will see.
-                    HandleItemConditionDamage(weapon, attacker, attackerItems, damByDT);
+                    float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 3f);
+                    int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
+
+                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.01f));
+                    float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.4f + (matDiffArmor * 0.2f), 5f) : Mathf.Max(0.4f + (matDiffArmor * 0.075f), 0.1f);
+                    int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
+
+                    int totalConditionDam = damByDT + damByBody;
+
+                    HandleItemConditionDamage(weapon, attacker, attackerItems, totalConditionDam);
                     //
                     // I'm thinking for the damage caused due to damaging the actual target, whatever is under the armor. Maybe have some mostly arbitrary case-switch method for all enemies,
                     // and just define what "tier" of material their skin/body is made from and use that as a way to determine how much condition damage the weapon takes, similar to armor, etc.
