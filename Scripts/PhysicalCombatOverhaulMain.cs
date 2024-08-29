@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		7/30/2024, 5:50 PM
+// Last Edit:		8/28/2024, 10:20 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -165,6 +165,11 @@ namespace PhysicalCombatOverhaul
             public float damBeforeDT;
             public float damAfterDT;
 
+            public float tNatDT;
+            public float tBluntMulti;
+            public float tSlashMulti;
+            public float tPierceMulti;
+
             public DaggerfallEntity aEntity;
             public int aStrn;
             public int aWill;
@@ -222,6 +227,11 @@ namespace PhysicalCombatOverhaul
 
             cvars.damBeforeDT = 0;
             cvars.damAfterDT = 0;
+
+            cvars.tNatDT = 0;
+            cvars.tBluntMulti = 1f;
+            cvars.tSlashMulti = 1f;
+            cvars.tPierceMulti = 1f;
 
             cvars.aEntity = attacker;
             cvars.aStrn = attacker.Stats.LiveStrength - 50;
@@ -644,8 +654,67 @@ namespace PhysicalCombatOverhaul
                 // Also possibly end method short here?
             }
 
-            // Next natural armor damage calculations go here.
-            // Continue from here tomorrow, I suppose. Maybe take the target's "natural armor" into account? If that is going to be a thing atleast, will see. Then after that deal the damage if any?
+            if (cVars.damAfterDT > 0)
+            {
+                CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars);
+
+                if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
+                {
+                    float damAfterDR = cVars.damage;
+
+                    if (cVars.unarmedAttack || cVars.wepType == (short)DFCareer.Skills.HandToHand || cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
+                        damAfterDR = cVars.damage * cVars.tBluntMulti;
+                    else if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        damAfterDR = cVars.damage * cVars.tSlashMulti;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        damAfterDR = cVars.damage * cVars.tPierceMulti;
+
+                    float dTAfterRound = cVars.tNatDT;
+                    float damRemainder = damAfterDR % 1;
+                    float dTRemainder = cVars.tNatDT % 1;
+
+                    damAfterDR = (float)Math.Truncate(damAfterDR);
+                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
+                        ++damAfterDR;
+
+                    dTAfterRound = (float)Math.Truncate(dTAfterRound);
+                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
+                        ++dTAfterRound;
+
+                    cVars.damBeforeDT = damAfterDR;
+                    cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
+
+                    if (dTAfterRound >= damAfterDR) // Attack was completely negated by natural armor.
+                    {
+                        DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                        // Play sound for attack hitting natural armor and it completely glancing off.
+                    }
+                    else // Attack was only partially reduced by natural armor, so the DT value was overcome.
+                    {
+                        DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                        // Actually damage health of target here.
+                        // Play sound for attack hitting natural armor and still going through somewhat.
+                    }
+                }
+                else
+                {
+                    // I think here if damage was dealt, but there was no armor or shield to reduce any of it.
+                    cVars.damBeforeDT = cVars.damage;
+                    cVars.damAfterDT = cVars.damage;
+
+                    DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                    // Actually damage health of target here.
+                    // Play sound for attack hitting target without any armor?
+                }
+            }
+            else
+            {
+                // If no damage was dealt?
+                // Play sound for attack missing or being dodged?
+                // Also possibly end method short here?
+            }
+
+            // Continue from here tomorrow I guess, look ahead and see what I'll probably have to reposition to make the previous damage calculation stuff work, will see.
 
             float damCheckBeforeMatMod = cVars.damage;
 
@@ -2642,6 +2711,85 @@ namespace PhysicalCombatOverhaul
                     else
                         item.LowerCondition(damValue, owner);
                 }
+            }
+        }
+
+        /// <summary>Determine how much damage reduction the target has from their natural defenses.</summary>
+        private static void CalculateNaturalDamageReductions(DaggerfallUnityItem weapon, DaggerfallUnityItem armor, DaggerfallEntity attacker, DaggerfallEntity target, ref CVARS cVars)
+        {
+            switch (cVars.tarCareer)
+            {
+                default:
+                case -1:
+                case (int)MonsterCareers.Rat:
+                case (int)MonsterCareers.Imp:
+                case (int)MonsterCareers.GiantBat:
+                case (int)MonsterCareers.Orc:
+                case (int)MonsterCareers.Centaur:
+                case (int)MonsterCareers.Nymph:
+                case (int)MonsterCareers.OrcSergeant:
+                case (int)MonsterCareers.Giant:
+                case (int)MonsterCareers.Zombie:
+                case (int)MonsterCareers.Mummy:
+                case (int)MonsterCareers.OrcShaman:
+                case (int)MonsterCareers.OrcWarlord:
+                case (int)MonsterCareers.Vampire:
+                case (int)MonsterCareers.VampireAncient:
+                case (int)MonsterCareers.FireAtronach:
+                case (int)MonsterCareers.FleshAtronach:
+                case (int)MonsterCareers.DaedraSeducer:
+                    break;
+                case (int)MonsterCareers.Ghost:
+                case (int)MonsterCareers.Wraith:
+                    if (weapon != null)
+                    {
+                        if (weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Iron || weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Steel)
+                        {
+                            cVars.tBluntMulti = 0.5f; cVars.tSlashMulti = 0.5f; cVars.tPierceMulti = 0.5f; // Simple materials do much less damage to incorporeal creatures. 
+                        }
+                    }
+                    break;
+                case (int)MonsterCareers.GrizzlyBear:
+                    cVars.tNatDT = 2f; cVars.tBluntMulti = 0.8f; break;
+                case (int)MonsterCareers.SabertoothTiger:
+                case (int)MonsterCareers.Werewolf:
+                    cVars.tNatDT = 1f; cVars.tBluntMulti = 0.8f; break;
+                case (int)MonsterCareers.Spider:
+                    cVars.tNatDT = 1.5f; cVars.tBluntMulti = 1.4f; cVars.tSlashMulti = 0.8f; cVars.tPierceMulti = 0.8f; break;
+                case (int)MonsterCareers.Slaughterfish:
+                case (int)MonsterCareers.Lamia:
+                    cVars.tNatDT = 1f; cVars.tSlashMulti = 0.8f; break;
+                case (int)MonsterCareers.GiantScorpion:
+                case (int)MonsterCareers.Dreugh:
+                    cVars.tNatDT = 2.5f; cVars.tBluntMulti = 1.4f; cVars.tSlashMulti = 0.8f; cVars.tPierceMulti = 0.8f; break;
+                case (int)MonsterCareers.Dragonling:
+                    cVars.tNatDT = 2.75f; cVars.tSlashMulti = 0.7f; break;
+                case (int)MonsterCareers.Dragonling_Alternate:
+                    cVars.tNatDT = 5f; cVars.tBluntMulti = 0.75f; cVars.tSlashMulti = 0.5f; cVars.tPierceMulti = 0.75f; break;
+                case (int)MonsterCareers.Spriggan:
+                    cVars.tNatDT = 3.25f; cVars.tBluntMulti = 0.8f; cVars.tSlashMulti = 1.75f; cVars.tPierceMulti = 0.6f; break;
+                case (int)MonsterCareers.Wereboar:
+                    cVars.tNatDT = 1.5f; cVars.tBluntMulti = 0.8f; break;
+                case (int)MonsterCareers.Harpy:
+                    cVars.tBluntMulti = 0.9f; break;
+                case (int)MonsterCareers.Gargoyle:
+                    cVars.tNatDT = 4.25f; cVars.tBluntMulti = 2.0f; cVars.tSlashMulti = 0.7f; cVars.tPierceMulti = 0.35f; break;
+                case (int)MonsterCareers.SkeletalWarrior:
+                case (int)MonsterCareers.Lich:
+                case (int)MonsterCareers.AncientLich:
+                    cVars.tNatDT = 2f; cVars.tBluntMulti = 1.5f; cVars.tSlashMulti = 0.9f; cVars.tPierceMulti = 0.6f; break;
+                case (int)MonsterCareers.IronAtronach:
+                    cVars.tNatDT = 4.75f; cVars.tBluntMulti = 0.4f; cVars.tSlashMulti = 0.7f; cVars.tPierceMulti = 0.6f; break;
+                case (int)MonsterCareers.IceAtronach:
+                    cVars.tNatDT = 3.25f; cVars.tBluntMulti = 1.5f; cVars.tPierceMulti = 0.6f; break;
+                case (int)MonsterCareers.FrostDaedra:
+                    cVars.tNatDT = 4f; cVars.tBluntMulti = 1.25f; cVars.tPierceMulti = 0.8f; break;
+                case (int)MonsterCareers.FireDaedra:
+                    cVars.tNatDT = 3f; break;
+                case (int)MonsterCareers.Daedroth:
+                    cVars.tNatDT = 3f; cVars.tSlashMulti = 0.7f; break;
+                case (int)MonsterCareers.DaedraLord:
+                    cVars.tNatDT = 3f; break;
             }
         }
 
