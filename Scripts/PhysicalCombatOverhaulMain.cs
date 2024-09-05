@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		8/28/2024, 10:20 PM
+// Last Edit:		9/4/2024, 10:10 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -656,55 +656,79 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damAfterDT > 0)
             {
-                CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars);
+                float damAfterDR = cVars.damAfterDT;
 
-                if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
+                if (softMatRequireModuleCheck)
                 {
-                    float damAfterDR = cVars.damage;
+                    // Remember to take incorporeal creatures into account here, rather than in the "CalculateNaturalDamageReductions" part, otherwise they will get reduced twice.
 
-                    if (cVars.unarmedAttack || cVars.wepType == (short)DFCareer.Skills.HandToHand || cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
-                        damAfterDR = cVars.damage * cVars.tBluntMulti;
-                    else if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
-                        damAfterDR = cVars.damage * cVars.tSlashMulti;
-                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
-                        damAfterDR = cVars.damage * cVars.tPierceMulti;
+                    float damCheckBeforeMatMod = damAfterDR;
 
-                    float dTAfterRound = cVars.tNatDT;
-                    float damRemainder = damAfterDR % 1;
-                    float dTRemainder = cVars.tNatDT % 1;
+                    damAfterDR *= cVars.matReqDamMulti;
 
-                    damAfterDR = (float)Math.Truncate(damAfterDR);
-                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
-                        ++damAfterDR;
+                    float damCheckAfterMatMod = damAfterDR;
 
-                    dTAfterRound = (float)Math.Truncate(dTAfterRound);
-                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
-                        ++dTAfterRound;
+                    if (damAfterDR < 1 && damAfterDR > 0)
+                        damAfterDR = damAfterDR >= 0.5f ? 1 : 0;
 
-                    cVars.damBeforeDT = damAfterDR;
-                    cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
+                    if (damCheckBeforeMatMod > 0 && (damCheckAfterMatMod / damCheckBeforeMatMod) <= 0.45f)
+                        DaggerfallUI.AddHUDText("This Weapon Is Not Very Effective Against This Creature.", 2.00f);
+                }
 
-                    if (dTAfterRound >= damAfterDR) // Attack was completely negated by natural armor.
+                if (damAfterDR > 0)
+                {
+                    CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars); // Guess go down from here tomorrow and confirm this is the order I want this logic to go.
+
+                    if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
                     {
-                        DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                        // Play sound for attack hitting natural armor and it completely glancing off.
+                        if (cVars.unarmedAttack || cVars.wepType == (short)DFCareer.Skills.HandToHand || cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
+                            damAfterDR = cVars.damage * cVars.tBluntMulti;
+                        else if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            damAfterDR = cVars.damage * cVars.tSlashMulti;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            damAfterDR = cVars.damage * cVars.tPierceMulti;
+
+                        float dTAfterRound = cVars.tNatDT;
+                        float damRemainder = damAfterDR % 1;
+                        float dTRemainder = cVars.tNatDT % 1;
+
+                        damAfterDR = (float)Math.Truncate(damAfterDR);
+                        if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
+                            ++damAfterDR;
+
+                        dTAfterRound = (float)Math.Truncate(dTAfterRound);
+                        if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
+                            ++dTAfterRound;
+
+                        cVars.damBeforeDT = damAfterDR;
+                        cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
+
+                        if (dTAfterRound >= damAfterDR) // Attack was completely negated by natural armor.
+                        {
+                            DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                            // Play sound for attack hitting natural armor and it completely glancing off.
+                        }
+                        else // Attack was only partially reduced by natural armor, so the DT value was overcome.
+                        {
+                            DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                            // Actually damage health of target here.
+                            // Play sound for attack hitting natural armor and still going through somewhat.
+                        }
                     }
-                    else // Attack was only partially reduced by natural armor, so the DT value was overcome.
+                    else
                     {
+                        // I think here if damage was dealt, but there was no armor or shield to reduce any of it.
+                        cVars.damBeforeDT = cVars.damage;
+                        cVars.damAfterDT = cVars.damage;
+
                         DamageEquipment(weapon, armor, attacker, target, ref cVars);
                         // Actually damage health of target here.
-                        // Play sound for attack hitting natural armor and still going through somewhat.
+                        // Play sound for attack hitting target without any armor?
                     }
                 }
                 else
                 {
-                    // I think here if damage was dealt, but there was no armor or shield to reduce any of it.
-                    cVars.damBeforeDT = cVars.damage;
-                    cVars.damAfterDT = cVars.damage;
-
-                    DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                    // Actually damage health of target here.
-                    // Play sound for attack hitting target without any armor?
+                    // If damage was reduced to 0 by material resistance.
                 }
             }
             else
@@ -715,18 +739,8 @@ namespace PhysicalCombatOverhaul
             }
 
             // Continue from here tomorrow I guess, look ahead and see what I'll probably have to reposition to make the previous damage calculation stuff work, will see.
-
-            float damCheckBeforeMatMod = cVars.damage;
-
-            cVars.damage = (int)Mathf.Round(cVars.damage * cVars.matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
-
-            float damCheckAfterMatMod = cVars.damage;
-
-            if (softMatRequireModuleCheck)
-            {
-                if (damCheckBeforeMatMod > 0 && (damCheckAfterMatMod / damCheckBeforeMatMod) <= 0.45f)
-                    DaggerfallUI.AddHUDText("This Weapon Is Not Very Effective Against This Creature.", 1.00f);
-            }
+            // Apparently I already have crit damage applied, so it seems the next thing would be taking into account at the start of the above "natural armor" related stuff
+            // the material requirement related reductions or bonuses, if there are any to apply for that particular target and weapon used, etc. 
 
             int targetEndur = target.Stats.LiveEndurance - 50;
             int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
