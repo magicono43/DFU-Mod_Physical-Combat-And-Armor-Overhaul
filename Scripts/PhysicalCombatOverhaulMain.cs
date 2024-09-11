@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		9/4/2024, 10:10 PM
+// Last Edit:		9/10/2024, 7:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -421,9 +421,6 @@ namespace PhysicalCombatOverhaul
             cVars.atkCareer = GetPlayerCareer(attacker);
             cVars.tarCareer = GetCreatureCareer(target);
 
-            // Now that I have the "body size" thing, maybe have that effect the hit chances somewhat depending on the size of the attacker compared to the target, will see.
-            // Also maybe have the material requirement stuff only factor in after armor is actually penetrated, if at all? Once again, will see.
-
             if (weapon != null)
             {
                 cVars.wepType = weapon.GetWeaponSkillIDAsShort();
@@ -515,16 +512,14 @@ namespace PhysicalCombatOverhaul
 
                     cVars.damage = CalculateBackstabDamage(cVars.damage, cVars.backstabChance);
                 }
-
-                // Handle poisoned weapons
-                if (cVars.damage > 0 && weapon.poisonType != Poisons.None)
-                {
-                    FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
-                    weapon.poisonType = Poisons.None;
-                }
             }
 
             cVars.damage = Mathf.Max(0, cVars.damage); // I think this is just here to keep damage from outputting a negative value.
+
+            if (cVars.damage <= 0)
+            {
+                // Do something here to possibly end execution of method early and resolve in satisfactory way to prevent unnecessary processing, if able. 
+            }
 
             if (cVars.critSuccess)
             {
@@ -539,8 +534,6 @@ namespace PhysicalCombatOverhaul
                 cVars.armorDRAmount = GetBaseDRAmount(armor, ref cVars);
             }
 
-            // I'm thinking of having the armor and shield stuff happen before all the mat-damage reduction and natural dam reduction. The idea being those parts would only really
-            // be taken into consideration once the protection of the armor fails or is penetrated in someway to actually harm the wearer in someway, that's the idea atleast.
             DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
             if (shield != null)
             {
@@ -562,7 +555,7 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            if (cVars.damage > 0)
+            if (cVars.damage > 0) // Alot of this can probably put into a single method that other methods can use just the same, will see. 
             {
                 if (cVars.finalDTAmount > 0 || cVars.finalDRAmount > 0)
                 {
@@ -656,11 +649,23 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damAfterDT > 0)
             {
-                float damAfterDR = cVars.damAfterDT;
+                float damAfterDR = cVars.damAfterDT; // Go down entire method operation here and look for ways to optimize and correct any oversights I see, etc. Poison based attacks should be past here, remember.
 
                 if (softMatRequireModuleCheck)
                 {
-                    // Remember to take incorporeal creatures into account here, rather than in the "CalculateNaturalDamageReductions" part, otherwise they will get reduced twice.
+                    if (cVars.tarCareer == (int)MonsterCareers.Ghost || cVars.tarCareer == (int)MonsterCareers.Wraith)
+                    {
+                        if (weapon != null)
+                        {
+                            if (weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Iron || weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Steel)
+                            {
+                                if (cVars.matReqDamMulti > 0.4f)
+                                {
+                                    cVars.matReqDamMulti = 0.4f; // Simple materials do much less damage to incorporeal creatures.
+                                }
+                            }
+                        }
+                    }
 
                     float damCheckBeforeMatMod = damAfterDR;
 
@@ -677,16 +682,16 @@ namespace PhysicalCombatOverhaul
 
                 if (damAfterDR > 0)
                 {
-                    CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars); // Guess go down from here tomorrow and confirm this is the order I want this logic to go.
+                    CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars);
 
                     if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
                     {
                         if (cVars.unarmedAttack || cVars.wepType == (short)DFCareer.Skills.HandToHand || cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
-                            damAfterDR = cVars.damage * cVars.tBluntMulti;
+                            damAfterDR *= cVars.tBluntMulti;
                         else if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
-                            damAfterDR = cVars.damage * cVars.tSlashMulti;
+                            damAfterDR *= cVars.tSlashMulti;
                         else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
-                            damAfterDR = cVars.damage * cVars.tPierceMulti;
+                            damAfterDR *= cVars.tPierceMulti;
 
                         float dTAfterRound = cVars.tNatDT;
                         float damRemainder = damAfterDR % 1;
@@ -713,17 +718,31 @@ namespace PhysicalCombatOverhaul
                             DamageEquipment(weapon, armor, attacker, target, ref cVars);
                             // Actually damage health of target here.
                             // Play sound for attack hitting natural armor and still going through somewhat.
+
+                            // Handle poisoned weapons
+                            if (weapon != null && weapon.poisonType != Poisons.None)
+                            {
+                                FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
+                                weapon.poisonType = Poisons.None;
+                            }
                         }
                     }
                     else
                     {
-                        // I think here if damage was dealt, but there was no armor or shield to reduce any of it.
+                        // I think here if damage was dealt, but no natural armor or resistances to reduce it.
                         cVars.damBeforeDT = cVars.damage;
                         cVars.damAfterDT = cVars.damage;
 
                         DamageEquipment(weapon, armor, attacker, target, ref cVars);
                         // Actually damage health of target here.
                         // Play sound for attack hitting target without any armor?
+
+                        // Handle poisoned weapons
+                        if (weapon != null && weapon.poisonType != Poisons.None)
+                        {
+                            FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
+                            weapon.poisonType = Poisons.None;
+                        }
                     }
                 }
                 else
@@ -737,20 +756,6 @@ namespace PhysicalCombatOverhaul
                 // Play sound for attack missing or being dodged?
                 // Also possibly end method short here?
             }
-
-            // Continue from here tomorrow I guess, look ahead and see what I'll probably have to reposition to make the previous damage calculation stuff work, will see.
-            // Apparently I already have crit damage applied, so it seems the next thing would be taking into account at the start of the above "natural armor" related stuff
-            // the material requirement related reductions or bonuses, if there are any to apply for that particular target and weapon used, etc. 
-
-            int targetEndur = target.Stats.LiveEndurance - 50;
-            int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
-            int targetWillp = target.Stats.LiveWillpower - 50;
-
-            float naturalDamResist = (targetEndur * .002f);
-            naturalDamResist += (targetStren * .001f);
-            naturalDamResist += (targetWillp * .001f);
-
-            Mathf.Clamp(naturalDamResist, -0.2f, 0.2f);
         }
         
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -2744,24 +2749,16 @@ namespace PhysicalCombatOverhaul
                 case (int)MonsterCareers.OrcSergeant:
                 case (int)MonsterCareers.Giant:
                 case (int)MonsterCareers.Zombie:
+                case (int)MonsterCareers.Ghost:
                 case (int)MonsterCareers.Mummy:
                 case (int)MonsterCareers.OrcShaman:
+                case (int)MonsterCareers.Wraith:
                 case (int)MonsterCareers.OrcWarlord:
                 case (int)MonsterCareers.Vampire:
                 case (int)MonsterCareers.VampireAncient:
                 case (int)MonsterCareers.FireAtronach:
                 case (int)MonsterCareers.FleshAtronach:
                 case (int)MonsterCareers.DaedraSeducer:
-                    break;
-                case (int)MonsterCareers.Ghost:
-                case (int)MonsterCareers.Wraith:
-                    if (weapon != null)
-                    {
-                        if (weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Iron || weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Steel)
-                        {
-                            cVars.tBluntMulti = 0.5f; cVars.tSlashMulti = 0.5f; cVars.tPierceMulti = 0.5f; // Simple materials do much less damage to incorporeal creatures. 
-                        }
-                    }
                     break;
                 case (int)MonsterCareers.GrizzlyBear:
                     cVars.tNatDT = 2f; cVars.tBluntMulti = 0.8f; break;
