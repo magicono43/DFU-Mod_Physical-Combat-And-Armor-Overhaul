@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		9/10/2024, 7:50 PM
+// Last Edit:		9/12/2024, 10:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -518,7 +518,8 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damage <= 0)
             {
-                // Do something here to possibly end execution of method early and resolve in satisfactory way to prevent unnecessary processing, if able. 
+                // Do something here to possibly end execution of method early and resolve in satisfactory way to prevent unnecessary processing, if able.
+                return 0;
             }
 
             if (cVars.critSuccess)
@@ -583,6 +584,7 @@ namespace PhysicalCombatOverhaul
                             {
                                 DamageEquipment(weapon, shield, attacker, target, ref cVars);
                                 // Play block sound and maybe animation when that is a thing?
+                                return 0;
                             }
                         }
                         else if (cVars.hitShield)
@@ -591,6 +593,7 @@ namespace PhysicalCombatOverhaul
                             {
                                 DamageEquipment(weapon, shield, attacker, target, ref cVars);
                                 // Play sound for attack hitting a shield and completely glancing off, but not a proper block.
+                                return 0;
                             }
                         }
                         else
@@ -599,6 +602,7 @@ namespace PhysicalCombatOverhaul
                             {
                                 DamageEquipment(weapon, armor, attacker, target, ref cVars);
                                 // Play sound for attack hitting armor and it completely glancing off.
+                                return 0;
                             }
                         }
                     }
@@ -649,7 +653,7 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damAfterDT > 0)
             {
-                float damAfterDR = cVars.damAfterDT; // Go down entire method operation here and look for ways to optimize and correct any oversights I see, etc. Poison based attacks should be past here, remember.
+                float damAfterDR = cVars.damAfterDT;
 
                 if (softMatRequireModuleCheck)
                 {
@@ -712,6 +716,7 @@ namespace PhysicalCombatOverhaul
                         {
                             DamageEquipment(weapon, armor, attacker, target, ref cVars);
                             // Play sound for attack hitting natural armor and it completely glancing off.
+                            return 0;
                         }
                         else // Attack was only partially reduced by natural armor, so the DT value was overcome.
                         {
@@ -725,6 +730,8 @@ namespace PhysicalCombatOverhaul
                                 FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
                                 weapon.poisonType = Poisons.None;
                             }
+
+                            return Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
                         }
                     }
                     else
@@ -743,11 +750,14 @@ namespace PhysicalCombatOverhaul
                             FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
                             weapon.poisonType = Poisons.None;
                         }
+
+                        return Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
                     }
                 }
                 else
                 {
                     // If damage was reduced to 0 by material resistance.
+                    return 0;
                 }
             }
             else
@@ -756,21 +766,16 @@ namespace PhysicalCombatOverhaul
                 // Play sound for attack missing or being dodged?
                 // Also possibly end method short here?
             }
+            return 0;
         }
         
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
-            short wepType = 30;
-            float matReqDamMulti = 1f;
-            int chanceToHitMod = 0;
-            bool critSuccess = false;
-            float critDamMulti = 1f;
-            int critHitAddi = 0;
-            int damageModifiers = 0;
-            int damage = 0;
-            bool unarmedAttack = false;
-            bool hasSpecialMonsterWeapon = false;
-            DummyDFUItem monsterWeapon = null;
+            CVARS cVars = GetCombatVariables(attacker, target);
+            cVars.atkSize = GetPlayerBodySize(target);
+            cVars.tarSize = GetCreatureBodySize(attacker);
+            cVars.atkCareer = GetPlayerCareer(target);
+            cVars.tarCareer = GetCreatureCareer(attacker); // Guess continue down from here tomorrow, basically just trying to replicate the stuff from the PlayerVsMonster method.
 
             // Choose whether weapon-wielding enemies use their weapons or weaponless attacks.
             // In classic, weapon-wielding enemies use the damage values of their weapons, instead of their weaponless values.
