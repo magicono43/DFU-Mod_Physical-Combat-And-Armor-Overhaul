@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		9/12/2024, 10:30 PM
+// Last Edit:		9/17/2024, 11:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -192,6 +192,8 @@ namespace PhysicalCombatOverhaul
             public int tarCareer;
             public bool fullBlock;
             public bool partBlock;
+
+            public DummyDFUItem monsterWeapon;
         }
 
         /// <summary>Fill in basic data for a new 'CombatVariables' struct variable.</summary>
@@ -255,6 +257,8 @@ namespace PhysicalCombatOverhaul
             cvars.tarCareer = -1;
             cvars.fullBlock = false;
             cvars.partBlock = false;
+
+            cvars.monsterWeapon = null;
 
             return cvars;
         }
@@ -394,7 +398,7 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Generates a dummy weapon.</summary>
-        public static DummyDFUItem CreateDummyWeapon(Weapons weapon, WeaponMaterialTypes material)
+        public static DummyDFUItem CreateDummyWeapon(Weapons weapon, WeaponMaterialTypes material) // Later may consider just assigning all these values manually for "dummy" weapons. 
         {
             // Create dummy item
             DummyDFUItem newItem = new DummyDFUItem();
@@ -775,7 +779,7 @@ namespace PhysicalCombatOverhaul
             cVars.atkSize = GetPlayerBodySize(target);
             cVars.tarSize = GetCreatureBodySize(attacker);
             cVars.atkCareer = GetPlayerCareer(target);
-            cVars.tarCareer = GetCreatureCareer(attacker); // Guess continue down from here tomorrow, basically just trying to replicate the stuff from the PlayerVsMonster method.
+            cVars.tarCareer = GetCreatureCareer(attacker);
 
             // Choose whether weapon-wielding enemies use their weapons or weaponless attacks.
             // In classic, weapon-wielding enemies use the damage values of their weapons, instead of their weaponless values.
@@ -794,7 +798,7 @@ namespace PhysicalCombatOverhaul
 
             if (weapon != null)
             {
-                wepType = weapon.GetWeaponSkillIDAsShort();
+                cVars.wepType = weapon.GetWeaponSkillIDAsShort();
 
                 if (softMatRequireModuleCheck)
                 {
@@ -802,12 +806,12 @@ namespace PhysicalCombatOverhaul
                     {
                         int targetMatRequire = (int)target.MinMetalToHit;
                         int weaponMatValue = weapon.NativeMaterialValue;
-                        matReqDamMulti = targetMatRequire - weaponMatValue;
+                        cVars.matReqDamMulti = targetMatRequire - weaponMatValue;
 
-                        if (matReqDamMulti <= 0) // There is no "bonus" damage for meeting material requirements, nor for exceeding them, just normal unmodded damage.
-                            matReqDamMulti = 1;
+                        if (cVars.matReqDamMulti <= 0) // There is no "bonus" damage for meeting material requirements, nor for exceeding them, just normal unmodded damage.
+                            cVars.matReqDamMulti = 1;
                         else // There is a damage penalty for attacking a target with below the minimum material requirements of that target, more as the difference between becomes greater.
-                            matReqDamMulti = (Mathf.Min(matReqDamMulti * 0.2f, 0.9f) - 1) * -1; // Keeps the damage multiplier penalty from going above 90% reduced damage.
+                            cVars.matReqDamMulti = (Mathf.Min(cVars.matReqDamMulti * 0.2f, 0.9f) - 1) * -1; // Keeps the damage multiplier penalty from going above 90% reduced damage.
                     }
                 }
                 else
@@ -819,42 +823,40 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            chanceToHitMod = attacker.Skills.GetLiveSkillValue(wepType);
+            cVars.chanceToHitMod = attacker.Skills.GetLiveSkillValue(cVars.wepType);
 
-            critSuccess = CriticalStrikeHandler(attacker);
+            cVars.critSuccess = CriticalStrikeHandler(attacker);
 
-            if (critSuccess)
+            if (cVars.critSuccess)
             {
-                critDamMulti = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 5);
-                critHitAddi = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 10);
+                cVars.critDamMulti = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 5);
+                cVars.critHitAddi = (attacker.Skills.GetLiveSkillValue(DFCareer.Skills.CriticalStrike) / 10);
 
-                critDamMulti = (critDamMulti * .025f) + 1;
-                chanceToHitMod += critHitAddi;
+                cVars.critDamMulti = (cVars.critDamMulti * .025f) + 1;
+                cVars.chanceToHitMod += cVars.critHitAddi;
             }
 
             int struckBodyPart = CalculateStruckBodyPart();
 
             // Get damage for weaponless attacks
-            if (wepType == (short)DFCareer.Skills.HandToHand)
+            if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
             {
-                unarmedAttack = true; // Check for later if weapon is NOT being used.
+                cVars.unarmedAttack = true;
 
                 if (attacker.EntityType == EntityTypes.EnemyClass)
                 {
-                    if (CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
+                    if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
                     {
-                        damage = CalculateHandToHandAttackDamage(attacker, target, damageModifiers, false); // Added my own, non-overriden version of this method for modification.
+                        cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damageModifiers, false); // Added my own, non-overriden version of this method for modification.
                     }
                 }
                 else // attacker is a monster
                 {
-                    hasSpecialMonsterWeapon = SpecialWeaponCheckForMonsters(attacker);
-
-                    if (hasSpecialMonsterWeapon)
+                    if (SpecialWeaponCheckForMonsters(attacker))
                     {
-                        unarmedAttack = false;
-                        monsterWeapon = MonsterWeaponAssign(attacker);
-                        wepType = monsterWeapon.GetWeaponSkillIDAsShort();
+                        cVars.unarmedAttack = false;
+                        cVars.monsterWeapon = MonsterWeaponAssign(attacker);
+                        cVars.wepType = cVars.monsterWeapon.GetWeaponSkillIDAsShort();
                     }
 
                     // Handle multiple attacks by AI
@@ -881,58 +883,70 @@ namespace PhysicalCombatOverhaul
 
                         int reflexesChance = 50 - (10 * ((int)target.Reflexes - 2));
 
-                        if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
+                        if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
                         {
-                            int hitDamage = UnityEngine.Random.Range(minBaseDamage, maxBaseDamage + 1);
-                            // Apply special monster attack effects
-                            if (hitDamage > 0 && attackNumber == 0)
-                                FormulaHelper.OnMonsterHit(attacker, target, hitDamage);
-
-                            damage += hitDamage;
+                            cVars.damage += UnityEngine.Random.Range(minBaseDamage, maxBaseDamage + 1);
                         }
                         ++attackNumber;
                     }
-                    if (damage >= 1)
-                        damage = CalculateHandToHandAttackDamage(attacker, target, damage, false); // Added my own, non-overriden version of this method for modification.
+                    if (cVars.damage >= 1)
+                        cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damage, false); // Added my own, non-overriden version of this method for modification.
                 }
             }
             // Handle weapon attacks
             else if (weapon != null)
             {
                 // Apply weapon material modifier.
-                chanceToHitMod += CalculateWeaponToHit(weapon);
+                cVars.chanceToHitMod += CalculateWeaponToHit(weapon);
 
-                if (CalculateSuccessfulHit(attacker, target, chanceToHitMod, struckBodyPart))
+                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
                 {
-                    damage = CalculateWeaponAttackDamage(attacker, target, damageModifiers, weaponAnimTime, weapon);
-                }
-
-                // Handle poisoned weapons
-                if (damage > 0 && weapon.poisonType != Poisons.None)
-                {
-                    FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
-                    weapon.poisonType = Poisons.None;
+                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
                 }
             }
 
-            damage = Mathf.Max(0, damage); // I think this is just here to keep damage from outputting a negative value.
+            cVars.damage = Mathf.Max(0, cVars.damage); // I think this is just here to keep damage from outputting a negative value.
 
-            if (critSuccess)
+            if (cVars.damage <= 0)
             {
-                damage = (int)Mathf.Round(damage * critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
+                // Do something here to possibly end execution of method early and resolve in satisfactory way to prevent unnecessary processing, if able.
+                return 0;
             }
 
-            damage = (int)Mathf.Round(damage * matReqDamMulti); // Could not find much better place to put there, so here seems fine, right after crit multiplier is taken into account.
+            if (cVars.critSuccess)
+            {
+                cVars.damage = (int)Mathf.Round(cVars.damage * cVars.critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
+            }
 
-            int targetEndur = target.Stats.LiveEndurance - 50;
-            int targetStren = target.Stats.LiveStrength - 50; // Every point of these does something, positive and negative between 50.
-            int targetWillp = target.Stats.LiveWillpower - 50;
+            EquipSlots hitSlot = DaggerfallUnityItem.GetEquipSlotForBodyPart((BodyParts)cVars.struckBodyPart);
+            DaggerfallUnityItem armor = cVars.tEntity.ItemEquipTable.GetItem(hitSlot);
+            if (armor != null)
+            {
+                cVars.armorDTAmount = GetBaseDTAmount(armor, ref cVars);
+                cVars.armorDRAmount = GetBaseDRAmount(armor, ref cVars);
+            }
 
-            float naturalDamResist = (targetEndur * .002f);
-            naturalDamResist += (targetStren * .001f);
-            naturalDamResist += (targetWillp * .001f);
+            DaggerfallUnityItem shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
+            if (shield != null)
+            {
+                BodyParts[] protectedBodyParts = shield.GetShieldProtectedBodyParts();
 
-            Mathf.Clamp(naturalDamResist, -0.2f, 0.2f);
+                if (protectedBodyParts.Length > 0)
+                {
+                    for (int i = 0; (i < protectedBodyParts.Length) && !cVars.shieldStrongSpot; i++)
+                    {
+                        if (protectedBodyParts[i] == (BodyParts)cVars.struckBodyPart)
+                            cVars.shieldStrongSpot = true;
+                    }
+                    ShieldBlockChanceCalculation(shield, ref cVars);
+                }
+
+                if (armor != null)
+                {
+                    CompareShieldToUnderArmor(shield, armor, ref cVars);
+                }
+            }
+            // Continue from here below tomorrow I think. Trying to replicate the functionality of the Player based method, etc.
         }
 
         public static int CalcMonsterVsMonsterAttack(EnemyEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
