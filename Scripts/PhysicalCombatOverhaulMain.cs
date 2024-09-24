@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		9/21/2024, 10:50 PM
+// Last Edit:		9/23/2024, 10:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -38,6 +38,9 @@ namespace PhysicalCombatOverhaul
         public static bool armorHitFormulaModuleCheck { get; set; }
         public static bool condBasedEffectModuleCheck { get; set; }
         public static bool softMatRequireModuleCheck { get; set; }
+
+        public static bool conditionBasedWeaponEffectiveness { get; set; }
+        public static bool conditionBasedArmorEffectiveness { get; set; }
 
         // Mod Compatibility Check Values
         public static bool RolePlayRealismArcheryModuleCheck { get; set; }
@@ -2026,6 +2029,14 @@ namespace PhysicalCombatOverhaul
             PlayerEntity player = GameManager.Instance.PlayerEntity;
             EnemyEntity AITarget = null;
 
+            if (conditionBasedWeaponEffectiveness)
+            {
+                if (attacker == player)
+                    damage = AlterDamageBasedOnWepCondition(damage, true, weapon);
+                else
+                    damage = AlterDamageBasedOnWepCondition(damage, false, weapon);
+            }
+
             if (target == player)
             {
                 if (GameManager.Instance.PlayerEffectManager.HasLycanthropy() || GameManager.Instance.PlayerEffectManager.HasVampirism())
@@ -2262,8 +2273,8 @@ namespace PhysicalCombatOverhaul
             armor = cVars.tEntity.ItemEquipTable.GetItem(hitSlot);
             if (armor != null)
             {
-                cVars.armorDTAmount = GetBaseDTAmount(armor, ref cVars);
-                cVars.armorDRAmount = GetBaseDRAmount(armor, ref cVars);
+                cVars.armorDTAmount = GetBaseDTAmount(armor, target, ref cVars);
+                cVars.armorDRAmount = GetBaseDRAmount(armor, target, ref cVars);
             }
 
             shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
@@ -2278,7 +2289,7 @@ namespace PhysicalCombatOverhaul
                         if (protectedBodyParts[i] == (BodyParts)cVars.struckBodyPart)
                             cVars.shieldStrongSpot = true;
                     }
-                    ShieldBlockChanceCalculation(shield, ref cVars);
+                    ShieldBlockChanceCalculation(shield, target, ref cVars);
                 }
 
                 if (armor != null)
@@ -2289,7 +2300,7 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Checks for if a shield block was successful and returns true if so, false if not.</summary>
-        public static void ShieldBlockChanceCalculation(DaggerfallUnityItem shield, ref CVARS cVars)
+        public static void ShieldBlockChanceCalculation(DaggerfallUnityItem shield, DaggerfallEntity owner, ref CVARS cVars)
         {
             float fullBlockChance = 0;
 
@@ -2341,8 +2352,8 @@ namespace PhysicalCombatOverhaul
             {
                 float dTMod = 1f;
                 cVars.shieldBlockSuccess = true;
-                cVars.shieldDTAmount = GetBaseDTAmount(shield, ref cVars);
-                cVars.shieldDRAmount = GetBaseDRAmount(shield, ref cVars);
+                cVars.shieldDTAmount = GetBaseDTAmount(shield, owner, ref cVars);
+                cVars.shieldDRAmount = GetBaseDRAmount(shield, owner, ref cVars);
                 cVars.shieldDTAmount *= 2;
 
                 if (cVars.tarSize < cVars.atkSize)
@@ -2367,8 +2378,8 @@ namespace PhysicalCombatOverhaul
                     float dTMod = 1f;
                     cVars.shieldBlockSuccess = false;
                     cVars.hitShield = true;
-                    cVars.shieldDTAmount = GetBaseDTAmount(shield, ref cVars);
-                    cVars.shieldDRAmount = GetBaseDRAmount(shield, ref cVars);
+                    cVars.shieldDTAmount = GetBaseDTAmount(shield, owner, ref cVars);
+                    cVars.shieldDRAmount = GetBaseDRAmount(shield, owner, ref cVars);
 
                     if (cVars.tarSize < cVars.atkSize)
                     {
@@ -2391,25 +2402,29 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        public static float GetBaseDTAmount(DaggerfallUnityItem armor, ref CVARS cVars)
+        public static float GetBaseDTAmount(DaggerfallUnityItem armor, DaggerfallEntity owner, ref CVARS cVars)
         {
+            float dT = 0f;
+
+            PlayerEntity player = GameManager.Instance.PlayerEntity;
+
             if (armor.IsShield)
             {
                 cVars.shieldMaterial = GetArmorMaterial(armor);
 
                 switch (cVars.shieldMaterial)
                 {
-                    case (int)ArmorMats.Leather: return 3.5f;
-                    case (int)ArmorMats.Chain: return 4.5f;
-                    case (int)ArmorMats.Iron: return 6f;
-                    case (int)ArmorMats.Steel_Silver: return 6.5f;
-                    case (int)ArmorMats.Elven: return 7f;
-                    case (int)ArmorMats.Dwarven: return 7.5f;
-                    case (int)ArmorMats.Mithril_Adam: return 8f;
-                    case (int)ArmorMats.Ebony: return 8.5f;
-                    case (int)ArmorMats.Orcish: return 9f;
-                    case (int)ArmorMats.Daedric: return 9.5f;
-                    default: return 0f;
+                    case (int)ArmorMats.Leather: dT = 3.5f; break;
+                    case (int)ArmorMats.Chain: dT = 4.5f; break;
+                    case (int)ArmorMats.Iron: dT = 6f; break;
+                    case (int)ArmorMats.Steel_Silver: dT = 6.5f; break;
+                    case (int)ArmorMats.Elven: dT = 7f; break;
+                    case (int)ArmorMats.Dwarven: dT = 7.5f; break;
+                    case (int)ArmorMats.Mithril_Adam: dT = 8f; break;
+                    case (int)ArmorMats.Ebony: dT = 8.5f; break;
+                    case (int)ArmorMats.Orcish: dT = 9f; break;
+                    case (int)ArmorMats.Daedric: dT = 9.5f; break;
+                    default: dT = 0f; break;
                 }
 
                 // Possibly modify somewhat based on the shield-type? Not sure, will see.
@@ -2436,79 +2451,89 @@ namespace PhysicalCombatOverhaul
                 {
                     switch (cVars.armorMaterial)
                     {
-                        case (int)ArmorMats.Leather: return 2f;
-                        case (int)ArmorMats.Chain: return 2f;
-                        case (int)ArmorMats.Iron: return 2.25f;
-                        case (int)ArmorMats.Steel_Silver: return 2.5f;
-                        case (int)ArmorMats.Elven: return 2.75f;
-                        case (int)ArmorMats.Dwarven: return 3f;
-                        case (int)ArmorMats.Mithril_Adam: return 3.25f;
-                        case (int)ArmorMats.Ebony: return 3.5f;
-                        case (int)ArmorMats.Orcish: return 3.75f;
-                        case (int)ArmorMats.Daedric: return 4f;
-                        default: return 0f;
+                        case (int)ArmorMats.Leather: dT = 2f; break;
+                        case (int)ArmorMats.Chain: dT = 2f; break;
+                        case (int)ArmorMats.Iron: dT = 2.25f; break;
+                        case (int)ArmorMats.Steel_Silver: dT = 2.5f; break;
+                        case (int)ArmorMats.Elven: dT = 2.75f; break;
+                        case (int)ArmorMats.Dwarven: dT = 3f; break;
+                        case (int)ArmorMats.Mithril_Adam: dT = 3.25f; break;
+                        case (int)ArmorMats.Ebony: dT = 3.5f; break;
+                        case (int)ArmorMats.Orcish: dT = 3.75f; break;
+                        case (int)ArmorMats.Daedric: dT = 4f; break;
+                        default: dT = 0f; break;
                     }
                 }
                 else if (cVars.armorType == 1)
                 {
                     switch (cVars.armorMaterial)
                     {
-                        case (int)ArmorMats.Leather: return 2.5f;
-                        case (int)ArmorMats.Chain: return 2.5f;
-                        case (int)ArmorMats.Iron: return 3f;
-                        case (int)ArmorMats.Steel_Silver: return 3.5f;
-                        case (int)ArmorMats.Elven: return 4f;
-                        case (int)ArmorMats.Dwarven: return 4.5f;
-                        case (int)ArmorMats.Mithril_Adam: return 5f;
-                        case (int)ArmorMats.Ebony: return 5.5f;
-                        case (int)ArmorMats.Orcish: return 6f;
-                        case (int)ArmorMats.Daedric: return 6.5f;
-                        default: return 0f;
+                        case (int)ArmorMats.Leather: dT = 2.5f; break;
+                        case (int)ArmorMats.Chain: dT = 2.5f; break;
+                        case (int)ArmorMats.Iron: dT = 3f; break;
+                        case (int)ArmorMats.Steel_Silver: dT = 3.5f; break;
+                        case (int)ArmorMats.Elven: dT = 4f; break;
+                        case (int)ArmorMats.Dwarven: dT = 4.5f; break;
+                        case (int)ArmorMats.Mithril_Adam: dT = 5f; break;
+                        case (int)ArmorMats.Ebony: dT = 5.5f; break;
+                        case (int)ArmorMats.Orcish: dT = 6f; break;
+                        case (int)ArmorMats.Daedric: dT = 6.5f; break;
+                        default: dT = 0f; break;
                     }
                 }
                 else if (cVars.armorType == 2)
                 {
                     switch (cVars.armorMaterial)
                     {
-                        case (int)ArmorMats.Leather: return 3.5f;
-                        case (int)ArmorMats.Chain: return 3.5f;
-                        case (int)ArmorMats.Iron: return 3.5f;
-                        case (int)ArmorMats.Steel_Silver: return 4.25f;
-                        case (int)ArmorMats.Elven: return 5f;
-                        case (int)ArmorMats.Dwarven: return 5.75f;
-                        case (int)ArmorMats.Mithril_Adam: return 6.5f;
-                        case (int)ArmorMats.Ebony: return 7.25f;
-                        case (int)ArmorMats.Orcish: return 8f;
-                        case (int)ArmorMats.Daedric: return 8.75f;
-                        default: return 0f;
+                        case (int)ArmorMats.Leather: dT = 3.5f; break;
+                        case (int)ArmorMats.Chain: dT = 3.5f; break;
+                        case (int)ArmorMats.Iron: dT = 3.5f; break;
+                        case (int)ArmorMats.Steel_Silver: dT = 4.25f; break;
+                        case (int)ArmorMats.Elven: dT = 5f; break;
+                        case (int)ArmorMats.Dwarven: dT = 5.75f; break;
+                        case (int)ArmorMats.Mithril_Adam: dT = 6.5f; break;
+                        case (int)ArmorMats.Ebony: dT = 7.25f; break;
+                        case (int)ArmorMats.Orcish: dT = 8f; break;
+                        case (int)ArmorMats.Daedric: dT = 8.75f; break;
+                        default: dT = 0f; break;
                     }
                 }
-                else
-                {
-                    return 0f;
-                }
             }
+
+            if (conditionBasedArmorEffectiveness)
+            {
+                if (owner == player)
+                    dT = AlterArmorReducBasedOnItemCondition(dT, true, armor);
+                else
+                    dT = AlterArmorReducBasedOnItemCondition(dT, false, armor);
+            }
+
+            return dT;
         }
 
-        public static float GetBaseDRAmount(DaggerfallUnityItem armor, ref CVARS cVars)
+        public static float GetBaseDRAmount(DaggerfallUnityItem armor, DaggerfallEntity owner, ref CVARS cVars)
         {
+            float dR = 0f;
+
+            PlayerEntity player = GameManager.Instance.PlayerEntity;
+
             if (armor.IsShield)
             {
                 cVars.shieldMaterial = GetArmorMaterial(armor);
 
                 switch (cVars.shieldMaterial)
                 {
-                    case (int)ArmorMats.Leather: return 0.15f;
-                    case (int)ArmorMats.Chain: return 0.2f;
-                    case (int)ArmorMats.Iron: return 0.25f;
-                    case (int)ArmorMats.Steel_Silver: return 0.275f;
-                    case (int)ArmorMats.Elven: return 0.3f;
-                    case (int)ArmorMats.Dwarven: return 0.325f;
-                    case (int)ArmorMats.Mithril_Adam: return 0.35f;
-                    case (int)ArmorMats.Ebony: return 0.375f;
-                    case (int)ArmorMats.Orcish: return 0.4f;
-                    case (int)ArmorMats.Daedric: return 0.425f;
-                    default: return 0f;
+                    case (int)ArmorMats.Leather: dR = 0.15f; break;
+                    case (int)ArmorMats.Chain: dR = 0.2f; break;
+                    case (int)ArmorMats.Iron: dR = 0.25f; break;
+                    case (int)ArmorMats.Steel_Silver: dR = 0.275f; break;
+                    case (int)ArmorMats.Elven: dR = 0.3f; break;
+                    case (int)ArmorMats.Dwarven: dR = 0.325f; break;
+                    case (int)ArmorMats.Mithril_Adam: dR = 0.35f; break;
+                    case (int)ArmorMats.Ebony: dR = 0.375f; break;
+                    case (int)ArmorMats.Orcish: dR = 0.4f; break;
+                    case (int)ArmorMats.Daedric: dR = 0.425f; break;
+                    default: dR = 0f; break;
                 }
 
                 // Possibly modify somewhat based on the shield-type? Not sure, will see.
@@ -2535,58 +2560,162 @@ namespace PhysicalCombatOverhaul
                 {
                     switch (cVars.armorMaterial)
                     {
-                        case (int)ArmorMats.Leather: return 0f;
-                        case (int)ArmorMats.Chain: return 0f;
-                        case (int)ArmorMats.Iron: return 0.05f;
-                        case (int)ArmorMats.Steel_Silver: return 0.075f;
-                        case (int)ArmorMats.Elven: return 0.1f;
-                        case (int)ArmorMats.Dwarven: return 0.125f;
-                        case (int)ArmorMats.Mithril_Adam: return 0.15f;
-                        case (int)ArmorMats.Ebony: return 0.175f;
-                        case (int)ArmorMats.Orcish: return 0.2f;
-                        case (int)ArmorMats.Daedric: return 0.225f;
-                        default: return 0f;
+                        case (int)ArmorMats.Leather: dR = 0f; break;
+                        case (int)ArmorMats.Chain: dR = 0f; break;
+                        case (int)ArmorMats.Iron: dR = 0.05f; break;
+                        case (int)ArmorMats.Steel_Silver: dR = 0.075f; break;
+                        case (int)ArmorMats.Elven: dR = 0.1f; break;
+                        case (int)ArmorMats.Dwarven: dR = 0.125f; break;
+                        case (int)ArmorMats.Mithril_Adam: dR = 0.15f; break;
+                        case (int)ArmorMats.Ebony: dR = 0.175f; break;
+                        case (int)ArmorMats.Orcish: dR = 0.2f; break;
+                        case (int)ArmorMats.Daedric: dR = 0.225f; break;
+                        default: dR = 0f; break;
                     }
                 }
                 else if (cVars.armorType == 1)
                 {
                     switch (cVars.armorMaterial)
                     {
-                        case (int)ArmorMats.Leather: return 0.075f;
-                        case (int)ArmorMats.Chain: return 0.075f;
-                        case (int)ArmorMats.Iron: return 0.1f;
-                        case (int)ArmorMats.Steel_Silver: return 0.125f;
-                        case (int)ArmorMats.Elven: return 0.15f;
-                        case (int)ArmorMats.Dwarven: return 0.175f;
-                        case (int)ArmorMats.Mithril_Adam: return 0.2f;
-                        case (int)ArmorMats.Ebony: return 0.225f;
-                        case (int)ArmorMats.Orcish: return 0.25f;
-                        case (int)ArmorMats.Daedric: return 0.275f;
-                        default: return 0f;
+                        case (int)ArmorMats.Leather: dR = 0.075f; break;
+                        case (int)ArmorMats.Chain: dR = 0.075f; break;
+                        case (int)ArmorMats.Iron: dR = 0.1f; break;
+                        case (int)ArmorMats.Steel_Silver: dR = 0.125f; break;
+                        case (int)ArmorMats.Elven: dR = 0.15f; break;
+                        case (int)ArmorMats.Dwarven: dR = 0.175f; break;
+                        case (int)ArmorMats.Mithril_Adam: dR = 0.2f; break;
+                        case (int)ArmorMats.Ebony: dR = 0.225f; break;
+                        case (int)ArmorMats.Orcish: dR = 0.25f; break;
+                        case (int)ArmorMats.Daedric: dR = 0.275f; break;
+                        default: dR = 0f; break;
                     }
                 }
                 else if (cVars.armorType == 2)
                 {
                     switch (cVars.armorMaterial)
                     {
-                        case (int)ArmorMats.Leather: return 0.175f;
-                        case (int)ArmorMats.Chain: return 0.175f;
-                        case (int)ArmorMats.Iron: return 0.175f;
-                        case (int)ArmorMats.Steel_Silver: return 0.2f;
-                        case (int)ArmorMats.Elven: return 0.225f;
-                        case (int)ArmorMats.Dwarven: return 0.25f;
-                        case (int)ArmorMats.Mithril_Adam: return 0.275f;
-                        case (int)ArmorMats.Ebony: return 0.3f;
-                        case (int)ArmorMats.Orcish: return 0.325f;
-                        case (int)ArmorMats.Daedric: return 0.35f;
-                        default: return 0f;
+                        case (int)ArmorMats.Leather: dR = 0.175f; break;
+                        case (int)ArmorMats.Chain: dR = 0.175f; break;
+                        case (int)ArmorMats.Iron: dR = 0.175f; break;
+                        case (int)ArmorMats.Steel_Silver: dR = 0.2f; break;
+                        case (int)ArmorMats.Elven: dR = 0.225f; break;
+                        case (int)ArmorMats.Dwarven: dR = 0.25f; break;
+                        case (int)ArmorMats.Mithril_Adam: dR = 0.275f; break;
+                        case (int)ArmorMats.Ebony: dR = 0.3f; break;
+                        case (int)ArmorMats.Orcish: dR = 0.325f; break;
+                        case (int)ArmorMats.Daedric: dR = 0.35f; break;
+                        default: dR = 0f; break;
                     }
                 }
-                else
-                {
-                    return 0f;
-                }
             }
+
+            if (conditionBasedArmorEffectiveness)
+            {
+                if (owner == player)
+                    dR = AlterArmorReducBasedOnItemCondition(dR, true, armor);
+                else
+                    dR = AlterArmorReducBasedOnItemCondition(dR, false, armor);
+            }
+
+            return dR;
+        }
+
+        // Multiplies the damage of an attack with a weapon, based on the current condition of said weapon, blunt less effected, but also does not benefit as much from higher condition.
+        public static int AlterDamageBasedOnWepCondition(int damage, bool isPlayer, DaggerfallUnityItem weapon)
+        {
+            if (weapon == null) // To attempt to keep object reference compile error from occuring when weapon breaks from an attack.
+                return damage;
+
+            int condPerc = weapon.ConditionPercentage;
+            float condFactor = 1.0f;
+
+            switch (weapon.GetWeaponSkillUsed())
+            {
+                default:
+                case (int)DFCareer.ProficiencyFlags.HandToHand:
+                case (int)DFCareer.ProficiencyFlags.BluntWeapons:
+                case (int)DFCareer.ProficiencyFlags.MissileWeapons:
+                    if (condPerc >= 92)                         // New
+                        condFactor = 1.1f;
+                    else if (condPerc <= 91 && condPerc >= 76)  // Almost New
+                        condFactor = 1f;
+                    else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
+                        condFactor = 1f;
+                    else if (condPerc <= 60 && condPerc >= 41)  // Used
+                        condFactor = 0.90f;
+                    else if (condPerc <= 40 && condPerc >= 16)  // Worn
+                        condFactor = 0.80f;
+                    else if (condPerc <= 15 && condPerc >= 6)   // Battered
+                        condFactor = 0.65f;
+                    else if (condPerc <= 5)                     // Useless, Broken
+                        condFactor = 0.50f;
+                    else                                        // Other
+                        condFactor = 1f;
+                    break;
+                case (int)DFCareer.ProficiencyFlags.ShortBlades:
+                case (int)DFCareer.ProficiencyFlags.LongBlades:
+                case (int)DFCareer.ProficiencyFlags.Axes:
+                    if (condPerc >= 92)                         // New
+                        condFactor = 1.3f;
+                    else if (condPerc <= 91 && condPerc >= 76)  // Almost New
+                        condFactor = 1.1f;
+                    else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
+                        condFactor = 1f;
+                    else if (condPerc <= 60 && condPerc >= 41)  // Used
+                        condFactor = 0.85f;
+                    else if (condPerc <= 40 && condPerc >= 16)  // Worn
+                        condFactor = 0.70f;
+                    else if (condPerc <= 15 && condPerc >= 6)   // Battered
+                        condFactor = 0.45f;
+                    else if (condPerc <= 5)                     // Useless, Broken
+                        condFactor = 0.25f;
+                    else                                        // Other
+                        condFactor = 1f;
+                    break;
+            }
+
+            float finalDamage = damage * condFactor;
+
+            // Non-player's equipment effectiveness is only effected half as much as the player, since they can't actively maintain it and such, unlike the player, etc.
+            if (!isPlayer)
+                finalDamage += (damage - finalDamage) * 0.5f;
+
+            return (int)Mathf.Round(finalDamage);
+        }
+
+        // Multiplies the DT or DR of a piece of armor, based on the current condition of said armor.
+        public static float AlterArmorReducBasedOnItemCondition(float value, bool isPlayer, DaggerfallUnityItem armor)
+        {
+            if (armor == null) // To attempt to keep object reference compile error from occuring when worn shield breaks from an attack.
+                return 1f;
+
+            int condPerc = armor.ConditionPercentage;
+            float condFactor = 1.0f;
+
+            if (condPerc >= 92)                         // New
+                condFactor = 1.15f;
+            else if (condPerc <= 91 && condPerc >= 76)  // Almost New
+                condFactor = 1.05f;
+            else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
+                condFactor = 1f;
+            else if (condPerc <= 60 && condPerc >= 41)  // Used
+                condFactor = 0.90f;
+            else if (condPerc <= 40 && condPerc >= 16)  // Worn
+                condFactor = 0.80f;
+            else if (condPerc <= 15 && condPerc >= 6)   // Battered
+                condFactor = 0.65f;
+            else if (condPerc <= 5)                     // Useless, Broken
+                condFactor = 0.50f;
+            else                                        // Other
+                condFactor = 1f;
+
+            float finalRed = value * condFactor;
+
+            // Non-player's equipment effectiveness is only effected half as much as the player, since they can't actively maintain it and such, unlike the player, etc.
+            if (!isPlayer)
+                finalRed += (value - finalRed) * 0.5f;
+
+            return finalRed;
         }
 
         /// <summary>Compares the damage reduction of the struck shield, with the armor under the part that was struck. This is to keep a full-suit of daedric armor from being worse while wearing a leather shield, which when a block is successful, would actually take more damage than if not wearing a shield.</summary>
@@ -2780,75 +2909,6 @@ namespace PhysicalCombatOverhaul
                     return 4;
                 case (int)MonsterCareers.IronAtronach:
                     return 5;
-            }
-        }
-
-        /// <summary>Currently being used to compare the damage reduction of a shield to the under armor it is covering. This is the average of all different types of damage reduction for simplification of this.</summary>
-        public static int PercentageReductionAverage(DaggerfallUnityItem item, int armorMaterial, int damage, float naturalDamResist, bool shieldQuickCheck)
-        {
-            float condMulti = 1f;
-
-            if (condBasedEffectModuleCheck) // Only runs if "Condition Based Effectiveness" module is active.
-            {
-                condMulti = AlterArmorReducBasedOnItemCondition(item);
-                //Debug.LogFormat("Average Reduction Multiplier Due To Condition = {0}", condMulti);
-            }
-
-            if (shieldQuickCheck)
-            {
-                switch (armorMaterial)
-                {
-                    case 1: // leather
-                        return (int)Mathf.Round(damage * (Mathf.Min((.68f * condMulti), .81f) - naturalDamResist));
-                    case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (Mathf.Min((.64f * condMulti), .77f) - naturalDamResist));
-                    case 3: // iron
-                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .70f) - naturalDamResist));
-                    case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (Mathf.Min((.52f * condMulti), .66f) - naturalDamResist));
-                    case 5: // elven
-                        return (int)Mathf.Round(damage * (Mathf.Min((.49f * condMulti), .62f) - naturalDamResist));
-                    case 6: // dwarven
-                        return (int)Mathf.Round(damage * (Mathf.Min((.45f * condMulti), .61f) - naturalDamResist));
-                    case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (Mathf.Min((.41f * condMulti), .54f) - naturalDamResist));
-                    case 8: // ebony
-                        return (int)Mathf.Round(damage * (Mathf.Min((.38f * condMulti), .47f) - naturalDamResist));
-                    case 9: // orcish
-                        return (int)Mathf.Round(damage * (Mathf.Min((.34f * condMulti), .41f) - naturalDamResist));
-                    case 10: // daedric
-                        return (int)Mathf.Round(damage * (Mathf.Min((.30f * condMulti), .35f) - naturalDamResist));
-                    default:
-                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
-                }
-            }
-            else
-            {
-                switch (armorMaterial)
-                {
-                    case 1: // leather
-                        return (int)Mathf.Round(damage * (Mathf.Min((.83f * condMulti), .93f) - naturalDamResist));
-                    case 2: // chains 1 and 2
-                        return (int)Mathf.Round(damage * (Mathf.Min((.81f * condMulti), .93f) - naturalDamResist));
-                    case 3: // iron
-                        return (int)Mathf.Round(damage * (Mathf.Min((.86f * condMulti), .92f) - naturalDamResist));
-                    case 4: // steel and silver
-                        return (int)Mathf.Round(damage * (Mathf.Min((.78f * condMulti), .90f) - naturalDamResist));
-                    case 5: // elven
-                        return (int)Mathf.Round(damage * (Mathf.Min((.73f * condMulti), .87f) - naturalDamResist));
-                    case 6: // dwarven
-                        return (int)Mathf.Round(damage * (Mathf.Min((.65f * condMulti), .84f) - naturalDamResist));
-                    case 7: // mithril and adamantium
-                        return (int)Mathf.Round(damage * (Mathf.Min((.58f * condMulti), .81f) - naturalDamResist));
-                    case 8: // ebony
-                        return (int)Mathf.Round(damage * (Mathf.Min((.51f * condMulti), .76f) - naturalDamResist));
-                    case 9: // orcish
-                        return (int)Mathf.Round(damage * (Mathf.Min((.42f * condMulti), .65f) - naturalDamResist));
-                    case 10: // daedric
-                        return (int)Mathf.Round(damage * (Mathf.Min((.35f * condMulti), .56f) - naturalDamResist));
-                    default:
-                        return (int)Mathf.Round(damage * (Mathf.Min((1f * condMulti), 1f) - naturalDamResist));
-                }
             }
         }
 
