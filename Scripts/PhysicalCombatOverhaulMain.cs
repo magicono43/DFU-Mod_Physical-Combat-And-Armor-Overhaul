@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		9/23/2024, 10:00 PM
+// Last Edit:		9/26/2024, 10:40 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -539,217 +539,33 @@ namespace PhysicalCombatOverhaul
 
             EvaluateArmorAndShieldCoverage(target, ref cVars, out shield, out armor);
 
-            if (cVars.damage > 0) // Alot of this can probably put into a single method that other methods can use just the same, will see. 
+            if (cVars.damage > 0)
             {
-                if (cVars.finalDTAmount > 0 || cVars.finalDRAmount > 0)
-                {
-                    float damAfterDR = cVars.damage * Mathf.Abs(cVars.finalDRAmount - 1);
-                    float dTAfterRound = cVars.finalDTAmount;
-                    float damRemainder = damAfterDR % 1;
-                    float dTRemainder = cVars.finalDTAmount % 1;
-
-                    damAfterDR = (float)Math.Truncate(damAfterDR);
-                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
-                        ++damAfterDR;
-
-                    dTAfterRound = (float)Math.Truncate(dTAfterRound);
-                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
-                        ++dTAfterRound;
-
-                    cVars.damBeforeDT = damAfterDR;
-                    cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
-
-                    if (dTAfterRound >= damAfterDR) // Attack was completely negated by shield or armor.
-                    {
-                        if (cVars.shieldBlockSuccess)
-                        {
-                            if (shield != null)
-                            {
-                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                                // Play block sound and maybe animation when that is a thing?
-                                return 0;
-                            }
-                        }
-                        else if (cVars.hitShield)
-                        {
-                            if (shield != null)
-                            {
-                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                                // Play sound for attack hitting a shield and completely glancing off, but not a proper block.
-                                return 0;
-                            }
-                        }
-                        else
-                        {
-                            if (armor != null)
-                            {
-                                DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                                // Play sound for attack hitting armor and it completely glancing off.
-                                return 0;
-                            }
-                        }
-                    }
-                    else // Attack was only partially reduced by shield or armor, so the DT value was overcome.
-                    {
-                        if (cVars.shieldBlockSuccess)
-                        {
-                            if (shield != null)
-                            {
-                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                                // Play block sound but attack still going through somewhat, and maybe animation when that is a thing?
-                            }
-                        }
-                        else if (cVars.hitShield)
-                        {
-                            if (shield != null)
-                            {
-                                DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                                // Play sound for attacking hitting a shield and still going through somewhat.
-                            }
-                        }
-                        else
-                        {
-                            if (armor != null)
-                            {
-                                DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                                // Play sound for attack hitting armor and still going through somewhat.
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // I think here if damage was dealt, but there was no armor or shield to reduce any of it.
-                    cVars.damBeforeDT = cVars.damage;
-                    cVars.damAfterDT = cVars.damage;
-
-                    DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                    // Play sound for attack hitting target without any armor?
-                }
+                if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
+                    return 0;
             }
             else
             {
                 // If no damage was dealt?
                 // Play sound for attack missing or being dodged?
                 // Also possibly end method short here?
+                return 0;
             }
 
             if (cVars.damAfterDT > 0)
             {
-                float damAfterDR = cVars.damAfterDT;
-
-                if (softMatRequireModuleCheck)
-                {
-                    if (cVars.tarCareer == (int)MonsterCareers.Ghost || cVars.tarCareer == (int)MonsterCareers.Wraith)
-                    {
-                        if (weapon != null)
-                        {
-                            if (weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Iron || weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Steel)
-                            {
-                                if (cVars.matReqDamMulti > 0.4f)
-                                {
-                                    cVars.matReqDamMulti = 0.4f; // Simple materials do much less damage to incorporeal creatures.
-                                }
-                            }
-                        }
-                    }
-
-                    float damCheckBeforeMatMod = damAfterDR;
-
-                    damAfterDR *= cVars.matReqDamMulti;
-
-                    float damCheckAfterMatMod = damAfterDR;
-
-                    if (damAfterDR < 1 && damAfterDR > 0)
-                        damAfterDR = damAfterDR >= 0.5f ? 1 : 0;
-
-                    if (damCheckBeforeMatMod > 0 && (damCheckAfterMatMod / damCheckBeforeMatMod) <= 0.45f)
-                        DaggerfallUI.AddHUDText("This Weapon Is Not Very Effective Against This Creature.", 2.00f);
-                }
-
-                if (damAfterDR > 0)
-                {
-                    CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars);
-
-                    if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
-                    {
-                        if (cVars.unarmedAttack || cVars.wepType == (short)DFCareer.Skills.HandToHand || cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
-                            damAfterDR *= cVars.tBluntMulti;
-                        else if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
-                            damAfterDR *= cVars.tSlashMulti;
-                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
-                            damAfterDR *= cVars.tPierceMulti;
-
-                        float dTAfterRound = cVars.tNatDT;
-                        float damRemainder = damAfterDR % 1;
-                        float dTRemainder = cVars.tNatDT % 1;
-
-                        damAfterDR = (float)Math.Truncate(damAfterDR);
-                        if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
-                            ++damAfterDR;
-
-                        dTAfterRound = (float)Math.Truncate(dTAfterRound);
-                        if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
-                            ++dTAfterRound;
-
-                        cVars.damBeforeDT = damAfterDR;
-                        cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
-
-                        if (dTAfterRound >= damAfterDR) // Attack was completely negated by natural armor.
-                        {
-                            DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                            // Play sound for attack hitting natural armor and it completely glancing off.
-                            return 0;
-                        }
-                        else // Attack was only partially reduced by natural armor, so the DT value was overcome.
-                        {
-                            DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                            // Actually damage health of target here.
-                            // Play sound for attack hitting natural armor and still going through somewhat.
-
-                            // Handle poisoned weapons
-                            if (weapon != null && weapon.poisonType != Poisons.None)
-                            {
-                                FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
-                                weapon.poisonType = Poisons.None;
-                            }
-
-                            return Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
-                        }
-                    }
-                    else
-                    {
-                        // I think here if damage was dealt, but no natural armor or resistances to reduce it.
-                        cVars.damBeforeDT = cVars.damage;
-                        cVars.damAfterDT = cVars.damage;
-
-                        DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                        // Actually damage health of target here.
-                        // Play sound for attack hitting target without any armor?
-
-                        // Handle poisoned weapons
-                        if (weapon != null && weapon.poisonType != Poisons.None)
-                        {
-                            FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
-                            weapon.poisonType = Poisons.None;
-                        }
-
-                        return Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
-                    }
-                }
-                else
-                {
-                    // If damage was reduced to 0 by material resistance.
+                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
                     return 0;
-                }
+                else
+                    return (int)cVars.damAfterDT;
             }
             else
             {
                 // If no damage was dealt?
                 // Play sound for attack missing or being dodged?
                 // Also possibly end method short here?
+                return 0;
             }
-            return 0;
         }
         
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
@@ -1029,7 +845,7 @@ namespace PhysicalCombatOverhaul
 
                 if (damAfterDR > 0)
                 {
-                    CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars);
+                    CalculateNaturalDamageReductions(ref cVars);
 
                     if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
                     {
@@ -1397,7 +1213,7 @@ namespace PhysicalCombatOverhaul
 
                 if (damAfterDR > 0)
                 {
-                    CalculateNaturalDamageReductions(weapon, armor, attacker, target, ref cVars);
+                    CalculateNaturalDamageReductions(ref cVars);
 
                     if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
                     {
@@ -3082,6 +2898,214 @@ namespace PhysicalCombatOverhaul
             return chanceToHitMod;
         }
 
+        public static bool FactorInArmor(DaggerfallEntity attacker, DaggerfallEntity target, DaggerfallUnityItem weapon, DaggerfallUnityItem shield, DaggerfallUnityItem armor, ref CVARS cVars)
+        {
+            if (cVars.finalDTAmount > 0 || cVars.finalDRAmount > 0)
+            {
+                float damAfterDR = cVars.damage * Mathf.Abs(cVars.finalDRAmount - 1);
+                float dTAfterRound = cVars.finalDTAmount;
+                float damRemainder = damAfterDR % 1;
+                float dTRemainder = cVars.finalDTAmount % 1;
+
+                damAfterDR = (float)Math.Truncate(damAfterDR);
+                if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
+                    ++damAfterDR;
+
+                dTAfterRound = (float)Math.Truncate(dTAfterRound);
+                if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
+                    ++dTAfterRound;
+
+                cVars.damBeforeDT = damAfterDR;
+                cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
+
+                if (dTAfterRound >= damAfterDR) // Attack was completely negated by shield or armor.
+                {
+                    if (cVars.shieldBlockSuccess)
+                    {
+                        if (shield != null)
+                        {
+                            DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                            // Play block sound and maybe animation when that is a thing?
+                            return true;
+                        }
+                    }
+                    else if (cVars.hitShield)
+                    {
+                        if (shield != null)
+                        {
+                            DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                            // Play sound for attack hitting a shield and completely glancing off, but not a proper block.
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        if (armor != null)
+                        {
+                            DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                            // Play sound for attack hitting armor and it completely glancing off.
+                            return true;
+                        }
+                    }
+                }
+                else // Attack was only partially reduced by shield or armor, so the DT value was overcome.
+                {
+                    if (cVars.shieldBlockSuccess)
+                    {
+                        if (shield != null)
+                        {
+                            DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                            // Play block sound but attack still going through somewhat, and maybe animation when that is a thing?
+                            return false;
+                        }
+                    }
+                    else if (cVars.hitShield)
+                    {
+                        if (shield != null)
+                        {
+                            DamageEquipment(weapon, shield, attacker, target, ref cVars);
+                            // Play sound for attacking hitting a shield and still going through somewhat.
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (armor != null)
+                        {
+                            DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                            // Play sound for attack hitting armor and still going through somewhat.
+                            return false;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // I think here if damage was dealt, but there was no armor or shield to reduce any of it.
+                cVars.damBeforeDT = cVars.damage;
+                cVars.damAfterDT = cVars.damage;
+
+                DamageEquipment(weapon, armor, attacker, target, ref cVars);
+                // Play sound for attack hitting target without any armor?
+                return false;
+            }
+            return false;
+        }
+
+        public static bool FactorInNaturalArmor(DaggerfallEntity attacker, DaggerfallEntity target, DaggerfallUnityItem weapon, ref CVARS cVars)
+        {
+            float damAfterDR = cVars.damAfterDT;
+
+            if (softMatRequireModuleCheck)
+            {
+                if (cVars.tarCareer == (int)MonsterCareers.Ghost || cVars.tarCareer == (int)MonsterCareers.Wraith)
+                {
+                    if (weapon != null)
+                    {
+                        if (weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Iron || weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Steel)
+                        {
+                            if (cVars.matReqDamMulti > 0.4f)
+                            {
+                                cVars.matReqDamMulti = 0.4f; // Simple materials do much less damage to incorporeal creatures.
+                            }
+                        }
+                    }
+                }
+
+                float damCheckBeforeMatMod = damAfterDR;
+
+                damAfterDR *= cVars.matReqDamMulti;
+
+                float damCheckAfterMatMod = damAfterDR;
+
+                if (damAfterDR < 1 && damAfterDR > 0)
+                    damAfterDR = damAfterDR >= 0.5f ? 1 : 0;
+
+                if (damCheckBeforeMatMod > 0 && (damCheckAfterMatMod / damCheckBeforeMatMod) <= 0.45f)
+                    DaggerfallUI.AddHUDText("This Weapon Is Not Very Effective Against This Creature.", 2.00f);
+            }
+
+            if (damAfterDR > 0)
+            {
+                CalculateNaturalDamageReductions(ref cVars);
+
+                if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
+                {
+                    if (cVars.unarmedAttack || cVars.wepType == (short)DFCareer.Skills.HandToHand || cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
+                        damAfterDR *= cVars.tBluntMulti;
+                    else if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        damAfterDR *= cVars.tSlashMulti;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        damAfterDR *= cVars.tPierceMulti;
+
+                    float dTAfterRound = cVars.tNatDT;
+                    float damRemainder = damAfterDR % 1;
+                    float dTRemainder = cVars.tNatDT % 1;
+
+                    damAfterDR = (float)Math.Truncate(damAfterDR);
+                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(damRemainder * 100 * ((cVars.aLuck * .02f) + 1)), 0, 100)))
+                        ++damAfterDR;
+
+                    dTAfterRound = (float)Math.Truncate(dTAfterRound);
+                    if (Dice100.SuccessRoll((int)Mathf.Clamp(Mathf.Floor(dTRemainder * 100 * ((cVars.tLuck * .02f) + 1)), 0, 100)))
+                        ++dTAfterRound;
+
+                    cVars.damBeforeDT = damAfterDR;
+                    cVars.damAfterDT = Mathf.Max(damAfterDR - dTAfterRound, 0);
+
+                    if (dTAfterRound >= damAfterDR) // Attack was completely negated by natural armor.
+                    {
+                        DamageEquipment(weapon, null, attacker, target, ref cVars);
+                        // Play sound for attack hitting natural armor and it completely glancing off.
+                        return true;
+                    }
+                    else // Attack was only partially reduced by natural armor, so the DT value was overcome.
+                    {
+                        DamageEquipment(weapon, null, attacker, target, ref cVars);
+                        // Actually damage health of target here.
+                        // Play sound for attack hitting natural armor and still going through somewhat.
+
+                        // Handle poisoned weapons
+                        if (weapon != null && weapon.poisonType != Poisons.None)
+                        {
+                            FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
+                            weapon.poisonType = Poisons.None;
+                        }
+
+                        cVars.damAfterDT = Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
+
+                        return false;
+                    }
+                }
+                else
+                {
+                    // I think here if damage was dealt, but no natural armor or resistances to reduce it.
+                    cVars.damBeforeDT = cVars.damage;
+                    cVars.damAfterDT = cVars.damage;
+
+                    DamageEquipment(weapon, null, attacker, target, ref cVars);
+                    // Actually damage health of target here.
+                    // Play sound for attack hitting target without any armor?
+
+                    // Handle poisoned weapons
+                    if (weapon != null && weapon.poisonType != Poisons.None)
+                    {
+                        FormulaHelper.InflictPoison(attacker, target, weapon.poisonType, false);
+                        weapon.poisonType = Poisons.None;
+                    }
+
+                    cVars.damAfterDT = Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
+
+                    return false;
+                }
+            }
+            else
+            {
+                // If damage was reduced to 0 by material resistance.
+                return true;
+            }
+        }
+
         /// <summary>Allocate any equipment damage from a strike, and reduce item condition.</summary>
         private static void DamageEquipment(DaggerfallUnityItem weapon, DaggerfallUnityItem armor, DaggerfallEntity attacker, DaggerfallEntity target, ref CVARS cVars)
         {
@@ -3211,7 +3235,7 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>Determine how much damage reduction the target has from their natural defenses.</summary>
-        private static void CalculateNaturalDamageReductions(DaggerfallUnityItem weapon, DaggerfallUnityItem armor, DaggerfallEntity attacker, DaggerfallEntity target, ref CVARS cVars)
+        private static void CalculateNaturalDamageReductions(ref CVARS cVars)
         {
             switch (cVars.tarCareer)
             {
