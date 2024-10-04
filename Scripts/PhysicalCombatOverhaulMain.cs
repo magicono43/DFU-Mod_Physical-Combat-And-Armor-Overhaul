@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		9/28/2024, 9:30 PM
+// Last Edit:		10/3/2024, 8:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -48,8 +48,68 @@ namespace PhysicalCombatOverhaul
 
         // Global Variables
         public static readonly short[] weightMultipliersByMaterial = { 4, 5, 4, 4, 3, 4, 4, 2, 4, 5 };
-        //public static ImmersiveFootstepsObject footstepComponent { get; set; }
-        //public static AudioClip LastFootstepPlayed { get { return lastFootstepPlayed; } set { lastFootstepPlayed = value; } }
+
+        #region Mod Sound Variables
+
+        // Mod Sounds
+        private static AudioClip lastFootstepPlayed = null;
+        private static AudioClip lastSwaySoundPlayed = null;
+
+        public static AudioClip[] EmptyAudioList = Array.Empty<AudioClip>();
+
+        public static AudioClip[] MissedAttackClips = { null, null, null };
+        public static AudioClip[] DodgedAttackClips = { null, null, null };
+
+        public static AudioClip[] FulNegMatResClips = { null, null, null };
+
+        public static AudioClip[] FulNegActShieldClips = { null, null, null };
+        public static AudioClip[] FulNegPasShieldClips = { null, null, null };
+
+        public static AudioClip[] FulNegMetalArmClips = { null, null, null };
+        public static AudioClip[] FulNegChainArmClips = { null, null, null };
+        public static AudioClip[] FulNegLeatherArmClips = { null, null, null };
+
+        public static AudioClip[] ParNegActShieldClips = { null, null, null };
+        public static AudioClip[] ParNegPasShieldClips = { null, null, null };
+
+        public static AudioClip[] ParNegMetalArmClips = { null, null, null };
+        public static AudioClip[] ParNegChainArmClips = { null, null, null };
+        public static AudioClip[] ParNegLeatherArmClips = { null, null, null };
+
+        public static AudioClip[] FulNegNatArmFleshClips = { null, null, null };
+        public static AudioClip[] FulNegNatArmFurClips = { null, null, null };
+        public static AudioClip[] FulNegNatArmScaleClips = { null, null, null };
+        public static AudioClip[] FulNegNatArmBoneClips = { null, null, null };
+        public static AudioClip[] FulNegNatArmStoneClips = { null, null, null };
+        public static AudioClip[] FulNegNatArmMetalClips = { null, null, null };
+
+        public static AudioClip[] BluntHitFleshClips = { null, null, null };
+        public static AudioClip[] SlashHitFleshClips = { null, null, null };
+        public static AudioClip[] PierceHitFleshClips = { null, null, null };
+
+        public static AudioClip[] BluntHitFurClips = { null, null, null };
+        public static AudioClip[] SlashHitFurClips = { null, null, null };
+        public static AudioClip[] PierceHitFurClips = { null, null, null };
+
+        public static AudioClip[] BluntHitScaleClips = { null, null, null };
+        public static AudioClip[] SlashHitScaleClips = { null, null, null };
+        public static AudioClip[] PierceHitScaleClips = { null, null, null };
+
+        public static AudioClip[] BluntHitBoneClips = { null, null, null };
+        public static AudioClip[] SlashHitBoneClips = { null, null, null };
+        public static AudioClip[] PierceHitBoneClips = { null, null, null };
+
+        public static AudioClip[] BluntHitStoneClips = { null, null, null };
+        public static AudioClip[] SlashHitStoneClips = { null, null, null };
+        public static AudioClip[] PierceHitStoneClips = { null, null, null };
+
+        public static AudioClip[] BluntHitMetalClips = { null, null, null };
+        public static AudioClip[] SlashHitMetalClips = { null, null, null };
+        public static AudioClip[] PierceHitMetalClips = { null, null, null };
+
+        public static AudioClip[] AttackHitEtherealClips = { null, null, null };
+
+        #endregion
 
         [Invoke(StateManager.StateTypes.Start, 0)]
         public static void Init(InitParams initParams)
@@ -96,6 +156,9 @@ namespace PhysicalCombatOverhaul
 
             FormulaHelper.RegisterOverride(mod, "AdjustWeaponHitChanceMod", (Func<DaggerfallEntity, DaggerfallEntity, int, int, DaggerfallUnityItem, int>)AdjustWeaponHitChanceMod);
             FormulaHelper.RegisterOverride(mod, "AdjustWeaponAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, int, int, DaggerfallUnityItem, int>)AdjustWeaponAttackDamage);
+
+            // Load Resources
+            LoadAudio();
 
             Debug.Log("Finished mod init: Physical Combat And Armor Overhaul");
         }
@@ -2865,6 +2928,204 @@ namespace PhysicalCombatOverhaul
         {
             return item != null && item.ContainsEnchantment(EnchantmentTypes.SpecialArtifactEffect, (int)ArtifactsSubTypes.Ring_of_Namira);
         }
+
+        #endregion
+
+        public static bool CoinFlip()
+        {
+            if (UnityEngine.Random.Range(0, 1 + 1) == 0)
+                return false;
+            else
+                return true;
+        }
+
+        // Made these two different methods because I didn't feel like figuring out a "clean" way to use the same one tracking both "LastAudioClipPlayed" values, oh well for now.
+        public static AudioClip RollRandomFootstepAudioClip(AudioClip[] clips)
+        {
+            int randChoice = UnityEngine.Random.Range(0, clips.Length);
+            AudioClip clip = clips[randChoice];
+
+            if (clip == lastFootstepPlayed)
+            {
+                if (randChoice == 0)
+                    randChoice++;
+                else if (randChoice == clips.Length - 1)
+                    randChoice--;
+                else
+                    randChoice = CoinFlip() ? randChoice + 1 : randChoice - 1;
+
+                clip = clips[randChoice];
+            }
+            lastFootstepPlayed = clip;
+            return clip;
+        }
+
+        // Continue working on implementing sounds and testing tomorrow I suppose? Maybe try making a list of all the sounds I plan on using, atleast for the target right now.
+
+        #region Load Audio Clips
+
+
+        private void LoadAudio()
+        {
+            ModManager modManager = ModManager.Instance;
+            bool success = true;
+
+            success &= modManager.TryGetAsset("HQ_Missed_Attack_1", false, out MissedAttackClips[0]);
+            success &= modManager.TryGetAsset("HQ_Missed_Attack_2", false, out MissedAttackClips[1]);
+            success &= modManager.TryGetAsset("HQ_Missed_Attack_3", false, out MissedAttackClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Dodged_Attack_1", false, out DodgedAttackClips[0]);
+            success &= modManager.TryGetAsset("HQ_Dodged_Attack_2", false, out DodgedAttackClips[1]);
+            success &= modManager.TryGetAsset("HQ_Dodged_Attack_3", false, out DodgedAttackClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_1", false, out FulNegMatResClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_2", false, out FulNegMatResClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_3", false, out FulNegMatResClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Active_Shield_Block_1", false, out FulNegActShieldClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Active_Shield_Block_2", false, out FulNegActShieldClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Active_Shield_Block_3", false, out FulNegActShieldClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Passive_Shield_Block_1", false, out FulNegPasShieldClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Passive_Shield_Block_2", false, out FulNegPasShieldClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Passive_Shield_Block_3", false, out FulNegPasShieldClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Metal_Armor_1", false, out FulNegMetalArmClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Metal_Armor_2", false, out FulNegMetalArmClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Metal_Armor_3", false, out FulNegMetalArmClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Chain_Armor_1", false, out FulNegChainArmClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Chain_Armor_2", false, out FulNegChainArmClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Chain_Armor_3", false, out FulNegChainArmClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Leather_Armor_1", false, out FulNegLeatherArmClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Leather_Armor_2", false, out FulNegLeatherArmClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Leather_Armor_3", false, out FulNegLeatherArmClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Active_Shield_Block_1", false, out ParNegActShieldClips[0]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Active_Shield_Block_2", false, out ParNegActShieldClips[1]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Active_Shield_Block_3", false, out ParNegActShieldClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Passive_Shield_Block_1", false, out ParNegPasShieldClips[0]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Passive_Shield_Block_2", false, out ParNegPasShieldClips[1]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Passive_Shield_Block_3", false, out ParNegPasShieldClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Metal_Armor_1", false, out ParNegMetalArmClips[0]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Metal_Armor_2", false, out ParNegMetalArmClips[1]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Metal_Armor_3", false, out ParNegMetalArmClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Chain_Armor_1", false, out ParNegChainArmClips[0]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Chain_Armor_2", false, out ParNegChainArmClips[1]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Chain_Armor_3", false, out ParNegChainArmClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Leather_Armor_1", false, out ParNegLeatherArmClips[0]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Leather_Armor_2", false, out ParNegLeatherArmClips[1]);
+            success &= modManager.TryGetAsset("HQ_Part_Negate_Leather_Armor_3", false, out ParNegLeatherArmClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Flesh_1", false, out FulNegNatArmFleshClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Flesh_2", false, out FulNegNatArmFleshClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Flesh_3", false, out FulNegNatArmFleshClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Fur_1", false, out FulNegNatArmFurClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Fur_2", false, out FulNegNatArmFurClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Fur_3", false, out FulNegNatArmFurClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Scale_1", false, out FulNegNatArmScaleClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Scale_2", false, out FulNegNatArmScaleClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Scale_3", false, out FulNegNatArmScaleClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Bone_1", false, out FulNegNatArmBoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Bone_2", false, out FulNegNatArmBoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Bone_3", false, out FulNegNatArmBoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_1", false, out FulNegNatArmStoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_2", false, out FulNegNatArmStoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_3", false, out FulNegNatArmStoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Metal_1", false, out FulNegNatArmMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Metal_2", false, out FulNegNatArmMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Metal_3", false, out FulNegNatArmMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_1", false, out BluntHitFleshClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_2", false, out BluntHitFleshClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_3", false, out BluntHitFleshClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_1", false, out SlashHitFleshClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_2", false, out SlashHitFleshClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_3", false, out SlashHitFleshClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_1", false, out PierceHitFleshClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_2", false, out PierceHitFleshClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_3", false, out PierceHitFleshClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_1", false, out BluntHitFurClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_2", false, out BluntHitFurClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_3", false, out BluntHitFurClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_1", false, out SlashHitFurClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_2", false, out SlashHitFurClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_3", false, out SlashHitFurClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_1", false, out PierceHitFurClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_2", false, out PierceHitFurClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_3", false, out PierceHitFurClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_1", false, out BluntHitScaleClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_2", false, out BluntHitScaleClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_3", false, out BluntHitScaleClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_1", false, out SlashHitScaleClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_2", false, out SlashHitScaleClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_3", false, out SlashHitScaleClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_1", false, out PierceHitScaleClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_2", false, out PierceHitScaleClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_3", false, out PierceHitScaleClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_1", false, out BluntHitBoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_2", false, out BluntHitBoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_3", false, out BluntHitBoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_1", false, out SlashHitBoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_2", false, out SlashHitBoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_3", false, out SlashHitBoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_1", false, out PierceHitBoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_2", false, out PierceHitBoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_3", false, out PierceHitBoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_1", false, out BluntHitStoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_2", false, out BluntHitStoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_3", false, out BluntHitStoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_1", false, out SlashHitStoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_2", false, out SlashHitStoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_3", false, out SlashHitStoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_1", false, out PierceHitStoneClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_2", false, out PierceHitStoneClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_3", false, out PierceHitStoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Metal_1", false, out BluntHitMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Metal_2", false, out BluntHitMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Metal_3", false, out BluntHitMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Metal_1", false, out SlashHitMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Metal_2", false, out SlashHitMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Metal_3", false, out SlashHitMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Metal_1", false, out PierceHitMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Metal_2", false, out PierceHitMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Metal_3", false, out PierceHitMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Attack_Hit_Ethereal_1", false, out AttackHitEtherealClips[0]);
+            success &= modManager.TryGetAsset("HQ_Attack_Hit_Ethereal_2", false, out AttackHitEtherealClips[1]);
+            success &= modManager.TryGetAsset("HQ_Attack_Hit_Ethereal_3", false, out AttackHitEtherealClips[2]);
+
+            if (!success)
+                throw new Exception("[Warning] PhysicalCombatOverhaul: Missing sound asset");
+        }
+
 
         #endregion
     }
