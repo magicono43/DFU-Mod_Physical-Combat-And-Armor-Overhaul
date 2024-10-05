@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		10/3/2024, 8:50 PM
+// Last Edit:		10/5/2024, 1:30 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -146,7 +146,6 @@ namespace PhysicalCombatOverhaul
             FormulaHelper.RegisterOverride(mod, "CalculateSkillsToHit", (Func<DaggerfallEntity, DaggerfallEntity, int>)CalculateSkillsToHit);
             FormulaHelper.RegisterOverride(mod, "CalculateAdjustmentsToHit", (Func<DaggerfallEntity, DaggerfallEntity, int>)CalculateAdjustmentsToHit);
             FormulaHelper.RegisterOverride(mod, "CalculateWeaponAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, int, int, DaggerfallUnityItem, int>)CalculateWeaponAttackDamage);
-            FormulaHelper.RegisterOverride(mod, "CalculateSuccessfulHit", (Func<DaggerfallEntity, DaggerfallEntity, int, int, bool>)CalculateSuccessfulHit);
 
             // Overridden Due To FormulaHelper.cs Private Access Modifiers, otherwise would not be included here.
             FormulaHelper.RegisterOverride(mod, "CalculateStruckBodyPart", (Func<int>)CalculateStruckBodyPart);
@@ -251,6 +250,8 @@ namespace PhysicalCombatOverhaul
             public int tEndu;
             public int tSped;
             public int tLuck;
+            public int tAvoidContrib;
+            public bool missWasDodge;
 
             public BodySize atkSize;
             public BodySize tarSize;
@@ -316,6 +317,8 @@ namespace PhysicalCombatOverhaul
             cvars.tEndu = target.Stats.LiveEndurance - 50;
             cvars.tSped = target.Stats.LiveSpeed - 50;
             cvars.tLuck = target.Stats.LiveLuck - 50;
+            cvars.tAvoidContrib = 0;
+            cvars.missWasDodge = false;
 
             cvars.atkSize = BodySize.Average;
             cvars.tarSize = BodySize.Average;
@@ -514,6 +517,7 @@ namespace PhysicalCombatOverhaul
                     if (target.MinMetalToHit > (WeaponMaterialTypes)weapon.NativeMaterialValue)
                     {
                         DaggerfallUI.Instance.PopupMessage(TextManager.Instance.GetLocalizedText("materialIneffective"));
+                        // Play Material Ineffective Sound Clip Here.
                         return 0;
                     }
                 }
@@ -559,7 +563,7 @@ namespace PhysicalCombatOverhaul
             {
                 cVars.unarmedAttack = true;
 
-                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, cVars.struckBodyPart))
+                if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
                     cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damageModifiers, true); // Added my own, non-overriden version of this method for modification.
 
@@ -576,7 +580,7 @@ namespace PhysicalCombatOverhaul
                 if (archeryModuleCheck)
                     cVars.chanceToHitMod = AdjustWeaponHitChanceMod(attacker, target, cVars.chanceToHitMod, weaponAnimTime, weapon);
 
-                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, cVars.struckBodyPart))
+                if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
                     cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
 
@@ -701,7 +705,7 @@ namespace PhysicalCombatOverhaul
 
                 if (attacker.EntityType == EntityTypes.EnemyClass)
                 {
-                    if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                    if (CalculateHitSuccess(attacker, target, ref cVars))
                     {
                         cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damageModifiers, false); // Added my own, non-overriden version of this method for modification.
                     }
@@ -739,7 +743,7 @@ namespace PhysicalCombatOverhaul
 
                         int reflexesChance = 50 - (10 * ((int)GameManager.Instance.PlayerEntity.Reflexes - 2));
 
-                        if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                        if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateHitSuccess(attacker, target, ref cVars))
                         {
                             cVars.damage += UnityEngine.Random.Range(minBaseDamage, maxBaseDamage + 1);
                         }
@@ -755,7 +759,7 @@ namespace PhysicalCombatOverhaul
                 // Apply weapon material modifier.
                 cVars.chanceToHitMod += CalculateWeaponToHit(weapon);
 
-                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
                     cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
                 }
@@ -898,7 +902,7 @@ namespace PhysicalCombatOverhaul
 
                 if (attacker.EntityType == EntityTypes.EnemyClass)
                 {
-                    if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                    if (CalculateHitSuccess(attacker, target, ref cVars))
                     {
                         cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damageModifiers, false); // Added my own, non-overriden version of this method for modification.
                     }
@@ -936,7 +940,7 @@ namespace PhysicalCombatOverhaul
 
                         int reflexesChance = 50 - (10 * ((int)GameManager.Instance.PlayerEntity.Reflexes - 2));
 
-                        if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                        if (DFRandom.rand() % 100 < reflexesChance && minBaseDamage > 0 && CalculateHitSuccess(attacker, target, ref cVars))
                         {
                             cVars.damage += UnityEngine.Random.Range(minBaseDamage, maxBaseDamage + 1);
                         }
@@ -952,7 +956,7 @@ namespace PhysicalCombatOverhaul
                 // Apply weapon material modifier.
                 cVars.chanceToHitMod += CalculateWeaponToHit(weapon);
 
-                if (CalculateSuccessfulHit(attacker, target, cVars.chanceToHitMod, struckBodyPart))
+                if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
                     cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
                 }
@@ -1003,10 +1007,48 @@ namespace PhysicalCombatOverhaul
             }
         }
 
+        /// <summary>Calculates whether an attack on a target is successful or not.</summary>
+        public static bool CalculateHitSuccess(DaggerfallEntity attacker, DaggerfallEntity target, ref CVARS cVars)
+        {
+            if (attacker == null || target == null)
+                return false;
+
+            // Get armor value for struck body part
+            cVars.tAvoidContrib += CalculateArmorToHit(target, cVars.struckBodyPart);
+
+            // Apply adrenaline rush modifiers.
+            cVars.tAvoidContrib += CalculateAdrenalineRushToHit(attacker, target);
+
+            // Apply enchantment modifier. 
+            cVars.chanceToHitMod += attacker.ChanceToHitModifier;
+            //Debug.LogFormat("Attacker Chance To Hit Mod 'Enchantment' = {0}", attacker.ChanceToHitModifier); // Pretty sure this is from the "bad reactions from:" enchantment effect.
+
+            // Apply stat differential modifiers. (default: luck and agility)
+            cVars.tAvoidContrib += CalculateStatDiffsToHit(attacker, target);
+
+            // Apply skill modifiers. (default: dodge and crit strike)
+            cVars.tAvoidContrib += CalculateSkillsToHit(attacker, target);
+            //Debug.LogFormat("After Dodge = {0}", chanceToHitMod);
+
+            // Apply monster modifier and biography adjustments.
+            cVars.tAvoidContrib += CalculateAdjustmentsToHit(attacker, target);
+            //Debug.LogFormat("Final chanceToHitMod = {0}", chanceToHitMod);
+
+            int chanceToHit = cVars.chanceToHitMod + cVars.tAvoidContrib;
+            int diceRoll = Dice100.Roll();
+
+            if (diceRoll <= cVars.chanceToHitMod && diceRoll > chanceToHit)
+                cVars.missWasDodge = true; // If attack roll would have hit if target avoidance was not factored in, then this was a dodge, not just a miss due to attacker incompetence.
+
+            Mathf.Clamp(chanceToHit, 3, 97);
+
+            return Dice100.SuccessRoll(chanceToHit);
+        }
+
         // -- Newly Added Stuff 4-17-2024 --
 
         #region Overridden Base Methods
-        
+
         private static int CalculateAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             if (attacker == null || target == null)
@@ -1463,41 +1505,6 @@ namespace PhysicalCombatOverhaul
                 damage = AdjustWeaponAttackDamage(attacker, target, damage, weaponAnimTime, weapon);
 
             return damage;
-        }
-
-        /// <summary>Calculates whether an attack on a target is successful or not.</summary>
-        private static bool CalculateSuccessfulHit(DaggerfallEntity attacker, DaggerfallEntity target, int chanceToHitMod, int struckBodyPart)
-        {
-            if (attacker == null || target == null)
-                return false;
-
-            int chanceToHit = chanceToHitMod;
-            //Debug.LogFormat("Starting chanceToHitMod = {0}", chanceToHit);
-
-            // Get armor value for struck body part
-            chanceToHit += CalculateArmorToHit(target, struckBodyPart);
-
-            // Apply adrenaline rush modifiers.
-            chanceToHit += CalculateAdrenalineRushToHit(attacker, target);
-
-            // Apply enchantment modifier. 
-            chanceToHit += attacker.ChanceToHitModifier;
-            //Debug.LogFormat("Attacker Chance To Hit Mod 'Enchantment' = {0}", attacker.ChanceToHitModifier); // No idea what this does, always seeing 0.
-
-            // Apply stat differential modifiers. (default: luck and agility)
-            chanceToHit += CalculateStatDiffsToHit(attacker, target);
-
-            // Apply skill modifiers. (default: dodge and crit strike)
-            chanceToHit += CalculateSkillsToHit(attacker, target);
-            //Debug.LogFormat("After Dodge = {0}", chanceToHitMod);
-
-            // Apply monster modifier and biography adjustments.
-            chanceToHit += CalculateAdjustmentsToHit(attacker, target);
-            //Debug.LogFormat("Final chanceToHitMod = {0}", chanceToHitMod);
-
-            Mathf.Clamp(chanceToHit, 3, 97);
-
-            return Dice100.SuccessRoll(chanceToHit);
         }
 
         /// <summary>This is where specific monsters will be given a true or false, depending on if said monster is clearly holding a type of weapon in their sprite.</summary>
