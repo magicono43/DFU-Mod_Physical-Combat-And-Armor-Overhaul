@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		10/5/2024, 1:30 AM
+// Last Edit:		10/7/2024, 3:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -80,7 +80,7 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] FulNegNatArmFurClips = { null, null, null };
         public static AudioClip[] FulNegNatArmScaleClips = { null, null, null };
         public static AudioClip[] FulNegNatArmBoneClips = { null, null, null };
-        public static AudioClip[] FulNegNatArmStoneClips = { null, null, null };
+        public static AudioClip[] FulNegNatArmRockClips = { null, null, null };
         public static AudioClip[] FulNegNatArmMetalClips = { null, null, null };
 
         public static AudioClip[] BluntHitFleshClips = { null, null, null };
@@ -99,9 +99,9 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] SlashHitBoneClips = { null, null, null };
         public static AudioClip[] PierceHitBoneClips = { null, null, null };
 
-        public static AudioClip[] BluntHitStoneClips = { null, null, null };
-        public static AudioClip[] SlashHitStoneClips = { null, null, null };
-        public static AudioClip[] PierceHitStoneClips = { null, null, null };
+        public static AudioClip[] BluntHitRockClips = { null, null, null };
+        public static AudioClip[] SlashHitRockClips = { null, null, null };
+        public static AudioClip[] PierceHitRockClips = { null, null, null };
 
         public static AudioClip[] BluntHitMetalClips = { null, null, null };
         public static AudioClip[] SlashHitMetalClips = { null, null, null };
@@ -250,6 +250,7 @@ namespace PhysicalCombatOverhaul
             public int tEndu;
             public int tSped;
             public int tLuck;
+            public NaturalArmorType tNatArm;
             public int tAvoidContrib;
             public bool missWasDodge;
 
@@ -317,6 +318,7 @@ namespace PhysicalCombatOverhaul
             cvars.tEndu = target.Stats.LiveEndurance - 50;
             cvars.tSped = target.Stats.LiveSpeed - 50;
             cvars.tLuck = target.Stats.LiveLuck - 50;
+            cvars.tNatArm = NaturalArmorType.Flesh;
             cvars.tAvoidContrib = 0;
             cvars.missWasDodge = false;
 
@@ -330,6 +332,60 @@ namespace PhysicalCombatOverhaul
             cvars.monsterWeapon = null;
 
             return cvars;
+        }
+
+        /// <summary>Return the natural armor type of the provided creature.</summary>
+        public static NaturalArmorType GetCreatureNaturalArmorType(EnemyEntity enemy)
+        {
+            if (enemy.EntityType == EntityTypes.EnemyClass)
+            {
+                return NaturalArmorType.Flesh;
+            }
+            else
+            {
+                switch (enemy.CareerIndex)
+                {
+                    default:
+                        return NaturalArmorType.Flesh;
+                    case (int)MonsterCareers.Rat:
+                    case (int)MonsterCareers.GiantBat:
+                    case (int)MonsterCareers.GrizzlyBear:
+                    case (int)MonsterCareers.SabertoothTiger:
+                    case (int)MonsterCareers.Werewolf:
+                    case (int)MonsterCareers.Harpy:
+                    case (int)MonsterCareers.Wereboar:
+                        return NaturalArmorType.Fur;
+                    case (int)MonsterCareers.Spider:
+                    case (int)MonsterCareers.Slaughterfish:
+                    case (int)MonsterCareers.GiantScorpion:
+                    case (int)MonsterCareers.Daedroth:
+                    case (int)MonsterCareers.Dragonling:
+                    case (int)MonsterCareers.Dragonling_Alternate:
+                    case (int)MonsterCareers.Dreugh:
+                        return NaturalArmorType.Scale;
+                    case (int)MonsterCareers.Spriggan:
+                    case (int)MonsterCareers.SkeletalWarrior:
+                    case (int)MonsterCareers.Lich:
+                    case (int)MonsterCareers.AncientLich:
+                        return NaturalArmorType.Bone;
+                    case (int)MonsterCareers.Gargoyle:
+                    case (int)MonsterCareers.IceAtronach:
+                        return NaturalArmorType.Rock;
+                    case (int)MonsterCareers.FrostDaedra:
+                    case (int)MonsterCareers.FireDaedra:
+                    case (int)MonsterCareers.IronAtronach:
+                        return NaturalArmorType.Metal;
+                    case (int)MonsterCareers.Ghost:
+                    case (int)MonsterCareers.Wraith:
+                        return NaturalArmorType.Ethereal;
+                }
+            }
+        }
+
+        /// <summary>Return the natural armor type of the player.</summary>
+        public static NaturalArmorType GetPlayerNaturalArmorType(PlayerEntity player)
+        {
+            return NaturalArmorType.Flesh;
         }
 
         /// <summary>Return the size category of the provided creature.</summary>
@@ -489,6 +545,7 @@ namespace PhysicalCombatOverhaul
         public static int CalcPlayerVsMonsterAttack(PlayerEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             CVARS cVars = GetCombatVariables(attacker, target);
+            cVars.tNatArm = GetCreatureNaturalArmorType(target);
             cVars.atkSize = GetPlayerBodySize(attacker);
             cVars.tarSize = GetCreatureBodySize(target);
             cVars.atkCareer = GetPlayerCareer(attacker);
@@ -517,7 +574,7 @@ namespace PhysicalCombatOverhaul
                     if (target.MinMetalToHit > (WeaponMaterialTypes)weapon.NativeMaterialValue)
                     {
                         DaggerfallUI.Instance.PopupMessage(TextManager.Instance.GetLocalizedText("materialIneffective"));
-                        // Play Material Ineffective Sound Clip Here.
+                        PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
                         return 0;
                     }
                 }
@@ -592,7 +649,8 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damage <= 0)
             {
-                // Do something here to possibly end execution of method early and resolve in satisfactory way to prevent unnecessary processing, if able.
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
 
@@ -613,8 +671,8 @@ namespace PhysicalCombatOverhaul
             }
             else
             {
-                // If no damage was dealt?
-                // Play sound for attack missing or being dodged?
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
 
@@ -627,8 +685,8 @@ namespace PhysicalCombatOverhaul
             }
             else
             {
-                // If no damage was dealt?
-                // Play sound for attack missing or being dodged?
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
         }
@@ -636,6 +694,7 @@ namespace PhysicalCombatOverhaul
         public static int CalcMonsterVsPlayerAttack(EnemyEntity attacker, PlayerEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             CVARS cVars = GetCombatVariables(attacker, target);
+            cVars.tNatArm = GetPlayerNaturalArmorType(target);
             cVars.atkSize = GetCreatureBodySize(attacker);
             cVars.tarSize = GetPlayerBodySize(target);
             cVars.atkCareer = GetCreatureCareer(attacker);
@@ -678,6 +737,7 @@ namespace PhysicalCombatOverhaul
                 {
                     if (target.MinMetalToHit > (WeaponMaterialTypes)weapon.NativeMaterialValue)
                     {
+                        PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
                         return 0;
                     }
                 }
@@ -769,7 +829,8 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damage <= 0)
             {
-                // Do something here to possibly end execution of method early and resolve in satisfactory way to prevent unnecessary processing, if able.
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
 
@@ -790,8 +851,8 @@ namespace PhysicalCombatOverhaul
             }
             else
             {
-                // If no damage was dealt?
-                // Play sound for attack missing or being dodged?
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
 
@@ -824,8 +885,8 @@ namespace PhysicalCombatOverhaul
             }
             else
             {
-                // If no damage was dealt?
-                // Play sound for attack missing or being dodged?
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
         }
@@ -833,6 +894,7 @@ namespace PhysicalCombatOverhaul
         public static int CalcMonsterVsMonsterAttack(EnemyEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             CVARS cVars = GetCombatVariables(attacker, target);
+            cVars.tNatArm = GetCreatureNaturalArmorType(target);
             cVars.atkSize = GetCreatureBodySize(attacker);
             cVars.tarSize = GetCreatureBodySize(target);
             cVars.atkCareer = GetCreatureCareer(attacker);
@@ -875,6 +937,7 @@ namespace PhysicalCombatOverhaul
                 {
                     if (target.MinMetalToHit > (WeaponMaterialTypes)weapon.NativeMaterialValue)
                     {
+                        PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
                         return 0;
                     }
                 }
@@ -966,7 +1029,8 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damage <= 0)
             {
-                // Do something here to possibly end execution of method early and resolve in satisfactory way to prevent unnecessary processing, if able.
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
 
@@ -987,8 +1051,8 @@ namespace PhysicalCombatOverhaul
             }
             else
             {
-                // If no damage was dealt?
-                // Play sound for attack missing or being dodged?
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
 
@@ -1001,8 +1065,8 @@ namespace PhysicalCombatOverhaul
             }
             else
             {
-                // If no damage was dealt?
-                // Play sound for attack missing or being dodged?
+                if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
+                else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
                 return 0;
             }
         }
@@ -2362,6 +2426,54 @@ namespace PhysicalCombatOverhaul
         }
 
         /// <summary>
+        /// Types of combat sound categories.
+        /// </summary>
+        public enum CombatSoundTypes
+        {
+            None = -1,
+            Miss = 0,
+            Dodge = 1,
+            Mat_Resist = 2,
+            Full_Act_Block = 3,
+            Full_Pas_Block = 4,
+            Full_Neg_Metal_Armor = 5,
+            Full_Neg_Chain_Armor = 6,
+            Full_Neg_Leather_Armor = 7,
+            Part_Act_Block = 8,
+            Part_Pas_Block = 9,
+            Part_Neg_Metal_Armor = 10,
+            Part_Neg_Chain_Armor = 11,
+            Part_Neg_Leather_Armor = 12,
+            Full_Neg_Flesh = 13,
+            Full_Neg_Fur = 14,
+            Full_Neg_Scale = 15,
+            Full_Neg_Bone = 16,
+            Full_Neg_Rock = 17,
+            Full_Neg_Metal = 18,
+            Attack_Hit_Flesh = 19,
+            Attack_Hit_Fur = 20,
+            Attack_Hit_Scale = 21,
+            Attack_Hit_Bone = 22,
+            Attack_Hit_Rock = 23,
+            Attack_Hit_Metal = 24,
+            Attack_Hit_Ethereal = 25,
+        }
+
+        /// <summary>
+        /// What type of natural armor the creature is made of.
+        /// </summary>
+        public enum NaturalArmorType
+        {
+            Flesh = 0,
+            Fur = 1,
+            Scale = 2,
+            Bone = 3,
+            Rock = 4,
+            Metal = 5,
+            Ethereal = 6,
+        }
+
+        /// <summary>
         /// Size categories for any creatures, used in some combat formula.
         /// </summary>
         public enum BodySize
@@ -2495,7 +2607,8 @@ namespace PhysicalCombatOverhaul
                         if (shield != null)
                         {
                             DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                            // Play block sound and maybe animation when that is a thing?
+                            PlayRelevantCombatSound(CombatSoundTypes.Full_Act_Block, attacker, target, ref cVars);
+                            // Also maybe animation when that is a thing?
                             return true;
                         }
                     }
@@ -2504,7 +2617,7 @@ namespace PhysicalCombatOverhaul
                         if (shield != null)
                         {
                             DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                            // Play sound for attack hitting a shield and completely glancing off, but not a proper block.
+                            PlayRelevantCombatSound(CombatSoundTypes.Full_Pas_Block, attacker, target, ref cVars);
                             return true;
                         }
                     }
@@ -2513,7 +2626,12 @@ namespace PhysicalCombatOverhaul
                         if (armor != null)
                         {
                             DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                            // Play sound for attack hitting armor and it completely glancing off.
+                            if (cVars.armorType == 2)
+                                PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Metal_Armor, attacker, target, ref cVars);
+                            else if (cVars.armorType == 1)
+                                PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Chain_Armor, attacker, target, ref cVars);
+                            else
+                                PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Leather_Armor, attacker, target, ref cVars);
                             return true;
                         }
                     }
@@ -2525,7 +2643,8 @@ namespace PhysicalCombatOverhaul
                         if (shield != null)
                         {
                             DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                            // Play block sound but attack still going through somewhat, and maybe animation when that is a thing?
+                            PlayRelevantCombatSound(CombatSoundTypes.Part_Act_Block, attacker, target, ref cVars);
+                            // Also maybe animation when that is a thing?
                             return false;
                         }
                     }
@@ -2534,7 +2653,7 @@ namespace PhysicalCombatOverhaul
                         if (shield != null)
                         {
                             DamageEquipment(weapon, shield, attacker, target, ref cVars);
-                            // Play sound for attacking hitting a shield and still going through somewhat.
+                            PlayRelevantCombatSound(CombatSoundTypes.Part_Pas_Block, attacker, target, ref cVars);
                             return false;
                         }
                     }
@@ -2543,7 +2662,12 @@ namespace PhysicalCombatOverhaul
                         if (armor != null)
                         {
                             DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                            // Play sound for attack hitting armor and still going through somewhat.
+                            if (cVars.armorType == 2)
+                                PlayRelevantCombatSound(CombatSoundTypes.Part_Neg_Metal_Armor, attacker, target, ref cVars);
+                            else if (cVars.armorType == 1)
+                                PlayRelevantCombatSound(CombatSoundTypes.Part_Neg_Chain_Armor, attacker, target, ref cVars);
+                            else
+                                PlayRelevantCombatSound(CombatSoundTypes.Part_Neg_Leather_Armor, attacker, target, ref cVars);
                             return false;
                         }
                     }
@@ -2556,7 +2680,6 @@ namespace PhysicalCombatOverhaul
                 cVars.damAfterDT = cVars.damage;
 
                 DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                // Play sound for attack hitting target without any armor?
                 return false;
             }
             return false;
@@ -2626,14 +2749,35 @@ namespace PhysicalCombatOverhaul
                     if (dTAfterRound >= damAfterDR) // Attack was completely negated by natural armor.
                     {
                         DamageEquipment(weapon, null, attacker, target, ref cVars);
-                        // Play sound for attack hitting natural armor and it completely glancing off.
+
+                        switch (cVars.tNatArm)
+                        {
+                            default:
+                            case NaturalArmorType.Flesh: PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Flesh, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Fur: PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Fur, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Scale: PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Scale, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Bone: PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Bone, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Rock: PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Rock, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Metal: PlayRelevantCombatSound(CombatSoundTypes.Full_Neg_Metal, attacker, target, ref cVars); break;
+                        }
+
                         return true;
                     }
                     else // Attack was only partially reduced by natural armor, so the DT value was overcome.
                     {
                         DamageEquipment(weapon, null, attacker, target, ref cVars);
-                        // Actually damage health of target here.
-                        // Play sound for attack hitting natural armor and still going through somewhat.
+
+                        switch (cVars.tNatArm)
+                        {
+                            default:
+                            case NaturalArmorType.Flesh: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Flesh, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Fur: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Fur, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Scale: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Scale, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Bone: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Bone, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Rock: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Rock, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Metal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Metal, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Ethereal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Ethereal, attacker, target, ref cVars); break;
+                        }
 
                         // Handle poisoned weapons
                         if (weapon != null && weapon.poisonType != Poisons.None)
@@ -2657,8 +2801,18 @@ namespace PhysicalCombatOverhaul
                     cVars.damAfterDT = cVars.damage;
 
                     DamageEquipment(weapon, null, attacker, target, ref cVars);
-                    // Actually damage health of target here.
-                    // Play sound for attack hitting target without any armor?
+
+                    switch (cVars.tNatArm)
+                    {
+                        default:
+                        case NaturalArmorType.Flesh: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Flesh, attacker, target, ref cVars); break;
+                        case NaturalArmorType.Fur: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Fur, attacker, target, ref cVars); break;
+                        case NaturalArmorType.Scale: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Scale, attacker, target, ref cVars); break;
+                        case NaturalArmorType.Bone: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Bone, attacker, target, ref cVars); break;
+                        case NaturalArmorType.Rock: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Rock, attacker, target, ref cVars); break;
+                        case NaturalArmorType.Metal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Metal, attacker, target, ref cVars); break;
+                        case NaturalArmorType.Ethereal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Ethereal, attacker, target, ref cVars); break;
+                    }
 
                     // Handle poisoned weapons
                     if (weapon != null && weapon.poisonType != Poisons.None)
@@ -2677,7 +2831,7 @@ namespace PhysicalCombatOverhaul
             }
             else
             {
-                // If damage was reduced to 0 by material resistance.
+                PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
                 return true;
             }
         }
@@ -2946,24 +3100,113 @@ namespace PhysicalCombatOverhaul
                 return true;
         }
 
+        public static void PlayRelevantCombatSound(CombatSoundTypes soundType, DaggerfallEntity attacker, DaggerfallEntity target, ref CVARS cVars)
+        {
+            AudioClip[] clips = GetSoundClipList(soundType, ref cVars);
+
+            if (clips.Length == 0)
+                return;
+
+            AudioClip clip = RollRandomCombatAudioClip(clips);
+
+            DaggerfallAudioSource dfAudioSource = null;
+
+            if (target != null)
+            {
+                if (target == GameManager.Instance.PlayerEntity)
+                    dfAudioSource = GameManager.Instance.PlayerObject.GetComponent<DaggerfallAudioSource>();
+                else
+                {
+                    EnemySounds enemySounds = target.EntityBehaviour.gameObject.GetComponent<EnemySounds>();
+
+                    if (enemySounds != null)
+                        dfAudioSource = enemySounds.GetComponent<DaggerfallAudioSource>();
+                }
+            }
+
+            if (dfAudioSource != null)
+            {
+                dfAudioSource.AudioSource.PlayOneShot(clip, DaggerfallUnity.Settings.SoundVolume);
+            }
+        }
+
+        public static AudioClip[] GetSoundClipList(CombatSoundTypes soundType, ref CVARS cVars)
+        {
+            switch (soundType)
+            {
+                default:
+                case CombatSoundTypes.None: return EmptyAudioList;
+                case CombatSoundTypes.Miss: return MissedAttackClips;
+                case CombatSoundTypes.Dodge: return DodgedAttackClips;
+                case CombatSoundTypes.Mat_Resist: return FulNegMatResClips;
+                case CombatSoundTypes.Full_Act_Block: return FulNegActShieldClips;
+                case CombatSoundTypes.Full_Pas_Block: return FulNegPasShieldClips;
+                case CombatSoundTypes.Full_Neg_Metal_Armor: return FulNegMetalArmClips;
+                case CombatSoundTypes.Full_Neg_Chain_Armor: return FulNegChainArmClips;
+                case CombatSoundTypes.Full_Neg_Leather_Armor: return FulNegLeatherArmClips;
+                case CombatSoundTypes.Part_Act_Block: return ParNegActShieldClips;
+                case CombatSoundTypes.Part_Pas_Block: return ParNegPasShieldClips;
+                case CombatSoundTypes.Part_Neg_Metal_Armor: return ParNegMetalArmClips;
+                case CombatSoundTypes.Part_Neg_Chain_Armor: return ParNegChainArmClips;
+                case CombatSoundTypes.Part_Neg_Leather_Armor: return ParNegLeatherArmClips;
+                case CombatSoundTypes.Full_Neg_Flesh: return FulNegNatArmFleshClips;
+                case CombatSoundTypes.Full_Neg_Fur: return FulNegNatArmFurClips;
+                case CombatSoundTypes.Full_Neg_Scale: return FulNegNatArmScaleClips;
+                case CombatSoundTypes.Full_Neg_Bone: return FulNegNatArmBoneClips;
+                case CombatSoundTypes.Full_Neg_Rock: return FulNegNatArmRockClips;
+                case CombatSoundTypes.Full_Neg_Metal: return FulNegNatArmMetalClips;
+                case CombatSoundTypes.Attack_Hit_Flesh:
+                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        return SlashHitFleshClips;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        return PierceHitFleshClips;
+                    else
+                        return BluntHitFleshClips;
+                case CombatSoundTypes.Attack_Hit_Fur:
+                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        return SlashHitFurClips;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        return PierceHitFurClips;
+                    else
+                        return BluntHitFurClips;
+                case CombatSoundTypes.Attack_Hit_Scale:
+                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        return SlashHitScaleClips;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        return PierceHitScaleClips;
+                    else
+                        return BluntHitScaleClips;
+                case CombatSoundTypes.Attack_Hit_Bone:
+                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        return SlashHitBoneClips;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        return PierceHitBoneClips;
+                    else
+                        return BluntHitBoneClips;
+                case CombatSoundTypes.Attack_Hit_Rock:
+                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        return SlashHitRockClips;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        return PierceHitRockClips;
+                    else
+                        return BluntHitRockClips;
+                case CombatSoundTypes.Attack_Hit_Metal:
+                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                        return SlashHitMetalClips;
+                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                        return PierceHitMetalClips;
+                    else
+                        return BluntHitMetalClips;
+                case CombatSoundTypes.Attack_Hit_Ethereal:
+                    return AttackHitEtherealClips;
+            }
+        }
+
         // Made these two different methods because I didn't feel like figuring out a "clean" way to use the same one tracking both "LastAudioClipPlayed" values, oh well for now.
-        public static AudioClip RollRandomFootstepAudioClip(AudioClip[] clips)
+        public static AudioClip RollRandomCombatAudioClip(AudioClip[] clips)
         {
             int randChoice = UnityEngine.Random.Range(0, clips.Length);
             AudioClip clip = clips[randChoice];
-
-            if (clip == lastFootstepPlayed)
-            {
-                if (randChoice == 0)
-                    randChoice++;
-                else if (randChoice == clips.Length - 1)
-                    randChoice--;
-                else
-                    randChoice = CoinFlip() ? randChoice + 1 : randChoice - 1;
-
-                clip = clips[randChoice];
-            }
-            lastFootstepPlayed = clip;
             return clip;
         }
 
@@ -3045,9 +3288,9 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Bone_2", false, out FulNegNatArmBoneClips[1]);
             success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Bone_3", false, out FulNegNatArmBoneClips[2]);
 
-            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_1", false, out FulNegNatArmStoneClips[0]);
-            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_2", false, out FulNegNatArmStoneClips[1]);
-            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_3", false, out FulNegNatArmStoneClips[2]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_1", false, out FulNegNatArmRockClips[0]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_2", false, out FulNegNatArmRockClips[1]);
+            success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Stone_3", false, out FulNegNatArmRockClips[2]);
 
             success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Metal_1", false, out FulNegNatArmMetalClips[0]);
             success &= modManager.TryGetAsset("HQ_Full_Negate_Nat_Armor_Metal_2", false, out FulNegNatArmMetalClips[1]);
@@ -3101,17 +3344,17 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_2", false, out PierceHitBoneClips[1]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_3", false, out PierceHitBoneClips[2]);
 
-            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_1", false, out BluntHitStoneClips[0]);
-            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_2", false, out BluntHitStoneClips[1]);
-            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_3", false, out BluntHitStoneClips[2]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_1", false, out BluntHitRockClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_2", false, out BluntHitRockClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_3", false, out BluntHitRockClips[2]);
 
-            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_1", false, out SlashHitStoneClips[0]);
-            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_2", false, out SlashHitStoneClips[1]);
-            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_3", false, out SlashHitStoneClips[2]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_1", false, out SlashHitRockClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_2", false, out SlashHitRockClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_3", false, out SlashHitRockClips[2]);
 
-            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_1", false, out PierceHitStoneClips[0]);
-            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_2", false, out PierceHitStoneClips[1]);
-            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_3", false, out PierceHitStoneClips[2]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_1", false, out PierceHitRockClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_2", false, out PierceHitRockClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_3", false, out PierceHitRockClips[2]);
 
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Metal_1", false, out BluntHitMetalClips[0]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Metal_2", false, out BluntHitMetalClips[1]);
