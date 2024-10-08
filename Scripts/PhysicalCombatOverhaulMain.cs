@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		10/7/2024, 3:00 PM
+// Last Edit:		10/7/2024, 10:40 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -60,7 +60,7 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] MissedAttackClips = { null, null, null };
         public static AudioClip[] DodgedAttackClips = { null, null, null };
 
-        public static AudioClip[] FulNegMatResClips = { null, null, null };
+        public static AudioClip[] FulNegMatResClips = { null };
 
         public static AudioClip[] FulNegActShieldClips = { null, null, null };
         public static AudioClip[] FulNegPasShieldClips = { null, null, null };
@@ -756,7 +756,7 @@ namespace PhysicalCombatOverhaul
                 cVars.chanceToHitMod += cVars.critHitAddi;
             }
 
-            int struckBodyPart = CalculateStruckBodyPart();
+            cVars.struckBodyPart = CalculateStruckBodyPart();
 
             // Get damage for weaponless attacks
             if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
@@ -956,7 +956,7 @@ namespace PhysicalCombatOverhaul
                 cVars.chanceToHitMod += cVars.critHitAddi;
             }
 
-            int struckBodyPart = CalculateStruckBodyPart();
+            cVars.struckBodyPart = CalculateStruckBodyPart();
 
             // Get damage for weaponless attacks
             if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
@@ -1725,6 +1725,9 @@ namespace PhysicalCombatOverhaul
             {
                 cVars.armorDTAmount = GetBaseDTAmount(armor, target, ref cVars);
                 cVars.armorDRAmount = GetBaseDRAmount(armor, target, ref cVars);
+
+                cVars.finalDTAmount = cVars.armorDTAmount;
+                cVars.finalDRAmount = cVars.armorDRAmount;
             }
 
             shield = target.ItemEquipTable.GetItem(EquipSlots.LeftHand); // Checks if character is using a shield or not.
@@ -2788,7 +2791,7 @@ namespace PhysicalCombatOverhaul
 
                         cVars.damAfterDT = Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
 
-                        if (attacker != GameManager.Instance.PlayerEntity)
+                        if (attacker != GameManager.Instance.PlayerEntity && attacker.EntityBehaviour.EntityType != EntityTypes.EnemyClass)
                             FormulaHelper.OnMonsterHit((EnemyEntity)attacker, target, (int)cVars.damAfterDT);
 
                         return false;
@@ -2823,7 +2826,7 @@ namespace PhysicalCombatOverhaul
 
                     cVars.damAfterDT = Mathf.Max(1, Mathf.RoundToInt(cVars.damAfterDT));
 
-                    if (attacker != GameManager.Instance.PlayerEntity)
+                    if (attacker != GameManager.Instance.PlayerEntity && attacker.EntityBehaviour.EntityType != EntityTypes.EnemyClass)
                         FormulaHelper.OnMonsterHit((EnemyEntity)attacker, target, (int)cVars.damAfterDT);
 
                     return false;
@@ -3229,8 +3232,8 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Dodged_Attack_3", false, out DodgedAttackClips[2]);
 
             success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_1", false, out FulNegMatResClips[0]);
-            success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_2", false, out FulNegMatResClips[1]);
-            success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_3", false, out FulNegMatResClips[2]);
+            //success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_2", false, out FulNegMatResClips[1]);
+            //success &= modManager.TryGetAsset("HQ_Full_Negate_Mat_Resist_3", false, out FulNegMatResClips[2]);
 
             success &= modManager.TryGetAsset("HQ_Full_Negate_Active_Shield_Block_1", false, out FulNegActShieldClips[0]);
             success &= modManager.TryGetAsset("HQ_Full_Negate_Active_Shield_Block_2", false, out FulNegActShieldClips[1]);
@@ -3344,17 +3347,17 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_2", false, out PierceHitBoneClips[1]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_3", false, out PierceHitBoneClips[2]);
 
-            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_1", false, out BluntHitRockClips[0]);
-            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_2", false, out BluntHitRockClips[1]);
-            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Stone_3", false, out BluntHitRockClips[2]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Rock_1", false, out BluntHitRockClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Rock_2", false, out BluntHitRockClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Rock_3", false, out BluntHitRockClips[2]);
 
-            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_1", false, out SlashHitRockClips[0]);
-            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_2", false, out SlashHitRockClips[1]);
-            success &= modManager.TryGetAsset("HQ_Slash_Hit_Stone_3", false, out SlashHitRockClips[2]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Rock_1", false, out SlashHitRockClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Rock_2", false, out SlashHitRockClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Rock_3", false, out SlashHitRockClips[2]);
 
-            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_1", false, out PierceHitRockClips[0]);
-            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_2", false, out PierceHitRockClips[1]);
-            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Stone_3", false, out PierceHitRockClips[2]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Rock_1", false, out PierceHitRockClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Rock_2", false, out PierceHitRockClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Rock_3", false, out PierceHitRockClips[2]);
 
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Metal_1", false, out BluntHitMetalClips[0]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Metal_2", false, out BluntHitMetalClips[1]);
