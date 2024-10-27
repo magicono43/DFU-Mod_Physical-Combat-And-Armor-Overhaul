@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		10/7/2024, 10:40 PM
+// Last Edit:		10/26/2024, 10:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -11,7 +11,6 @@
 using UnityEngine;
 using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Utility.ModSupport;
-using DaggerfallWorkshop.Game.Serialization;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
 using DaggerfallWorkshop.Game.Formulas;
@@ -22,6 +21,7 @@ using DaggerfallWorkshop.Game.MagicAndEffects;
 using DaggerfallWorkshop.Game.Utility;
 using System;
 using DaggerfallConnect.FallExe;
+using System.Collections.Generic;
 
 namespace PhysicalCombatOverhaul
 {
@@ -48,6 +48,17 @@ namespace PhysicalCombatOverhaul
 
         // Global Variables
         public static readonly short[] weightMultipliersByMaterial = { 4, 5, 4, 4, 3, 4, 4, 2, 4, 5 };
+
+        static Dictionary<int, Monster> monsterDict;
+        public static Dictionary<int, Monster> MonsterDict
+        {
+            get
+            {
+                if (monsterDict == null)
+                    monsterDict = PCOEnemyBasics.BuildMonsterDict();
+                return monsterDict;
+            }
+        }
 
         #region Mod Sound Variables
 
@@ -159,6 +170,9 @@ namespace PhysicalCombatOverhaul
             // Load Resources
             LoadAudio();
 
+            if (monsterDict == null)
+                monsterDict = PCOEnemyBasics.BuildMonsterDict();
+
             Debug.Log("Finished mod init: Physical Combat And Armor Overhaul");
         }
 
@@ -184,15 +198,39 @@ namespace PhysicalCombatOverhaul
 
         private void Update()
         {
+            /*
             if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
                 return;
 
-            // Handle mouse wheel
-            float mouseScroll = Input.GetAxis("Mouse ScrollWheel");
-            if (mouseScroll != 0)
+            // Handle key presses
+            if (InputManager.Instance.GetKeyDown(KeyCode.P))
             {
-                // sdf
+                AudioClip clip = FulNegActShieldClips[0];
+
+                DaggerfallAudioSource dfAudioSource = GameManager.Instance.PlayerObject.GetComponent<DaggerfallAudioSource>();
+
+                if (dfAudioSource != null)
+                {
+                    dfAudioSource.AudioSource.PlayOneShot(clip, DaggerfallUnity.Settings.SoundVolume); // Get these hotkeys for testing implemented tomorrow and test which AudioSource sounds better to play from.
+                }
+                else
+                    DaggerfallUI.AddHUDText("Player Object DF Audio Source Is Null.", 2.00f);
             }
+
+            if (InputManager.Instance.GetKeyDown(KeyCode.O))
+            {
+                AudioClip clip = FulNegActShieldClips[0];
+
+                DaggerfallAudioSource dfAudioSource = GameManager.Instance.WeaponManager.ScreenWeapon.gameObject.GetComponent<DaggerfallAudioSource>();
+
+                if (dfAudioSource != null)
+                {
+                    dfAudioSource.AudioSource.PlayOneShot(clip, DaggerfallUnity.Settings.SoundVolume);
+                }
+                else
+                    DaggerfallUI.AddHUDText("FPSWeapon DF Audio Source Is Null.", 2.00f);
+            }
+            */
         }
 
         // -- Newly Added Stuff 4-23-2024 --
@@ -236,14 +274,32 @@ namespace PhysicalCombatOverhaul
             public float tPierceMulti;
 
             public DaggerfallEntity aEntity;
+            public Races aRace;
+            public bool aIsVamp;
+            public bool aIsLycan;
             public int aStrn;
             public int aWill;
             public int aAgil;
             public int aEndu;
             public int aSped;
             public int aLuck;
+            public AttackType attackType;
+            public AttackElementType attackElement;
+            public int attackOdds;
+            public AttackType attackType2;
+            public AttackElementType attackElement2;
+            public int attackOdds2;
+            public AttackType attackType3;
+            public AttackElementType attackElement3;
+            public int attackOdds3;
+            public AttackType attackType4;
+            public AttackElementType attackElement4;
+            public int attackOdds4;
 
             public DaggerfallEntity tEntity;
+            public Races tRace;
+            public bool tIsVamp;
+            public bool tIsLycan;
             public int tStrn;
             public int tWill;
             public int tAgil;
@@ -304,14 +360,32 @@ namespace PhysicalCombatOverhaul
             cvars.tPierceMulti = 1f;
 
             cvars.aEntity = attacker;
+            cvars.aRace = Races.None;
+            cvars.aIsVamp = false;
+            cvars.aIsLycan = false;
             cvars.aStrn = attacker.Stats.LiveStrength - 50;
             cvars.aWill = attacker.Stats.LiveWillpower - 50;
             cvars.aAgil = attacker.Stats.LiveAgility - 50;
             cvars.aEndu = attacker.Stats.LiveEndurance - 50;
             cvars.aSped = attacker.Stats.LiveSpeed - 50;
             cvars.aLuck = attacker.Stats.LiveLuck - 50;
+            cvars.attackType = AttackType.Bash;
+            cvars.attackElement = AttackElementType.None;
+            cvars.attackOdds = 100;
+            cvars.attackType2 = AttackType.Bash;
+            cvars.attackElement2 = AttackElementType.None;
+            cvars.attackOdds2 = 0;
+            cvars.attackType3 = AttackType.Bash;
+            cvars.attackElement3 = AttackElementType.None;
+            cvars.attackOdds3 = 0;
+            cvars.attackType4 = AttackType.Bash;
+            cvars.attackElement4 = AttackElementType.None;
+            cvars.attackOdds4 = 0;
 
             cvars.tEntity = target;
+            cvars.tRace = Races.None;
+            cvars.tIsVamp = false;
+            cvars.tIsLycan = false;
             cvars.tStrn = target.Stats.LiveStrength - 50;
             cvars.tWill = target.Stats.LiveWillpower - 50;
             cvars.tAgil = target.Stats.LiveAgility - 50;
@@ -334,92 +408,10 @@ namespace PhysicalCombatOverhaul
             return cvars;
         }
 
-        /// <summary>Return the natural armor type of the provided creature.</summary>
-        public static NaturalArmorType GetCreatureNaturalArmorType(EnemyEntity enemy)
-        {
-            if (enemy.EntityType == EntityTypes.EnemyClass)
-            {
-                return NaturalArmorType.Flesh;
-            }
-            else
-            {
-                switch (enemy.CareerIndex)
-                {
-                    default:
-                        return NaturalArmorType.Flesh;
-                    case (int)MonsterCareers.Rat:
-                    case (int)MonsterCareers.GiantBat:
-                    case (int)MonsterCareers.GrizzlyBear:
-                    case (int)MonsterCareers.SabertoothTiger:
-                    case (int)MonsterCareers.Werewolf:
-                    case (int)MonsterCareers.Harpy:
-                    case (int)MonsterCareers.Wereboar:
-                        return NaturalArmorType.Fur;
-                    case (int)MonsterCareers.Spider:
-                    case (int)MonsterCareers.Slaughterfish:
-                    case (int)MonsterCareers.GiantScorpion:
-                    case (int)MonsterCareers.Daedroth:
-                    case (int)MonsterCareers.Dragonling:
-                    case (int)MonsterCareers.Dragonling_Alternate:
-                    case (int)MonsterCareers.Dreugh:
-                        return NaturalArmorType.Scale;
-                    case (int)MonsterCareers.Spriggan:
-                    case (int)MonsterCareers.SkeletalWarrior:
-                    case (int)MonsterCareers.Lich:
-                    case (int)MonsterCareers.AncientLich:
-                        return NaturalArmorType.Bone;
-                    case (int)MonsterCareers.Gargoyle:
-                    case (int)MonsterCareers.IceAtronach:
-                        return NaturalArmorType.Rock;
-                    case (int)MonsterCareers.FrostDaedra:
-                    case (int)MonsterCareers.FireDaedra:
-                    case (int)MonsterCareers.IronAtronach:
-                        return NaturalArmorType.Metal;
-                    case (int)MonsterCareers.Ghost:
-                    case (int)MonsterCareers.Wraith:
-                        return NaturalArmorType.Ethereal;
-                }
-            }
-        }
-
         /// <summary>Return the natural armor type of the player.</summary>
         public static NaturalArmorType GetPlayerNaturalArmorType(PlayerEntity player)
         {
             return NaturalArmorType.Flesh;
-        }
-
-        /// <summary>Return the size category of the provided creature.</summary>
-        public static BodySize GetCreatureBodySize(EnemyEntity enemy)
-        {
-            if (enemy.EntityType == EntityTypes.EnemyClass)
-            {
-                return BodySize.Average;
-            }
-            else
-            {
-                switch (enemy.CareerIndex)
-                {
-                    case (int)MonsterCareers.Imp:
-                        return BodySize.Tiny;
-                    case (int)MonsterCareers.Rat:
-                    case (int)MonsterCareers.GiantBat:
-                    case (int)MonsterCareers.Spider:
-                    case (int)MonsterCareers.Slaughterfish:
-                        return BodySize.Small;
-                    default:
-                        return BodySize.Average;
-                    case (int)MonsterCareers.GrizzlyBear:
-                    case (int)MonsterCareers.SabertoothTiger:
-                    case (int)MonsterCareers.GiantScorpion:
-                    case (int)MonsterCareers.Centaur:
-                    case (int)MonsterCareers.Gargoyle:
-                    case (int)MonsterCareers.Giant:
-                    case (int)MonsterCareers.Daedroth:
-                        return BodySize.Large;
-                    case (int)MonsterCareers.Dragonling_Alternate:
-                        return BodySize.Huge;
-                }
-            }
         }
 
         /// <summary>Return the size category of the player.</summary>
@@ -447,113 +439,86 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        /// <summary>Class to hopefully keep from spamming new UID values from enemies being assigned 'fake' weapons, will see if it works or not.</summary>
-        public class DummyDFUItem
+        /// <summary>Return the attack type the player used.</summary>
+        public static AttackType GetPlayerAttackType(ref CVARS cVars)
         {
-            public ItemGroups itemGroup { get; set; }
-            public int groupIndex { get; set; }
-            public int nativeMaterialValue { get; set; }
-            public int templateIndex { get; set; }
-            public float weightInKg { get; set; }
-
-            // Default constructor
-            public DummyDFUItem()
+            switch ((Skills)cVars.wepType)
             {
-                // Default values
-                itemGroup = ItemGroups.None;
-                groupIndex = 0;
-                nativeMaterialValue = -1;
-                templateIndex = -1;
-                weightInKg = 0.0f;
-            }
-
-            public short GetWeaponSkillIDAsShort()
-            {
-                int skill = GetWeaponSkillUsed();
-                switch (skill)
-                {
-                    case (int)DFCareer.ProficiencyFlags.ShortBlades:
-                        return (int)Skills.ShortBlade;
-                    case (int)DFCareer.ProficiencyFlags.LongBlades:
-                        return (int)Skills.LongBlade;
-                    case (int)DFCareer.ProficiencyFlags.Axes:
-                        return (int)Skills.Axe;
-                    case (int)DFCareer.ProficiencyFlags.BluntWeapons:
-                        return (int)Skills.BluntWeapon;
-                    case (int)DFCareer.ProficiencyFlags.MissileWeapons:
-                        return (int)Skills.Archery;
-
-                    default:
-                        return (int)Skills.None;
-                }
-            }
-
-            public int GetWeaponSkillUsed()
-            {
-                switch (templateIndex)
-                {
-                    case (int)Weapons.Dagger:
-                    case (int)Weapons.Tanto:
-                    case (int)Weapons.Wakazashi:
-                    case (int)Weapons.Shortsword:
-                        return (int)DFCareer.ProficiencyFlags.ShortBlades;
-                    case (int)Weapons.Broadsword:
-                    case (int)Weapons.Longsword:
-                    case (int)Weapons.Saber:
-                    case (int)Weapons.Katana:
-                    case (int)Weapons.Claymore:
-                    case (int)Weapons.Dai_Katana:
-                        return (int)DFCareer.ProficiencyFlags.LongBlades;
-                    case (int)Weapons.Battle_Axe:
-                    case (int)Weapons.War_Axe:
-                        return (int)DFCareer.ProficiencyFlags.Axes;
-                    case (int)Weapons.Flail:
-                    case (int)Weapons.Mace:
-                    case (int)Weapons.Warhammer:
-                    case (int)Weapons.Staff:
-                        return (int)DFCareer.ProficiencyFlags.BluntWeapons;
-                    case (int)Weapons.Short_Bow:
-                    case (int)Weapons.Long_Bow:
-                        return (int)DFCareer.ProficiencyFlags.MissileWeapons;
-
-                    default:
-                        return (int)Skills.None;
-                }
+                default:
+                case Skills.HandToHand:
+                    if (cVars.aIsLycan && (GameManager.Instance.PlayerEffectManager.GetRacialOverrideEffect() as DaggerfallWorkshop.Game.MagicAndEffects.MagicEffects.LycanthropyEffect).IsTransformed) // If player is a lycanthrope and currently transformed.
+                        return AttackType.Claw;
+                    else if (cVars.aIsVamp)
+                        return AttackType.Scratch;
+                    else if (cVars.aRace == Races.Khajiit)
+                        return AttackType.Claw;
+                    else
+                        return AttackType.Bash;
+                case Skills.ShortBlade:
+                case Skills.Archery:
+                    return AttackType.Stab;
+                case Skills.LongBlade:
+                case Skills.Axe:
+                    return AttackType.Slash;
+                case Skills.BluntWeapon:
+                    return AttackType.Bludgeon;
             }
         }
 
-        /// <summary>Generates a dummy weapon.</summary>
-        public static DummyDFUItem CreateDummyWeapon(Weapons weapon, WeaponMaterialTypes material) // Later may consider just assigning all these values manually for "dummy" weapons. 
+        /// <summary>Return the element of the attack the player used.</summary>
+        public static AttackElementType GetPlayerAttackElement(ref CVARS cVars)
         {
-            // Create dummy item
-            DummyDFUItem newItem = new DummyDFUItem();
-            newItem.itemGroup = ItemGroups.Weapons;
-            newItem.groupIndex = DaggerfallUnity.Instance.ItemHelper.GetGroupIndex(ItemGroups.Weapons, (int)weapon);
-            newItem.nativeMaterialValue = (int)material;
-
-            ItemTemplate itemTemplate = DaggerfallUnity.Instance.ItemHelper.GetItemTemplate(newItem.itemGroup, newItem.groupIndex);
-
-            newItem.templateIndex = itemTemplate.index;
-
-            int quarterKgs = (int)(itemTemplate.baseWeight * 4);
-            float matQuarterKgs = (float)(quarterKgs * weightMultipliersByMaterial[(int)material]) / 4;
-            newItem.weightInKg = Mathf.Round(matQuarterKgs) / 4;
-
-            return newItem;
+            return AttackElementType.None;
         }
-        
+
+        /// <summary>Populate common static combat variables stored for this particular creature.</summary>
+        public static void GetMonsterSpecificCombatVariables(bool target, DaggerfallEntity creature, ref CVARS cVars)
+        {
+            Monster monster = MonsterDict[cVars.tarCareer];
+
+            if (target)
+            {
+                cVars.tarSize = monster.Size;
+                cVars.tNatArm = monster.ArmorType;
+                cVars.monsterWeapon = monster.MonsterWeapon;
+                cVars.tNatDT = monster.NaturalDT;
+                cVars.tBluntMulti = monster.BluntDR;
+                cVars.tSlashMulti = monster.SlashDR;
+                cVars.tPierceMulti = monster.PierceDR;
+            }
+            else
+            {
+                cVars.atkSize = monster.Size;
+                cVars.attackType = monster.Attack;
+                cVars.attackElement = monster.AttackElement;
+                cVars.attackOdds = monster.AttackOdds;
+                cVars.attackType2 = monster.Attack2;
+                cVars.attackElement2 = monster.AttackElement2;
+                cVars.attackOdds2 = monster.AttackOdds2;
+                cVars.attackType3 = monster.Attack3;
+                cVars.attackElement3 = monster.AttackElement3;
+                cVars.attackOdds3 = monster.AttackOdds3;
+                cVars.attackType4 = monster.Attack4;
+                cVars.attackElement4 = monster.AttackElement4;
+                cVars.attackOdds4 = monster.AttackOdds4;
+                cVars.monsterWeapon = monster.MonsterWeapon;
+            }
+        }
+
         public static int CalcPlayerVsMonsterAttack(PlayerEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             CVARS cVars = GetCombatVariables(attacker, target);
-            cVars.tNatArm = GetCreatureNaturalArmorType(target);
-            cVars.atkSize = GetPlayerBodySize(attacker);
-            cVars.tarSize = GetCreatureBodySize(target);
+            cVars.aRace = (Races)attacker.BirthRaceTemplate.ID;
+            cVars.aIsVamp = GameManager.Instance.PlayerEffectManager.HasVampirism();
+            cVars.aIsLycan = GameManager.Instance.PlayerEffectManager.HasLycanthropy();
             cVars.atkCareer = GetPlayerCareer(attacker);
+            cVars.atkSize = GetPlayerBodySize(attacker);
             cVars.tarCareer = GetCreatureCareer(target);
+            GetMonsterSpecificCombatVariables(true, target, ref cVars);
 
             if (weapon != null)
             {
-                cVars.wepType = weapon.GetWeaponSkillIDAsShort();
+                cVars.wepType = weapon.GetWeaponSkillIDAsShort(); // Tomorrow, get the new "attackType" and "attackElement" values set where they should and continue from there.
 
                 if (softMatRequireModuleCheck)
                 {
@@ -583,6 +548,9 @@ namespace PhysicalCombatOverhaul
             int playerWeaponSkill = attacker.Skills.GetLiveSkillValue(cVars.wepType);
             playerWeaponSkill = (int)Mathf.Ceil(playerWeaponSkill * 1.5f); // Makes it so player weapon skill has 150% of the effect it normally would on hit chance. So now instead of 50 weapon skill adding +50 to the end, 50 will now add +75.
             cVars.chanceToHitMod = playerWeaponSkill;
+
+            cVars.attackType = GetPlayerAttackType(ref cVars);
+            cVars.attackElement = GetPlayerAttackElement(ref cVars);
 
             cVars.critSuccess = CriticalStrikeHandler(attacker);
 
@@ -695,10 +663,10 @@ namespace PhysicalCombatOverhaul
         {
             CVARS cVars = GetCombatVariables(attacker, target);
             cVars.tNatArm = GetPlayerNaturalArmorType(target);
-            cVars.atkSize = GetCreatureBodySize(attacker);
             cVars.tarSize = GetPlayerBodySize(target);
-            cVars.atkCareer = GetCreatureCareer(attacker);
             cVars.tarCareer = GetPlayerCareer(target);
+            cVars.atkCareer = GetCreatureCareer(attacker);
+            GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
 
             // Choose whether weapon-wielding enemies use their weapons or weaponless attacks.
             // In classic, weapon-wielding enemies use the damage values of their weapons, instead of their weaponless values.
@@ -772,7 +740,7 @@ namespace PhysicalCombatOverhaul
                 }
                 else // attacker is a monster
                 {
-                    if (SpecialWeaponCheckForMonsters(attacker))
+                    if (SpecialWeaponCheckForMonsters(attacker)) // Continue here tomorrow I suppose.
                     {
                         cVars.unarmedAttack = false;
                         cVars.monsterWeapon = MonsterWeaponAssign(attacker);
@@ -1571,76 +1539,6 @@ namespace PhysicalCombatOverhaul
             return damage;
         }
 
-        /// <summary>This is where specific monsters will be given a true or false, depending on if said monster is clearly holding a type of weapon in their sprite.</summary>
-        public static bool SpecialWeaponCheckForMonsters(DaggerfallEntity attacker)
-        {
-            EnemyEntity AIAttacker = attacker as EnemyEntity;
-            switch (AIAttacker.CareerIndex)
-            {
-                case (int)MonsterCareers.Centaur:
-                case (int)MonsterCareers.Giant:
-                case (int)MonsterCareers.Gargoyle:
-                case (int)MonsterCareers.Orc:
-                case (int)MonsterCareers.OrcSergeant:
-                case (int)MonsterCareers.OrcShaman:
-                case (int)MonsterCareers.OrcWarlord:
-                case (int)MonsterCareers.IronAtronach:
-                case (int)MonsterCareers.IceAtronach:
-                case (int)MonsterCareers.SkeletalWarrior:
-                case (int)MonsterCareers.Wraith:
-                case (int)MonsterCareers.Lich:
-                case (int)MonsterCareers.AncientLich:
-                case (int)MonsterCareers.FrostDaedra:
-                case (int)MonsterCareers.FireDaedra:
-                case (int)MonsterCareers.Daedroth:
-                case (int)MonsterCareers.DaedraLord:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        /// <summary>This is where specific monsters will be given a pre-defined weapon object for purposes of the rest of the formula, based on their level and sprite weapon appearance.</summary>
-        public static DummyDFUItem MonsterWeaponAssign(DaggerfallEntity attacker)
-        {
-            EnemyEntity AIAttacker = attacker as EnemyEntity;
-            switch (AIAttacker.CareerIndex)
-            {
-                case (int)MonsterCareers.SkeletalWarrior:
-                    return CreateDummyWeapon(Weapons.War_Axe, WeaponMaterialTypes.Steel);
-                case (int)MonsterCareers.Orc:
-                    return CreateDummyWeapon(Weapons.Saber, WeaponMaterialTypes.Steel);
-                case (int)MonsterCareers.OrcSergeant:
-                    return CreateDummyWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Dwarven);
-                case (int)MonsterCareers.OrcWarlord:
-                case (int)MonsterCareers.Daedroth:
-                    return CreateDummyWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Orcish);
-                case (int)MonsterCareers.OrcShaman:
-                case (int)MonsterCareers.Lich:
-                case (int)MonsterCareers.AncientLich:
-                    return CreateDummyWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium);
-                case (int)MonsterCareers.Centaur:
-                    return CreateDummyWeapon(Weapons.Claymore, WeaponMaterialTypes.Elven);
-                case (int)MonsterCareers.Giant:
-                    return CreateDummyWeapon(Weapons.Warhammer, WeaponMaterialTypes.Steel);
-                case (int)MonsterCareers.Gargoyle:
-                    return CreateDummyWeapon(Weapons.Flail, WeaponMaterialTypes.Steel);
-                case (int)MonsterCareers.IronAtronach:
-                    return CreateDummyWeapon(Weapons.Mace, WeaponMaterialTypes.Steel);
-                case (int)MonsterCareers.IceAtronach:
-                    return CreateDummyWeapon(Weapons.Katana, WeaponMaterialTypes.Elven);
-                case (int)MonsterCareers.Wraith:
-                    return CreateDummyWeapon(Weapons.Saber, WeaponMaterialTypes.Mithril);
-                case (int)MonsterCareers.FrostDaedra:
-                    return CreateDummyWeapon(Weapons.Warhammer, WeaponMaterialTypes.Daedric);
-                case (int)MonsterCareers.FireDaedra:
-                case (int)MonsterCareers.DaedraLord:
-                    return CreateDummyWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric);
-                default:
-                    return null;
-            }
-        }
-
         public static int CalculateArmorToHit(DaggerfallEntity target, int struckBodyPart)
         {
             EnemyEntity AITarget = target as EnemyEntity;
@@ -2305,66 +2203,6 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        public static int GetCreatureBodyMaterial(int creatureCareer)
-        {
-            switch (creatureCareer)
-            {
-                case (int)MonsterCareers.Ghost:
-                case (int)MonsterCareers.Wraith:
-                    return -2; // For incorporeal enemies such as the ghost.
-                default:
-                case -2:
-                case -1:
-                case (int)MonsterCareers.Rat:
-                case (int)MonsterCareers.Imp:
-                case (int)MonsterCareers.GiantBat:
-                case (int)MonsterCareers.Orc:
-                case (int)MonsterCareers.Centaur:
-                case (int)MonsterCareers.Nymph:
-                case (int)MonsterCareers.OrcSergeant:
-                case (int)MonsterCareers.Harpy:
-                case (int)MonsterCareers.Giant:
-                case (int)MonsterCareers.Zombie:
-                case (int)MonsterCareers.Mummy:
-                case (int)MonsterCareers.OrcShaman:
-                case (int)MonsterCareers.OrcWarlord:
-                case (int)MonsterCareers.Vampire:
-                case (int)MonsterCareers.DaedraSeducer:
-                case (int)MonsterCareers.VampireAncient:
-                case (int)MonsterCareers.DaedraLord:
-                    return -1; // For the player and human enemies, unmodified by stats and such.
-                case (int)MonsterCareers.GrizzlyBear:
-                case (int)MonsterCareers.SabertoothTiger:
-                case (int)MonsterCareers.Spider:
-                case (int)MonsterCareers.Werewolf:
-                case (int)MonsterCareers.Slaughterfish:
-                case (int)MonsterCareers.Wereboar:
-                case (int)MonsterCareers.FleshAtronach:
-                case (int)MonsterCareers.Lamia:
-                    return 0; // For I guess slightly more bulky "natural armor" such as thick fur or fat or something.
-                case (int)MonsterCareers.GiantScorpion:
-                case (int)MonsterCareers.Spriggan:
-                case (int)MonsterCareers.SkeletalWarrior:
-                case (int)MonsterCareers.Lich:
-                case (int)MonsterCareers.AncientLich:
-                case (int)MonsterCareers.Dragonling:
-                case (int)MonsterCareers.Dreugh:
-                    return 1; // For more significant "natural armor" such as exoskeleton chitin or scales, etc.
-                case (int)MonsterCareers.Daedroth:
-                case (int)MonsterCareers.FireAtronach:
-                case (int)MonsterCareers.Dragonling_Alternate:
-                    return 2;
-                case (int)MonsterCareers.FireDaedra:
-                case (int)MonsterCareers.IceAtronach:
-                    return 3;
-                case (int)MonsterCareers.Gargoyle:
-                case (int)MonsterCareers.FrostDaedra:
-                    return 4;
-                case (int)MonsterCareers.IronAtronach:
-                    return 5;
-            }
-        }
-
         /// <summary>Retrieves the multiplier based on the condition modifier of a material, the idea being that items will take around the same amount of damage as other items in that category.</summary>
         public static int EqualizeMaterialConditions(DaggerfallUnityItem item)
         {
@@ -2460,33 +2298,6 @@ namespace PhysicalCombatOverhaul
             Attack_Hit_Rock = 23,
             Attack_Hit_Metal = 24,
             Attack_Hit_Ethereal = 25,
-        }
-
-        /// <summary>
-        /// What type of natural armor the creature is made of.
-        /// </summary>
-        public enum NaturalArmorType
-        {
-            Flesh = 0,
-            Fur = 1,
-            Scale = 2,
-            Bone = 3,
-            Rock = 4,
-            Metal = 5,
-            Ethereal = 6,
-        }
-
-        /// <summary>
-        /// Size categories for any creatures, used in some combat formula.
-        /// </summary>
-        public enum BodySize
-        {
-            None = -1,
-            Tiny = 0,
-            Small = 1,
-            Average = 2,
-            Large = 3,
-            Huge = 4,
         }
 
         /// <summary>
@@ -2967,77 +2778,6 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        /// <summary>Determine how much damage reduction the target has from their natural defenses.</summary>
-        private static void CalculateNaturalDamageReductions(ref CVARS cVars)
-        {
-            switch (cVars.tarCareer)
-            {
-                default:
-                case -1:
-                case (int)MonsterCareers.Rat:
-                case (int)MonsterCareers.Imp:
-                case (int)MonsterCareers.GiantBat:
-                case (int)MonsterCareers.Orc:
-                case (int)MonsterCareers.Centaur:
-                case (int)MonsterCareers.Nymph:
-                case (int)MonsterCareers.OrcSergeant:
-                case (int)MonsterCareers.Giant:
-                case (int)MonsterCareers.Zombie:
-                case (int)MonsterCareers.Ghost:
-                case (int)MonsterCareers.Mummy:
-                case (int)MonsterCareers.OrcShaman:
-                case (int)MonsterCareers.Wraith:
-                case (int)MonsterCareers.OrcWarlord:
-                case (int)MonsterCareers.Vampire:
-                case (int)MonsterCareers.VampireAncient:
-                case (int)MonsterCareers.FireAtronach:
-                case (int)MonsterCareers.FleshAtronach:
-                case (int)MonsterCareers.DaedraSeducer:
-                    break;
-                case (int)MonsterCareers.GrizzlyBear:
-                    cVars.tNatDT = 2f; cVars.tBluntMulti = 0.8f; break;
-                case (int)MonsterCareers.SabertoothTiger:
-                case (int)MonsterCareers.Werewolf:
-                    cVars.tNatDT = 1f; cVars.tBluntMulti = 0.8f; break;
-                case (int)MonsterCareers.Spider:
-                    cVars.tNatDT = 1.5f; cVars.tBluntMulti = 1.4f; cVars.tSlashMulti = 0.8f; cVars.tPierceMulti = 0.8f; break;
-                case (int)MonsterCareers.Slaughterfish:
-                case (int)MonsterCareers.Lamia:
-                    cVars.tNatDT = 1f; cVars.tSlashMulti = 0.8f; break;
-                case (int)MonsterCareers.GiantScorpion:
-                case (int)MonsterCareers.Dreugh:
-                    cVars.tNatDT = 2.5f; cVars.tBluntMulti = 1.4f; cVars.tSlashMulti = 0.8f; cVars.tPierceMulti = 0.8f; break;
-                case (int)MonsterCareers.Dragonling:
-                    cVars.tNatDT = 2.75f; cVars.tSlashMulti = 0.7f; break;
-                case (int)MonsterCareers.Dragonling_Alternate:
-                    cVars.tNatDT = 5f; cVars.tBluntMulti = 0.75f; cVars.tSlashMulti = 0.5f; cVars.tPierceMulti = 0.75f; break;
-                case (int)MonsterCareers.Spriggan:
-                    cVars.tNatDT = 3.25f; cVars.tBluntMulti = 0.8f; cVars.tSlashMulti = 1.75f; cVars.tPierceMulti = 0.6f; break;
-                case (int)MonsterCareers.Wereboar:
-                    cVars.tNatDT = 1.5f; cVars.tBluntMulti = 0.8f; break;
-                case (int)MonsterCareers.Harpy:
-                    cVars.tBluntMulti = 0.9f; break;
-                case (int)MonsterCareers.Gargoyle:
-                    cVars.tNatDT = 4.25f; cVars.tBluntMulti = 2.0f; cVars.tSlashMulti = 0.7f; cVars.tPierceMulti = 0.35f; break;
-                case (int)MonsterCareers.SkeletalWarrior:
-                case (int)MonsterCareers.Lich:
-                case (int)MonsterCareers.AncientLich:
-                    cVars.tNatDT = 2f; cVars.tBluntMulti = 1.5f; cVars.tSlashMulti = 0.9f; cVars.tPierceMulti = 0.6f; break;
-                case (int)MonsterCareers.IronAtronach:
-                    cVars.tNatDT = 4.75f; cVars.tBluntMulti = 0.4f; cVars.tSlashMulti = 0.7f; cVars.tPierceMulti = 0.6f; break;
-                case (int)MonsterCareers.IceAtronach:
-                    cVars.tNatDT = 3.25f; cVars.tBluntMulti = 1.5f; cVars.tPierceMulti = 0.6f; break;
-                case (int)MonsterCareers.FrostDaedra:
-                    cVars.tNatDT = 4f; cVars.tBluntMulti = 1.25f; cVars.tPierceMulti = 0.8f; break;
-                case (int)MonsterCareers.FireDaedra:
-                    cVars.tNatDT = 3f; break;
-                case (int)MonsterCareers.Daedroth:
-                    cVars.tNatDT = 3f; cVars.tSlashMulti = 0.7f; break;
-                case (int)MonsterCareers.DaedraLord:
-                    cVars.tNatDT = 3f; break;
-            }
-        }
-
         private static int AdjustWeaponHitChanceMod(DaggerfallEntity attacker, DaggerfallEntity target, int hitChanceMod, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             if (weaponAnimTime > 0 && (weapon.TemplateIndex == (int)Weapons.Short_Bow || weapon.TemplateIndex == (int)Weapons.Long_Bow))
@@ -3117,10 +2857,10 @@ namespace PhysicalCombatOverhaul
             if (target != null)
             {
                 if (target == GameManager.Instance.PlayerEntity)
-                    dfAudioSource = GameManager.Instance.PlayerObject.GetComponent<DaggerfallAudioSource>();
+                    dfAudioSource = GameManager.Instance.WeaponManager.ScreenWeapon.gameObject.GetComponent<DaggerfallAudioSource>();
                 else
                 {
-                    EnemySounds enemySounds = target.EntityBehaviour.gameObject.GetComponent<EnemySounds>();
+                    EnemySounds enemySounds = target.EntityBehaviour.gameObject.GetComponent<EnemySounds>(); // Tomorrow, guess I can try using the "OnEnemyDeath" event and applying this, will see.
 
                     if (enemySounds != null)
                         dfAudioSource = enemySounds.GetComponent<DaggerfallAudioSource>();
