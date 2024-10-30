@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		10/26/2024, 10:50 PM
+// Last Edit:		10/29/2024, 11:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -307,6 +307,7 @@ namespace PhysicalCombatOverhaul
             public int tSped;
             public int tLuck;
             public NaturalArmorType tNatArm;
+            public int tArmHardness;
             public int tAvoidContrib;
             public bool missWasDodge;
 
@@ -393,6 +394,7 @@ namespace PhysicalCombatOverhaul
             cvars.tSped = target.Stats.LiveSpeed - 50;
             cvars.tLuck = target.Stats.LiveLuck - 50;
             cvars.tNatArm = NaturalArmorType.Flesh;
+            cvars.tArmHardness = -1;
             cvars.tAvoidContrib = 0;
             cvars.missWasDodge = false;
 
@@ -480,6 +482,7 @@ namespace PhysicalCombatOverhaul
             {
                 cVars.tarSize = monster.Size;
                 cVars.tNatArm = monster.ArmorType;
+                cVars.tArmHardness = monster.ArmorHardness;
                 cVars.monsterWeapon = monster.MonsterWeapon;
                 cVars.tNatDT = monster.NaturalDT;
                 cVars.tBluntMulti = monster.BluntDR;
@@ -710,6 +713,35 @@ namespace PhysicalCombatOverhaul
                     }
                 }
             }
+            else if (cVars.monsterWeapon != null)
+            {
+                cVars.wepType = cVars.monsterWeapon.GetWeaponSkillIDAsShort();
+
+                if (softMatRequireModuleCheck)
+                {
+                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.monsterWeapon.nativeMaterialValue)
+                    {
+                        int targetMatRequire = (int)target.MinMetalToHit;
+                        int weaponMatValue = cVars.monsterWeapon.nativeMaterialValue;
+                        cVars.matReqDamMulti = targetMatRequire - weaponMatValue;
+
+                        if (cVars.matReqDamMulti <= 0) // There is no "bonus" damage for meeting material requirements, nor for exceeding them, just normal unmodded damage.
+                            cVars.matReqDamMulti = 1;
+                        else // There is a damage penalty for attacking a target with below the minimum material requirements of that target, more as the difference between becomes greater.
+                            cVars.matReqDamMulti = (Mathf.Min(cVars.matReqDamMulti * 0.2f, 0.9f) - 1) * -1; // Keeps the damage multiplier penalty from going above 90% reduced damage.
+                    }
+                }
+                else
+                {
+                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.monsterWeapon.nativeMaterialValue)
+                    {
+                        PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
+                        return 0;
+                    }
+                }
+            }
+
+            // Tomorrow, see if I can "bridge the gap" between an actual Daggerfall weapon and the Dummy Weapons, that way I won't have to do all this repetition, will see.
 
             cVars.chanceToHitMod = attacker.Skills.GetLiveSkillValue(cVars.wepType);
 
@@ -740,13 +772,6 @@ namespace PhysicalCombatOverhaul
                 }
                 else // attacker is a monster
                 {
-                    if (SpecialWeaponCheckForMonsters(attacker)) // Continue here tomorrow I suppose.
-                    {
-                        cVars.unarmedAttack = false;
-                        cVars.monsterWeapon = MonsterWeaponAssign(attacker);
-                        cVars.wepType = cVars.monsterWeapon.GetWeaponSkillIDAsShort();
-                    }
-
                     // Handle multiple attacks by AI
                     int minBaseDamage = 0;
                     int maxBaseDamage = 0;
@@ -790,6 +815,16 @@ namespace PhysicalCombatOverhaul
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
                     cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
+                }
+            }
+            else if (cVars.monsterWeapon != null)
+            {
+                // Apply weapon material modifier.
+                cVars.chanceToHitMod += CalculateDummyWeaponToHit(cVars.monsterWeapon);
+
+                if (CalculateHitSuccess(attacker, target, ref cVars))
+                {
+                    cVars.damage = CalculateDummyWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.monsterWeapon);
                 }
             }
 
@@ -862,11 +897,10 @@ namespace PhysicalCombatOverhaul
         public static int CalcMonsterVsMonsterAttack(EnemyEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             CVARS cVars = GetCombatVariables(attacker, target);
-            cVars.tNatArm = GetCreatureNaturalArmorType(target);
-            cVars.atkSize = GetCreatureBodySize(attacker);
-            cVars.tarSize = GetCreatureBodySize(target);
             cVars.atkCareer = GetCreatureCareer(attacker);
             cVars.tarCareer = GetCreatureCareer(target);
+            GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
+            GetMonsterSpecificCombatVariables(true, target, ref cVars);
 
             // Choose whether weapon-wielding enemies use their weapons or weaponless attacks.
             // In classic, weapon-wielding enemies use the damage values of their weapons, instead of their weaponless values.
@@ -940,10 +974,9 @@ namespace PhysicalCombatOverhaul
                 }
                 else // attacker is a monster
                 {
-                    if (SpecialWeaponCheckForMonsters(attacker))
+                    if (cVars.monsterWeapon != null)
                     {
                         cVars.unarmedAttack = false;
-                        cVars.monsterWeapon = MonsterWeaponAssign(attacker);
                         cVars.wepType = cVars.monsterWeapon.GetWeaponSkillIDAsShort();
                     }
 
@@ -1475,6 +1508,12 @@ namespace PhysicalCombatOverhaul
 
         }
 
+        public static int CalculateDummyWeaponToHit(DummyDFUItem weapon)
+        {
+            return weapon.GetWeaponMaterialModifier() * 2 + 2;
+
+        }
+
         private static int CalculateWeaponAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, int damageModifier, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             int damage = UnityEngine.Random.Range(weapon.GetBaseDamageMin(), weapon.GetBaseDamageMax() + 1) + damageModifier;
@@ -1535,6 +1574,55 @@ namespace PhysicalCombatOverhaul
             // Mod hook for adjusting final damage. (is a no-op in DFU)
             if (attacker == player && archeryModuleCheck)
                 damage = AdjustWeaponAttackDamage(attacker, target, damage, weaponAnimTime, weapon);
+
+            return damage;
+        }
+
+        public static int CalculateDummyWeaponAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, int damageModifier, int weaponAnimTime, DummyDFUItem weapon)
+        {
+            int damage = UnityEngine.Random.Range(weapon.GetBaseDamageMin(), weapon.GetBaseDamageMax() + 1) + damageModifier;
+
+            PlayerEntity player = GameManager.Instance.PlayerEntity;
+
+            if (target == player)
+            {
+                if (GameManager.Instance.PlayerEffectManager.HasLycanthropy() || GameManager.Instance.PlayerEffectManager.HasVampirism())
+                {
+                    if (weapon.nativeMaterialValue == (int)WeaponMaterialTypes.Silver)
+                        damage *= 2;
+                }
+            }
+            else
+            {
+                // Has most of the "obvious" enemies take extra damage from silver weapons, most of the lower level undead, as well as werebeasts.
+                EnemyEntity AITarget = target as EnemyEntity;
+                switch (AITarget.CareerIndex)
+                {
+                    case (int)MonsterCareers.Werewolf:
+                    case (int)MonsterCareers.Wereboar:
+                    case (int)MonsterCareers.SkeletalWarrior:
+                    case (int)MonsterCareers.Ghost:
+                    case (int)MonsterCareers.Mummy:
+                    case (int)MonsterCareers.Wraith:
+                    case (int)MonsterCareers.Vampire:
+                        if (weapon.nativeMaterialValue == (int)WeaponMaterialTypes.Silver) { damage *= 2; }
+                        break;
+                    default: break;
+                }
+            }
+            // TODO: Apply strength bonus from Mace of Molag Bal
+
+            // Apply strength modifier
+            damage += DamageModifier(attacker.Stats.LiveStrength);
+
+            // Apply material modifier.
+            // The in-game display in Daggerfall of weapon damages with material modifiers is incorrect. The material modifier is half of what the display suggests.
+            damage += weapon.GetWeaponMaterialModifier();
+            if (damage < 1)
+                damage = 0;
+
+            if (damage >= 1)
+                damage += GetBonusOrPenaltyByEnemyType(attacker, target); // Added my own, non-overriden version of this method for modification.
 
             return damage;
         }
@@ -2534,8 +2622,6 @@ namespace PhysicalCombatOverhaul
 
             if (damAfterDR > 0)
             {
-                CalculateNaturalDamageReductions(ref cVars);
-
                 if (cVars.tNatDT > 0 || cVars.tBluntMulti > 0 || cVars.tSlashMulti > 0 || cVars.tPierceMulti > 0)
                 {
                     if (cVars.unarmedAttack || cVars.wepType == (short)DFCareer.Skills.HandToHand || cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
@@ -2676,7 +2762,7 @@ namespace PhysicalCombatOverhaul
                     float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
 
-                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f));
+                    matDiffBody = cVars.tArmHardness - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.02f));
                     float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.7f + (matDiffArmor * 0.35f), 2.7f) : Mathf.Max(0.7f + (matDiffArmor * 0.15f), 0.1f);
                     int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
 
@@ -2691,7 +2777,7 @@ namespace PhysicalCombatOverhaul
                     float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.7f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
 
-                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.015f));
+                    matDiffBody = cVars.tArmHardness - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.015f));
                     float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.5f + (matDiffArmor * 0.25f), 3.5f) : Mathf.Max(0.5f + (matDiffArmor * 0.1f), 0.1f);
                     int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
 
@@ -2706,7 +2792,7 @@ namespace PhysicalCombatOverhaul
                     float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 3f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
 
-                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.01f));
+                    matDiffBody = cVars.tArmHardness - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.01f));
                     float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.4f + (matDiffArmor * 0.2f), 5f) : Mathf.Max(0.4f + (matDiffArmor * 0.075f), 0.1f);
                     int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
 
@@ -2720,7 +2806,7 @@ namespace PhysicalCombatOverhaul
                     float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 2.4f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
 
-                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.0065f));
+                    matDiffBody = cVars.tArmHardness - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.0065f));
                     float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.3f + (matDiffArmor * 0.15f), 4f) : Mathf.Max(0.3f + (matDiffArmor * 0.05f), 0.1f);
                     int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
 
@@ -2734,7 +2820,7 @@ namespace PhysicalCombatOverhaul
                     float conDamModArmor = Mathf.Clamp(1f + (matDiffArmor * 0.2f), 0.3f, 3f);
                     int damByDT = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamModArmor), 0);
 
-                    matDiffBody = GetCreatureBodyMaterial(cVars.tarCareer) - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.01f));
+                    matDiffBody = cVars.tArmHardness - (GetWeaponMaterial(weapon) + ((cVars.aStrn + 50) * 0.01f));
                     float conDamModBody = matDiffBody > 0 ? Mathf.Min(0.4f + (matDiffArmor * 0.2f), 5f) : Mathf.Max(0.4f + (matDiffArmor * 0.075f), 0.1f);
                     int damByBody = Mathf.Max(Mathf.RoundToInt(damToBody * conDamModBody), 0);
 

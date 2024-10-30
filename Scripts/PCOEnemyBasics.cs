@@ -5,6 +5,7 @@ using DaggerfallConnect.FallExe;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Entity;
+using DaggerfallWorkshop.Game.Formulas;
 using DaggerfallWorkshop.Game.Items;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace PhysicalCombatOverhaul
         public int ID;
         public BodySize Size;
         public NaturalArmorType ArmorType;
+        public int ArmorHardness;
         public AttackType Attack;
         public AttackElementType AttackElement;
         public int AttackOdds;
@@ -195,6 +197,44 @@ namespace PhysicalCombatOverhaul
                     return (int)Skills.None;
             }
         }
+
+        public int GetWeaponMaterialModifier()
+        {
+            switch (nativeMaterialValue)
+            {
+                case (int)WeaponMaterialTypes.Iron:
+                    return -1;
+                case (int)WeaponMaterialTypes.Steel:
+                case (int)WeaponMaterialTypes.Silver:
+                    return 0;
+                case (int)WeaponMaterialTypes.Elven:
+                    return 1;
+                case (int)WeaponMaterialTypes.Dwarven:
+                    return 2;
+                case (int)WeaponMaterialTypes.Mithril:
+                case (int)WeaponMaterialTypes.Adamantium:
+                    return 3;
+                case (int)WeaponMaterialTypes.Ebony:
+                    return 4;
+                case (int)WeaponMaterialTypes.Orcish:
+                    return 5;
+                case (int)WeaponMaterialTypes.Daedric:
+                    return 6;
+
+                default:
+                    return 0;
+            }
+        }
+
+        public virtual int GetBaseDamageMin()
+        {
+            return FormulaHelper.CalculateWeaponMinDamage((Weapons)templateIndex);
+        }
+
+        public virtual int GetBaseDamageMax()
+        {
+            return FormulaHelper.CalculateWeaponMaxDamage((Weapons)templateIndex);
+        }
     }
 
     /// <summary>
@@ -212,6 +252,7 @@ namespace PhysicalCombatOverhaul
                 ID = 0,
                 Size = BodySize.Small,
                 ArmorType = NaturalArmorType.Fur,
+                ArmorHardness = -1,
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -223,6 +264,7 @@ namespace PhysicalCombatOverhaul
                 ID = 1,
                 Size = BodySize.Tiny,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Elemental_Touch,
                 AttackElement = AttackElementType.Magic,
                 AttackOdds = 75,
@@ -237,6 +279,7 @@ namespace PhysicalCombatOverhaul
                 ID = 2,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Bone, // Might make a "wood" natural armor type, but will see.
+                ArmorHardness = 1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -252,6 +295,7 @@ namespace PhysicalCombatOverhaul
                 ID = 3,
                 Size = BodySize.Small,
                 ArmorType = NaturalArmorType.Fur,
+                ArmorHardness = -1,
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -263,6 +307,7 @@ namespace PhysicalCombatOverhaul
                 ID = 4,
                 Size = BodySize.Large,
                 ArmorType = NaturalArmorType.Fur,
+                ArmorHardness = 0,
                 Attack = AttackType.Claw,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 75,
@@ -279,6 +324,7 @@ namespace PhysicalCombatOverhaul
                 ID = 5,
                 Size = BodySize.Large,
                 ArmorType = NaturalArmorType.Fur,
+                ArmorHardness = 0,
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 50,
@@ -295,6 +341,7 @@ namespace PhysicalCombatOverhaul
                 ID = 6,
                 Size = BodySize.Small,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 0,
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -310,6 +357,7 @@ namespace PhysicalCombatOverhaul
                 ID = 7,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -322,6 +370,7 @@ namespace PhysicalCombatOverhaul
                 ID = 8,
                 Size = BodySize.Large,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -334,6 +383,7 @@ namespace PhysicalCombatOverhaul
                 ID = 9,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Fur,
+                ArmorHardness = 0,
                 Attack = AttackType.Claw,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 80,
@@ -350,6 +400,7 @@ namespace PhysicalCombatOverhaul
                 ID = 10,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Elemental_Touch,
                 AttackElement = AttackElementType.Draining,
                 AttackOdds = 100,
@@ -361,6 +412,7 @@ namespace PhysicalCombatOverhaul
                 ID = 11,
                 Size = BodySize.Small,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 0,
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -374,6 +426,7 @@ namespace PhysicalCombatOverhaul
                 ID = 12,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -386,6 +439,7 @@ namespace PhysicalCombatOverhaul
                 ID = 13,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Fur,
+                ArmorHardness = -1,
                 Attack = AttackType.Claw,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -398,6 +452,7 @@ namespace PhysicalCombatOverhaul
                 ID = 14,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Fur,
+                ArmorHardness = 0,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 50,
@@ -417,6 +472,7 @@ namespace PhysicalCombatOverhaul
                 ID = 15,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Bone,
+                ArmorHardness = 1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -433,6 +489,7 @@ namespace PhysicalCombatOverhaul
                 ID = 16,
                 Size = BodySize.Large,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -445,6 +502,7 @@ namespace PhysicalCombatOverhaul
                 ID = 17,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Scratch,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 40,
@@ -462,6 +520,7 @@ namespace PhysicalCombatOverhaul
                 ID = 18,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Ethereal,
+                ArmorHardness = -2,
                 Attack = AttackType.Ethereal,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -473,6 +532,7 @@ namespace PhysicalCombatOverhaul
                 ID = 19,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Scratch,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 40,
@@ -490,6 +550,7 @@ namespace PhysicalCombatOverhaul
                 ID = 20,
                 Size = BodySize.Large,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 1,
                 Attack = AttackType.Sting,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 65,
@@ -508,6 +569,7 @@ namespace PhysicalCombatOverhaul
                 ID = 21,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Elemental_Touch,
                 AttackElement = AttackElementType.Lightning,
                 AttackOdds = 65,
@@ -523,6 +585,7 @@ namespace PhysicalCombatOverhaul
                 ID = 22,
                 Size = BodySize.Large,
                 ArmorType = NaturalArmorType.Rock,
+                ArmorHardness = 4,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -539,6 +602,7 @@ namespace PhysicalCombatOverhaul
                 ID = 23,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Ethereal,
+                ArmorHardness = -2,
                 Attack = AttackType.Ethereal,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -550,6 +614,7 @@ namespace PhysicalCombatOverhaul
                 ID = 24,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -562,6 +627,7 @@ namespace PhysicalCombatOverhaul
                 ID = 25,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Metal,
+                ArmorHardness = 4,
                 Attack = AttackType.Elemental_Bludgeon,
                 AttackElement = AttackElementType.Ice,
                 AttackOdds = 100,
@@ -577,6 +643,7 @@ namespace PhysicalCombatOverhaul
                 ID = 26,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Metal,
+                ArmorHardness = 3,
                 Attack = AttackType.Elemental_Slash,
                 AttackElement = AttackElementType.Fire,
                 AttackOdds = 100,
@@ -590,6 +657,7 @@ namespace PhysicalCombatOverhaul
                 ID = 27,
                 Size = BodySize.Large,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 2,
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -604,6 +672,7 @@ namespace PhysicalCombatOverhaul
                 ID = 28,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Scratch,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 70,
@@ -618,6 +687,7 @@ namespace PhysicalCombatOverhaul
                 ID = 29,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Scratch,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 50,
@@ -632,6 +702,7 @@ namespace PhysicalCombatOverhaul
                 ID = 30,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Scratch,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 70,
@@ -646,6 +717,7 @@ namespace PhysicalCombatOverhaul
                 ID = 31,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = -1,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -659,6 +731,7 @@ namespace PhysicalCombatOverhaul
                 ID = 32,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Bone,
+                ArmorHardness = 1,
                 Attack = AttackType.Elemental_Touch,
                 AttackElement = AttackElementType.Magic,
                 AttackOdds = 40,
@@ -681,6 +754,7 @@ namespace PhysicalCombatOverhaul
                 ID = 33,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Bone,
+                ArmorHardness = 1,
                 Attack = AttackType.Elemental_Touch,
                 AttackElement = AttackElementType.Magic,
                 AttackOdds = 45,
@@ -703,6 +777,7 @@ namespace PhysicalCombatOverhaul
                 ID = 34,
                 Size = BodySize.Small,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 1,
                 Attack = AttackType.Elemental_Breath,
                 AttackElement = AttackElementType.Fire,
                 AttackOdds = 70,
@@ -719,6 +794,7 @@ namespace PhysicalCombatOverhaul
                 ID = 35,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = 2,
                 Attack = AttackType.Elemental_Bludgeon,
                 AttackElement = AttackElementType.Fire,
                 AttackOdds = 100,
@@ -730,6 +806,7 @@ namespace PhysicalCombatOverhaul
                 ID = 36,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Metal,
+                ArmorHardness = 5,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -746,6 +823,7 @@ namespace PhysicalCombatOverhaul
                 ID = 37,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Flesh,
+                ArmorHardness = 0,
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -757,6 +835,7 @@ namespace PhysicalCombatOverhaul
                 ID = 38,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Rock,
+                ArmorHardness = 3,
                 Attack = AttackType.Elemental_Slash,
                 AttackElement = AttackElementType.Ice,
                 AttackOdds = 100,
@@ -772,6 +851,7 @@ namespace PhysicalCombatOverhaul
                 ID = 40,
                 Size = BodySize.Huge,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 2,
                 Attack = AttackType.Elemental_Breath,
                 AttackElement = AttackElementType.Fire,
                 AttackOdds = 40,
@@ -793,6 +873,7 @@ namespace PhysicalCombatOverhaul
                 ID = 41,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 1,
                 Attack = AttackType.Pinch,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
@@ -808,6 +889,7 @@ namespace PhysicalCombatOverhaul
                 ID = 42,
                 Size = BodySize.Average,
                 ArmorType = NaturalArmorType.Scale,
+                ArmorHardness = 0,
                 Attack = AttackType.Elemental_Touch,
                 AttackElement = AttackElementType.Draining,
                 AttackOdds = 75,
