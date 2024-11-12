@@ -32,7 +32,8 @@ namespace PhysicalCombatOverhaul
         public AttackType Attack4;
         public AttackElementType AttackElement4;
         public int AttackOdds4;
-        public DummyDFUItem MonsterWeapon;
+        public int[] AttacksList;
+        public DaggerfallUnityItem MonsterWeapon;
         public float NaturalDT;
         public float BluntDR;
         public float SlashDR;
@@ -104,139 +105,6 @@ namespace PhysicalCombatOverhaul
         Huge = 4,
     }
 
-    /// <summary>Class to hopefully keep from spamming new UID values from enemies being assigned 'fake' weapons, will see if it works or not.</summary>
-    public class DummyDFUItem
-    {
-        public ItemGroups itemGroup { get; set; }
-        public int groupIndex { get; set; }
-        public int nativeMaterialValue { get; set; }
-        public int templateIndex { get; set; }
-        public float weightInKg { get; set; }
-
-        // Default constructor
-        public DummyDFUItem()
-        {
-            // Default values
-            itemGroup = ItemGroups.None;
-            groupIndex = 0;
-            nativeMaterialValue = -1;
-            templateIndex = -1;
-            weightInKg = 0.0f;
-        }
-
-        /// <summary>Generates a dummy weapon.</summary>
-        public static DummyDFUItem CreateDummyWeapon(Weapons weapon, WeaponMaterialTypes material) // Later may consider just assigning all these values manually for "dummy" weapons. 
-        {
-            // Create dummy item
-            DummyDFUItem newItem = new DummyDFUItem();
-            newItem.itemGroup = ItemGroups.Weapons;
-            newItem.groupIndex = DaggerfallUnity.Instance.ItemHelper.GetGroupIndex(ItemGroups.Weapons, (int)weapon);
-            newItem.nativeMaterialValue = (int)material;
-
-            ItemTemplate itemTemplate = DaggerfallUnity.Instance.ItemHelper.GetItemTemplate(newItem.itemGroup, newItem.groupIndex);
-
-            newItem.templateIndex = itemTemplate.index;
-
-            int quarterKgs = (int)(itemTemplate.baseWeight * 4);
-            float matQuarterKgs = (float)(quarterKgs * PhysicalCombatOverhaulMain.weightMultipliersByMaterial[(int)material]) / 4;
-            newItem.weightInKg = Mathf.Round(matQuarterKgs) / 4;
-
-            return newItem;
-        }
-
-        public short GetWeaponSkillIDAsShort()
-        {
-            int skill = GetWeaponSkillUsed();
-            switch (skill)
-            {
-                case (int)DFCareer.ProficiencyFlags.ShortBlades:
-                    return (int)Skills.ShortBlade;
-                case (int)DFCareer.ProficiencyFlags.LongBlades:
-                    return (int)Skills.LongBlade;
-                case (int)DFCareer.ProficiencyFlags.Axes:
-                    return (int)Skills.Axe;
-                case (int)DFCareer.ProficiencyFlags.BluntWeapons:
-                    return (int)Skills.BluntWeapon;
-                case (int)DFCareer.ProficiencyFlags.MissileWeapons:
-                    return (int)Skills.Archery;
-
-                default:
-                    return (int)Skills.None;
-            }
-        }
-
-        public int GetWeaponSkillUsed()
-        {
-            switch (templateIndex)
-            {
-                case (int)Weapons.Dagger:
-                case (int)Weapons.Tanto:
-                case (int)Weapons.Wakazashi:
-                case (int)Weapons.Shortsword:
-                    return (int)DFCareer.ProficiencyFlags.ShortBlades;
-                case (int)Weapons.Broadsword:
-                case (int)Weapons.Longsword:
-                case (int)Weapons.Saber:
-                case (int)Weapons.Katana:
-                case (int)Weapons.Claymore:
-                case (int)Weapons.Dai_Katana:
-                    return (int)DFCareer.ProficiencyFlags.LongBlades;
-                case (int)Weapons.Battle_Axe:
-                case (int)Weapons.War_Axe:
-                    return (int)DFCareer.ProficiencyFlags.Axes;
-                case (int)Weapons.Flail:
-                case (int)Weapons.Mace:
-                case (int)Weapons.Warhammer:
-                case (int)Weapons.Staff:
-                    return (int)DFCareer.ProficiencyFlags.BluntWeapons;
-                case (int)Weapons.Short_Bow:
-                case (int)Weapons.Long_Bow:
-                    return (int)DFCareer.ProficiencyFlags.MissileWeapons;
-
-                default:
-                    return (int)Skills.None;
-            }
-        }
-
-        public int GetWeaponMaterialModifier()
-        {
-            switch (nativeMaterialValue)
-            {
-                case (int)WeaponMaterialTypes.Iron:
-                    return -1;
-                case (int)WeaponMaterialTypes.Steel:
-                case (int)WeaponMaterialTypes.Silver:
-                    return 0;
-                case (int)WeaponMaterialTypes.Elven:
-                    return 1;
-                case (int)WeaponMaterialTypes.Dwarven:
-                    return 2;
-                case (int)WeaponMaterialTypes.Mithril:
-                case (int)WeaponMaterialTypes.Adamantium:
-                    return 3;
-                case (int)WeaponMaterialTypes.Ebony:
-                    return 4;
-                case (int)WeaponMaterialTypes.Orcish:
-                    return 5;
-                case (int)WeaponMaterialTypes.Daedric:
-                    return 6;
-
-                default:
-                    return 0;
-            }
-        }
-
-        public virtual int GetBaseDamageMin()
-        {
-            return FormulaHelper.CalculateWeaponMinDamage((Weapons)templateIndex);
-        }
-
-        public virtual int GetBaseDamageMax()
-        {
-            return FormulaHelper.CalculateWeaponMaxDamage((Weapons)templateIndex);
-        }
-    }
-
     /// <summary>
     /// Static definitions for enemies and their various properties.
     /// </summary>
@@ -256,6 +124,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bite, AttackElementType.None, 100),
             },
 
             // Imp
@@ -271,6 +141,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Elemental_Touch,
                 AttackElement2 = AttackElementType.Acid,
                 AttackOdds2 = 25,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Touch, AttackElementType.Magic, 75,
+                    AttackType.Elemental_Touch, AttackElementType.Acid, 25),
             },
 
             // Spriggan
@@ -283,6 +156,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
                 NaturalDT = 3.25f,
                 BluntDR = 0.8f,
                 SlashDR = 1.75f,
@@ -299,6 +174,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bite, AttackElementType.None, 100),
             },
 
             // Grizzly Bear
@@ -314,6 +191,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Maul,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 25,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Claw, AttackElementType.None, 75,
+                    AttackType.Maul, AttackElementType.None, 25),
                 NaturalDT = 2f,
                 BluntDR = 0.8f,
             },
@@ -331,6 +211,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Claw,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 50,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bite, AttackElementType.None, 50,
+                    AttackType.Claw, AttackElementType.None, 50),
                 NaturalDT = 1f,
                 BluntDR = 0.8f,
             },
@@ -345,6 +228,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bite, AttackElementType.None, 100),
                 NaturalDT = 1.5f,
                 BluntDR = 1.4f,
                 SlashDR = 0.8f,
@@ -361,7 +246,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Saber, WeaponMaterialTypes.Steel),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Saber, WeaponMaterialTypes.Steel),
             },
 
             // Centaur
@@ -374,7 +261,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Claymore, WeaponMaterialTypes.Elven),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Claymore, WeaponMaterialTypes.Elven),
             },
 
             // Werewolf
@@ -390,6 +279,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Bite,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 20,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Claw, AttackElementType.None, 80,
+                    AttackType.Bite, AttackElementType.None, 20),
                 NaturalDT = 1f,
                 BluntDR = 0.8f,
             },
@@ -404,6 +296,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Elemental_Touch,
                 AttackElement = AttackElementType.Draining,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Touch, AttackElementType.Draining, 100),
             },
 
             // Slaughterfish
@@ -416,6 +310,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bite, AttackElementType.None, 100),
                 NaturalDT = 1f,
                 SlashDR = 0.8f,
             },
@@ -430,7 +326,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Dwarven),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Dwarven),
             },
 
             // Harpy
@@ -443,6 +341,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Claw,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Claw, AttackElementType.None, 100),
                 BluntDR = 0.9f,
             },
 
@@ -462,6 +362,10 @@ namespace PhysicalCombatOverhaul
                 Attack3 = AttackType.Bite,
                 AttackElement3 = AttackElementType.None,
                 AttackOdds3 = 10,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 50,
+                    AttackType.Claw, AttackElementType.None, 40,
+                    AttackType.Bite, AttackElementType.None, 10),
                 NaturalDT = 1.5f,
                 BluntDR = 0.8f,
             },
@@ -476,7 +380,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.War_Axe, WeaponMaterialTypes.Steel),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.War_Axe, WeaponMaterialTypes.Steel),
                 NaturalDT = 2f,
                 BluntDR = 1.5f,
                 SlashDR = 0.9f,
@@ -493,7 +399,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Warhammer, WeaponMaterialTypes.Steel),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Warhammer, WeaponMaterialTypes.Steel),
             },
 
             // Zombie
@@ -512,6 +420,10 @@ namespace PhysicalCombatOverhaul
                 Attack3 = AttackType.Bite,
                 AttackElement3 = AttackElementType.None,
                 AttackOdds3 = 25,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Scratch, AttackElementType.None, 40,
+                    AttackType.Bash, AttackElementType.None, 35,
+                    AttackType.Bite, AttackElementType.None, 25),
             },
 
             // Ghost
@@ -524,6 +436,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Ethereal,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Ethereal, AttackElementType.None, 100),
             },
 
             // Mummy
@@ -542,6 +456,10 @@ namespace PhysicalCombatOverhaul
                 Attack3 = AttackType.Bite,
                 AttackElement3 = AttackElementType.None,
                 AttackOdds3 = 25,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Scratch, AttackElementType.None, 40,
+                    AttackType.Bash, AttackElementType.None, 35,
+                    AttackType.Bite, AttackElementType.None, 25),
             },
 
             // Giant Scorpion
@@ -557,6 +475,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Pinch,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 35,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Sting, AttackElementType.None, 65,
+                    AttackType.Pinch, AttackElementType.None, 35),
                 NaturalDT = 2.5f,
                 BluntDR = 1.4f,
                 SlashDR = 0.8f,
@@ -576,7 +497,10 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Bash,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 35,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Touch, AttackElementType.Lightning, 65,
+                    AttackType.Bash, AttackElementType.None, 35),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium),
             },
 
             // Gargoyle
@@ -589,7 +513,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Flail, WeaponMaterialTypes.Steel),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Flail, WeaponMaterialTypes.Steel),
                 NaturalDT = 4.25f,
                 BluntDR = 2.0f,
                 SlashDR = 0.7f,
@@ -606,6 +532,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Ethereal,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Ethereal, AttackElementType.None, 100),
             },
 
             // Orc Warlord
@@ -618,7 +546,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Orcish),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Orcish),
             },
 
             // Frost Daedra
@@ -631,7 +561,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Elemental_Bludgeon,
                 AttackElement = AttackElementType.Ice,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Warhammer, WeaponMaterialTypes.Daedric),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Bludgeon, AttackElementType.Ice, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Warhammer, WeaponMaterialTypes.Daedric),
                 NaturalDT = 4f,
                 BluntDR = 1.25f,
                 PierceDR = 0.8f,
@@ -647,7 +579,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Elemental_Slash,
                 AttackElement = AttackElementType.Fire,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Slash, AttackElementType.Fire, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric),
                 NaturalDT = 3f,
             },
 
@@ -661,7 +595,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bite,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Orcish),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bite, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Orcish),
                 NaturalDT = 3f,
                 SlashDR = 0.7f,
             },
@@ -679,6 +615,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Bite,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 30,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Scratch, AttackElementType.None, 70,
+                    AttackType.Bite, AttackElementType.None, 30),
             },
 
             // Daedra Seducer
@@ -694,6 +633,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Elemental_Touch,
                 AttackElement2 = AttackElementType.Magic,
                 AttackOdds2 = 50,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Scratch, AttackElementType.None, 50,
+                    AttackType.Elemental_Touch, AttackElementType.Magic, 50),
             },
 
             // Vampire Ancient
@@ -709,6 +651,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Bite,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 30,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Scratch, AttackElementType.None, 70,
+                    AttackType.Bite, AttackElementType.None, 30),
             },
 
             // Daedra Lord
@@ -721,7 +666,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric),
                 NaturalDT = 3f,
             },
 
@@ -741,7 +688,11 @@ namespace PhysicalCombatOverhaul
                 Attack3 = AttackType.Bash,
                 AttackElement3 = AttackElementType.None,
                 AttackOdds3 = 20,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Touch, AttackElementType.Magic, 40,
+                    AttackType.Elemental_Touch, AttackElementType.Lightning, 40,
+                    AttackType.Bash, AttackElementType.None, 20),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium),
                 NaturalDT = 2f,
                 BluntDR = 1.5f,
                 SlashDR = 0.9f,
@@ -764,7 +715,11 @@ namespace PhysicalCombatOverhaul
                 Attack3 = AttackType.Bash,
                 AttackElement3 = AttackElementType.None,
                 AttackOdds3 = 10,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Touch, AttackElementType.Magic, 45,
+                    AttackType.Elemental_Touch, AttackElementType.Lightning, 45,
+                    AttackType.Bash, AttackElementType.None, 10),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Staff, WeaponMaterialTypes.Adamantium),
                 NaturalDT = 2f,
                 BluntDR = 1.5f,
                 SlashDR = 0.9f,
@@ -784,6 +739,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Claw,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 30,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Breath, AttackElementType.Fire, 70,
+                    AttackType.Claw, AttackElementType.None, 30),
                 NaturalDT = 2.75f,
                 SlashDR = 0.7f,
             },
@@ -798,6 +756,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Elemental_Bludgeon,
                 AttackElement = AttackElementType.Fire,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Bludgeon, AttackElementType.Fire, 100),
             },
 
             // Iron Atronach
@@ -810,7 +770,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Mace, WeaponMaterialTypes.Iron),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Mace, WeaponMaterialTypes.Iron),
                 NaturalDT = 4.75f,
                 BluntDR = 0.4f,
                 SlashDR = 0.7f,
@@ -827,6 +789,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Bash,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Bash, AttackElementType.None, 100),
             },
 
             // Ice Atronach
@@ -839,7 +803,9 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Elemental_Slash,
                 AttackElement = AttackElementType.Ice,
                 AttackOdds = 100,
-                MonsterWeapon = DummyDFUItem.CreateDummyWeapon(Weapons.Katana, WeaponMaterialTypes.Elven),
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Slash, AttackElementType.Ice, 100),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Katana, WeaponMaterialTypes.Elven),
                 NaturalDT = 3.25f,
                 BluntDR = 1.5f,
                 PierceDR = 0.6f,
@@ -861,6 +827,10 @@ namespace PhysicalCombatOverhaul
                 Attack3 = AttackType.Bite,
                 AttackElement3 = AttackElementType.None,
                 AttackOdds3 = 30,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Breath, AttackElementType.Fire, 40,
+                    AttackType.Claw, AttackElementType.None, 30,
+                    AttackType.Bite, AttackElementType.None, 30),
                 NaturalDT = 5f,
                 BluntDR = 0.75f,
                 SlashDR = 0.5f,
@@ -877,6 +847,8 @@ namespace PhysicalCombatOverhaul
                 Attack = AttackType.Pinch,
                 AttackElement = AttackElementType.None,
                 AttackOdds = 100,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Pinch, AttackElementType.None, 100),
                 NaturalDT = 2.5f,
                 BluntDR = 1.4f,
                 SlashDR = 0.8f,
@@ -896,6 +868,9 @@ namespace PhysicalCombatOverhaul
                 Attack2 = AttackType.Scratch,
                 AttackElement2 = AttackElementType.None,
                 AttackOdds2 = 25,
+                AttacksList = CombineIntoAttacksList(
+                    AttackType.Elemental_Touch, AttackElementType.Draining, 75,
+                    AttackType.Scratch, AttackElementType.None, 25),
                 NaturalDT = 1f,
                 SlashDR = 0.8f,
             },
@@ -904,6 +879,36 @@ namespace PhysicalCombatOverhaul
         #endregion
 
         #region Helpers
+
+        public static int[] CombineIntoAttacksList(AttackType aT1 = AttackType.Bash, AttackElementType aE1 = AttackElementType.None, int aO1 = 100, AttackType aT2 = AttackType.Bash, AttackElementType aE2 = AttackElementType.None, int aO2 = 0, AttackType aT3 = AttackType.Bash, AttackElementType aE3 = AttackElementType.None, int aO3 = 0, AttackType aT4 = AttackType.Bash, AttackElementType aE4 = AttackElementType.None, int aO4 = 0)
+        {
+            List<int> combinedList = new List<int>();
+
+            for (int i = 0; i < 12; i++)
+            {
+                if (i == 0 && aO1 > 0)
+                {
+                    combinedList.Add(aO1); combinedList.Add((int)aT1); combinedList.Add((int)aE1); continue;
+                }
+
+                if (i == 3 && aO2 > 0)
+                {
+                    combinedList.Add(aO2); combinedList.Add((int)aT2); combinedList.Add((int)aE2); continue;
+                }
+
+                if (i == 6 && aO3 > 0)
+                {
+                    combinedList.Add(aO3); combinedList.Add((int)aT3); combinedList.Add((int)aE3); continue;
+                }
+
+                if (i == 9 && aO4 > 0)
+                {
+                    combinedList.Add(aO4); combinedList.Add((int)aT4); combinedList.Add((int)aE4); continue;
+                }
+            }
+
+            return combinedList.ToArray();
+        }
 
         /// <summary>
         /// Build a dictionary of monsters keyed by ID.

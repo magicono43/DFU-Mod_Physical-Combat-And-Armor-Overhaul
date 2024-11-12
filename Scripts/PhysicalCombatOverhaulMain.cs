@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		10/29/2024, 11:30 PM
+// Last Edit:		11/11/2024, 10:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -318,7 +318,10 @@ namespace PhysicalCombatOverhaul
             public bool fullBlock;
             public bool partBlock;
 
-            public DummyDFUItem monsterWeapon;
+            public DaggerfallUnityItem aMonsterWeapon;
+            public bool aUseDummyWep;
+            public DaggerfallUnityItem tMonsterWeapon;
+            public bool tUseDummyWep;
         }
 
         /// <summary>Fill in basic data for a new 'CombatVariables' struct variable.</summary>
@@ -405,7 +408,10 @@ namespace PhysicalCombatOverhaul
             cvars.fullBlock = false;
             cvars.partBlock = false;
 
-            cvars.monsterWeapon = null;
+            cvars.aMonsterWeapon = null;
+            cvars.aUseDummyWep = false;
+            cvars.tMonsterWeapon = null;
+            cvars.tUseDummyWep = false;
 
             return cvars;
         }
@@ -483,7 +489,7 @@ namespace PhysicalCombatOverhaul
                 cVars.tarSize = monster.Size;
                 cVars.tNatArm = monster.ArmorType;
                 cVars.tArmHardness = monster.ArmorHardness;
-                cVars.monsterWeapon = monster.MonsterWeapon;
+                cVars.aMonsterWeapon = monster.MonsterWeapon;
                 cVars.tNatDT = monster.NaturalDT;
                 cVars.tBluntMulti = monster.BluntDR;
                 cVars.tSlashMulti = monster.SlashDR;
@@ -504,7 +510,7 @@ namespace PhysicalCombatOverhaul
                 cVars.attackType4 = monster.Attack4;
                 cVars.attackElement4 = monster.AttackElement4;
                 cVars.attackOdds4 = monster.AttackOdds4;
-                cVars.monsterWeapon = monster.MonsterWeapon;
+                cVars.tMonsterWeapon = monster.MonsterWeapon;
             }
         }
 
@@ -671,6 +677,19 @@ namespace PhysicalCombatOverhaul
             cVars.atkCareer = GetCreatureCareer(attacker);
             GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
 
+            if (weapon == null)
+            {
+                cVars.aUseDummyWep = true;
+            }
+            else if (weapon != null && cVars.aMonsterWeapon != null)
+            {
+                if (cVars.aMonsterWeapon.nativeMaterialValue >= weapon.nativeMaterialValue && cVars.aMonsterWeapon.GetBaseDamageMax() >= weapon.GetBaseDamageMax())
+                {
+                    cVars.aUseDummyWep = true;
+                    weapon = null;
+                }
+            }
+
             // Choose whether weapon-wielding enemies use their weapons or weaponless attacks.
             // In classic, weapon-wielding enemies use the damage values of their weapons, instead of their weaponless values.
             // For some enemies this gives lower damage than similar-tier monsters and the weaponless values seems more appropriate, so here
@@ -683,6 +702,17 @@ namespace PhysicalCombatOverhaul
                 {
                     // Use hand-to-hand
                     weapon = null;
+                }
+            }
+
+            if (cVars.aMonsterWeapon != null)
+            {
+                int weaponAverage = (cVars.aMonsterWeapon.GetBaseDamageMin() + cVars.aMonsterWeapon.GetBaseDamageMax()) / 2;
+                int noWeaponAverage = (attacker.MobileEnemy.MinDamage + attacker.MobileEnemy.MaxDamage) / 2;
+                if (noWeaponAverage > weaponAverage)
+                {
+                    // Use hand-to-hand
+                    cVars.aMonsterWeapon = null;
                 }
             }
 
@@ -713,16 +743,16 @@ namespace PhysicalCombatOverhaul
                     }
                 }
             }
-            else if (cVars.monsterWeapon != null)
+            else if (cVars.aMonsterWeapon != null)
             {
-                cVars.wepType = cVars.monsterWeapon.GetWeaponSkillIDAsShort();
+                cVars.wepType = cVars.aMonsterWeapon.GetWeaponSkillIDAsShort();
 
                 if (softMatRequireModuleCheck)
                 {
-                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.monsterWeapon.nativeMaterialValue)
+                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.aMonsterWeapon.nativeMaterialValue)
                     {
                         int targetMatRequire = (int)target.MinMetalToHit;
-                        int weaponMatValue = cVars.monsterWeapon.nativeMaterialValue;
+                        int weaponMatValue = cVars.aMonsterWeapon.nativeMaterialValue;
                         cVars.matReqDamMulti = targetMatRequire - weaponMatValue;
 
                         if (cVars.matReqDamMulti <= 0) // There is no "bonus" damage for meeting material requirements, nor for exceeding them, just normal unmodded damage.
@@ -733,7 +763,7 @@ namespace PhysicalCombatOverhaul
                 }
                 else
                 {
-                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.monsterWeapon.nativeMaterialValue)
+                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.aMonsterWeapon.nativeMaterialValue)
                     {
                         PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
                         return 0;
@@ -772,7 +802,7 @@ namespace PhysicalCombatOverhaul
                 }
                 else // attacker is a monster
                 {
-                    // Handle multiple attacks by AI
+                    // Handle multiple attacks by AI // Continue here tomorrow I suppose. See about rolling which attack type to use I suppose, based on the attackList array?
                     int minBaseDamage = 0;
                     int maxBaseDamage = 0;
                     int attackNumber = 0;
@@ -1508,12 +1538,6 @@ namespace PhysicalCombatOverhaul
 
         }
 
-        public static int CalculateDummyWeaponToHit(DummyDFUItem weapon)
-        {
-            return weapon.GetWeaponMaterialModifier() * 2 + 2;
-
-        }
-
         private static int CalculateWeaponAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, int damageModifier, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
             int damage = UnityEngine.Random.Range(weapon.GetBaseDamageMin(), weapon.GetBaseDamageMax() + 1) + damageModifier;
@@ -1574,55 +1598,6 @@ namespace PhysicalCombatOverhaul
             // Mod hook for adjusting final damage. (is a no-op in DFU)
             if (attacker == player && archeryModuleCheck)
                 damage = AdjustWeaponAttackDamage(attacker, target, damage, weaponAnimTime, weapon);
-
-            return damage;
-        }
-
-        public static int CalculateDummyWeaponAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, int damageModifier, int weaponAnimTime, DummyDFUItem weapon)
-        {
-            int damage = UnityEngine.Random.Range(weapon.GetBaseDamageMin(), weapon.GetBaseDamageMax() + 1) + damageModifier;
-
-            PlayerEntity player = GameManager.Instance.PlayerEntity;
-
-            if (target == player)
-            {
-                if (GameManager.Instance.PlayerEffectManager.HasLycanthropy() || GameManager.Instance.PlayerEffectManager.HasVampirism())
-                {
-                    if (weapon.nativeMaterialValue == (int)WeaponMaterialTypes.Silver)
-                        damage *= 2;
-                }
-            }
-            else
-            {
-                // Has most of the "obvious" enemies take extra damage from silver weapons, most of the lower level undead, as well as werebeasts.
-                EnemyEntity AITarget = target as EnemyEntity;
-                switch (AITarget.CareerIndex)
-                {
-                    case (int)MonsterCareers.Werewolf:
-                    case (int)MonsterCareers.Wereboar:
-                    case (int)MonsterCareers.SkeletalWarrior:
-                    case (int)MonsterCareers.Ghost:
-                    case (int)MonsterCareers.Mummy:
-                    case (int)MonsterCareers.Wraith:
-                    case (int)MonsterCareers.Vampire:
-                        if (weapon.nativeMaterialValue == (int)WeaponMaterialTypes.Silver) { damage *= 2; }
-                        break;
-                    default: break;
-                }
-            }
-            // TODO: Apply strength bonus from Mace of Molag Bal
-
-            // Apply strength modifier
-            damage += DamageModifier(attacker.Stats.LiveStrength);
-
-            // Apply material modifier.
-            // The in-game display in Daggerfall of weapon damages with material modifiers is incorrect. The material modifier is half of what the display suggests.
-            damage += weapon.GetWeaponMaterialModifier();
-            if (damage < 1)
-                damage = 0;
-
-            if (damage >= 1)
-                damage += GetBonusOrPenaltyByEnemyType(attacker, target); // Added my own, non-overriden version of this method for modification.
 
             return damage;
         }
