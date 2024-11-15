@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		11/11/2024, 10:30 PM
+// Last Edit:		11/15/2024, 1:00 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -283,18 +283,9 @@ namespace PhysicalCombatOverhaul
             public int aEndu;
             public int aSped;
             public int aLuck;
+            public int[] attackList;
             public AttackType attackType;
             public AttackElementType attackElement;
-            public int attackOdds;
-            public AttackType attackType2;
-            public AttackElementType attackElement2;
-            public int attackOdds2;
-            public AttackType attackType3;
-            public AttackElementType attackElement3;
-            public int attackOdds3;
-            public AttackType attackType4;
-            public AttackElementType attackElement4;
-            public int attackOdds4;
 
             public DaggerfallEntity tEntity;
             public Races tRace;
@@ -373,18 +364,9 @@ namespace PhysicalCombatOverhaul
             cvars.aEndu = attacker.Stats.LiveEndurance - 50;
             cvars.aSped = attacker.Stats.LiveSpeed - 50;
             cvars.aLuck = attacker.Stats.LiveLuck - 50;
+            cvars.attackList = new int[12];
             cvars.attackType = AttackType.Bash;
             cvars.attackElement = AttackElementType.None;
-            cvars.attackOdds = 100;
-            cvars.attackType2 = AttackType.Bash;
-            cvars.attackElement2 = AttackElementType.None;
-            cvars.attackOdds2 = 0;
-            cvars.attackType3 = AttackType.Bash;
-            cvars.attackElement3 = AttackElementType.None;
-            cvars.attackOdds3 = 0;
-            cvars.attackType4 = AttackType.Bash;
-            cvars.attackElement4 = AttackElementType.None;
-            cvars.attackOdds4 = 0;
 
             cvars.tEntity = target;
             cvars.tRace = Races.None;
@@ -498,18 +480,9 @@ namespace PhysicalCombatOverhaul
             else
             {
                 cVars.atkSize = monster.Size;
-                cVars.attackType = monster.Attack;
-                cVars.attackElement = monster.AttackElement;
-                cVars.attackOdds = monster.AttackOdds;
-                cVars.attackType2 = monster.Attack2;
-                cVars.attackElement2 = monster.AttackElement2;
-                cVars.attackOdds2 = monster.AttackOdds2;
-                cVars.attackType3 = monster.Attack3;
-                cVars.attackElement3 = monster.AttackElement3;
-                cVars.attackOdds3 = monster.AttackOdds3;
-                cVars.attackType4 = monster.Attack4;
-                cVars.attackElement4 = monster.AttackElement4;
-                cVars.attackOdds4 = monster.AttackOdds4;
+                cVars.attackList = (int[])monster.AttacksList.Clone();
+                cVars.attackType = (AttackType)cVars.attackList[1];
+                cVars.attackElement = (AttackElementType)cVars.attackList[2];
                 cVars.tMonsterWeapon = monster.MonsterWeapon;
             }
         }
@@ -802,7 +775,7 @@ namespace PhysicalCombatOverhaul
                 }
                 else // attacker is a monster
                 {
-                    // Handle multiple attacks by AI // Continue here tomorrow I suppose. See about rolling which attack type to use I suppose, based on the attackList array?
+                    // Handle multiple attacks by AI
                     int minBaseDamage = 0;
                     int maxBaseDamage = 0;
                     int attackNumber = 0;
@@ -833,7 +806,10 @@ namespace PhysicalCombatOverhaul
                         ++attackNumber;
                     }
                     if (cVars.damage >= 1)
+                    {
                         cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damage, false); // Added my own, non-overriden version of this method for modification.
+                        RollMonsterAttackType(ref cVars); // Continue from below here tomorrow I suppose.
+                    }
                 }
             }
             // Handle weapon attacks
@@ -1138,6 +1114,48 @@ namespace PhysicalCombatOverhaul
             Mathf.Clamp(chanceToHit, 3, 97);
 
             return Dice100.SuccessRoll(chanceToHit);
+        }
+
+        public static void RollMonsterAttackType(ref CVARS cVars)
+        {
+            int[] list = (int[])cVars.attackList.Clone();
+
+            if (list.Length >= 3)
+            {
+                if (list[0] >= 100)
+                {
+                    cVars.attackType = (AttackType)list[1];
+                    cVars.attackElement = (AttackElementType)list[2];
+                    return;
+                }
+
+                int roll = Dice100.Roll();
+                int totalOdds = 0;
+                int numAttackOptions = list.Length / 3;
+
+                for (int i = 0; i < numAttackOptions; i++)
+                {
+                    totalOdds += list[i * 3];
+
+                    if (roll <= totalOdds)
+                    {
+                        int attackType = list[i * 3 + 1];
+                        int attackElement = list[i * 3 + 2];
+
+                        cVars.attackType = (AttackType)list[attackType];
+                        cVars.attackElement = (AttackElementType)list[attackElement];
+                        return;
+                    }
+                }
+
+                cVars.attackType = (AttackType)list[1];
+                cVars.attackElement = (AttackElementType)list[2];
+            }
+            else
+            {
+                cVars.attackType = AttackType.Bash;
+                cVars.attackElement = AttackElementType.None;
+            }
         }
 
         // -- Newly Added Stuff 4-17-2024 --
