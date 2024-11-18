@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		11/15/2024, 1:00 AM
+// Last Edit:		11/17/2024, 10:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -744,8 +744,6 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            // Tomorrow, see if I can "bridge the gap" between an actual Daggerfall weapon and the Dummy Weapons, that way I won't have to do all this repetition, will see.
-
             cVars.chanceToHitMod = attacker.Skills.GetLiveSkillValue(cVars.wepType);
 
             cVars.critSuccess = CriticalStrikeHandler(attacker);
@@ -808,7 +806,7 @@ namespace PhysicalCombatOverhaul
                     if (cVars.damage >= 1)
                     {
                         cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damage, false); // Added my own, non-overriden version of this method for modification.
-                        RollMonsterAttackType(ref cVars); // Continue from below here tomorrow I suppose.
+                        RollMonsterAttackType(ref cVars);
                     }
                 }
             }
@@ -821,16 +819,18 @@ namespace PhysicalCombatOverhaul
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
                     cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
+                    DetermineWeaponAttackType(ref cVars);
                 }
             }
-            else if (cVars.monsterWeapon != null)
+            else if (cVars.aMonsterWeapon != null)
             {
                 // Apply weapon material modifier.
-                cVars.chanceToHitMod += CalculateDummyWeaponToHit(cVars.monsterWeapon);
+                cVars.chanceToHitMod += CalculateWeaponToHit(cVars.aMonsterWeapon);
 
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
-                    cVars.damage = CalculateDummyWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.monsterWeapon);
+                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon);
+                    DetermineWeaponAttackType(ref cVars);
                 }
             }
 
@@ -855,8 +855,16 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damage > 0)
             {
-                if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
-                    return 0;
+                if (weapon != null)
+                {
+                    if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
+                        return 0;
+                }
+                else
+                {
+                    if (FactorInArmor(attacker, target, cVars.aMonsterWeapon, shield, armor, ref cVars))
+                        return 0;
+                }
             }
             else
             {
@@ -867,7 +875,7 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damAfterDT > 0)
             {
-                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
+                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars)) // Continue here tomorrow I suppose.
                     return 0;
                 else
                 {
@@ -1114,6 +1122,26 @@ namespace PhysicalCombatOverhaul
             Mathf.Clamp(chanceToHit, 3, 97);
 
             return Dice100.SuccessRoll(chanceToHit);
+        }
+
+        public static void DetermineWeaponAttackType(ref CVARS cVars)
+        {
+            if (cVars.attackList.Length >= 3 && cVars.aUseDummyWep && cVars.aMonsterWeapon != null)
+            {
+                if ((AttackType)cVars.attackList[1] != AttackType.Bash)
+                {
+                    cVars.attackType = (AttackType)cVars.attackList[1];
+                    cVars.attackElement = (AttackElementType)cVars.attackList[2];
+                    return;
+                }
+            }
+
+            if (cVars.wepType == (short)DFCareer.Skills.BluntWeapon)
+                cVars.attackType = AttackType.Bludgeon;
+            else if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                cVars.attackType = AttackType.Slash;
+            else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                cVars.attackType = AttackType.Stab;
         }
 
         public static void RollMonsterAttackType(ref CVARS cVars)
@@ -2827,15 +2855,68 @@ namespace PhysicalCombatOverhaul
                     // Now with the vanilla enemies "body materials" defined, I guess I can continue on whatever this part was tomorrow, probably.
                 }
             }
+            else if (cVars.aUseDummyWep && cVars.aMonsterWeapon != null)
+            {
+                if (cVars.wepType == (short)Skills.Archery)
+                {
+                    // Likely won't do any damage to the bow, that should happen when fired, hit or miss.
+                }
+                else if (cVars.wepType == (short)Skills.BluntWeapon)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.04f) - 2f) : 0;
+                }
+                else if (cVars.wepType == (short)Skills.Axe)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.03f)) : 0;
+                }
+                else if (cVars.wepType == (short)Skills.LongBlade)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                }
+                else if (cVars.wepType == (short)Skills.ShortBlade)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.013f)) : 0;
+                }
+                else
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                }
+            }
             else // Handles Unarmed attacks.
             {
-                //
+                switch (cVars.attackType)
+                {
+                    case AttackType.Bash:
+                    case AttackType.Bludgeon:
+                    case AttackType.Elemental_Bludgeon:
+                    case AttackType.Maul:
+                    case AttackType.Kick:
+                        matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.06f) - 4f) : 0; break;
+                    case AttackType.Slash:
+                    case AttackType.Elemental_Slash:
+                    case AttackType.Claw:
+                    case AttackType.Scratch:
+                        matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.03f) - 2f) : 0; break;
+                    case AttackType.Stab:
+                    case AttackType.Elemental_Stab:
+                    case AttackType.Sting:
+                        matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.018f) - 1.5f) : 0; break;
+                    case AttackType.Bite:
+                        matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.0525f) - 3.25f) : 0; break;
+                    case AttackType.Pinch:
+                        matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.045f) - 2f) : 0; break;
+                    default:
+                        matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.03f) - 2f) : 0; break;
+                }
             }
 
             if (armor != null)
             {
+                if (cVars.attackType == AttackType.Ethereal) // I'm thinking now atleast, that Ethereal attacks will possibly go through armor, but also not deal any condition damage to said armor, etc.
+                    return;
+
                 // When I get to the mod compatibility stuff, I'll want to take Roleplay Realism: Items armor types into account, most likely.
-                float conDamMod = Mathf.Clamp(1f + (-1f * matDiffArmor * 0.3f), 0.5f, 5f);
+                float conDamMod = Mathf.Clamp(1f + (-1f * matDiffArmor * 0.3f), 0.3f, 4f);
                 int armorDam = Mathf.Max(Mathf.RoundToInt(damRedByDT * conDamMod), 0);
                 HandleItemConditionDamage(armor, target, targetItems, armorDam);
                 //
