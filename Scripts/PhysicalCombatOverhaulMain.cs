@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		11/17/2024, 10:50 PM
+// Last Edit:		11/18/2024, 11:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -875,29 +875,25 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damAfterDT > 0)
             {
-                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars)) // Continue here tomorrow I suppose.
-                    return 0;
+                if (weapon != null)
+                {
+                    if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
+                        return 0;
+                    else
+                    {
+                        ApplyRingOfNamiraEffect(attacker, target, ref cVars);
+                        return (int)cVars.damAfterDT;
+                    }
+                }
                 else
                 {
-                    // Apply Ring of Namira effect
-                    if (target == GameManager.Instance.PlayerEntity)
+                    if (FactorInNaturalArmor(attacker, target, cVars.aMonsterWeapon, ref cVars))
+                        return 0;
+                    else
                     {
-                        DaggerfallUnityItem[] equippedItems = target.ItemEquipTable.EquipTable;
-                        DaggerfallUnityItem item = null;
-                        if (equippedItems.Length != 0)
-                        {
-                            if (IsRingOfNamira(equippedItems[(int)EquipSlots.Ring0]) || IsRingOfNamira(equippedItems[(int)EquipSlots.Ring1]))
-                            {
-                                IEntityEffect effectTemplate = GameManager.Instance.EntityEffectBroker.GetEffectTemplate(DaggerfallWorkshop.Game.MagicAndEffects.MagicEffects.RingOfNamiraEffect.EffectKey);
-                                effectTemplate.EnchantmentPayloadCallback(EnchantmentPayloadFlags.None,
-                                    targetEntity: attacker.EntityBehaviour,
-                                    sourceItem: item,
-                                    sourceDamage: (int)cVars.damAfterDT);
-                            }
-                        }
+                        ApplyRingOfNamiraEffect(attacker, target, ref cVars);
+                        return (int)cVars.damAfterDT;
                     }
-
-                    return (int)cVars.damAfterDT;
                 }
             }
             else
@@ -910,7 +906,7 @@ namespace PhysicalCombatOverhaul
 
         public static int CalcMonsterVsMonsterAttack(EnemyEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
-            CVARS cVars = GetCombatVariables(attacker, target);
+            CVARS cVars = GetCombatVariables(attacker, target); // Continue here tomorrow I suppose.
             cVars.atkCareer = GetCreatureCareer(attacker);
             cVars.tarCareer = GetCreatureCareer(target);
             GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
@@ -1183,6 +1179,26 @@ namespace PhysicalCombatOverhaul
             {
                 cVars.attackType = AttackType.Bash;
                 cVars.attackElement = AttackElementType.None;
+            }
+        }
+
+        public static void ApplyRingOfNamiraEffect(EnemyEntity attacker, PlayerEntity target, ref CVARS cVars)
+        {
+            if (target == GameManager.Instance.PlayerEntity)
+            {
+                DaggerfallUnityItem[] equippedItems = target.ItemEquipTable.EquipTable;
+                DaggerfallUnityItem item = null;
+                if (equippedItems.Length != 0)
+                {
+                    if (IsRingOfNamira(equippedItems[(int)EquipSlots.Ring0]) || IsRingOfNamira(equippedItems[(int)EquipSlots.Ring1]))
+                    {
+                        IEntityEffect effectTemplate = GameManager.Instance.EntityEffectBroker.GetEffectTemplate(DaggerfallWorkshop.Game.MagicAndEffects.MagicEffects.RingOfNamiraEffect.EffectKey);
+                        effectTemplate.EnchantmentPayloadCallback(EnchantmentPayloadFlags.None,
+                            targetEntity: attacker.EntityBehaviour,
+                            sourceItem: item,
+                            sourceDamage: (int)cVars.damAfterDT);
+                    }
+                }
             }
         }
 
@@ -2614,7 +2630,7 @@ namespace PhysicalCombatOverhaul
 
             if (softMatRequireModuleCheck)
             {
-                if (cVars.tarCareer == (int)MonsterCareers.Ghost || cVars.tarCareer == (int)MonsterCareers.Wraith)
+                if (cVars.tNatArm == NaturalArmorType.Ethereal)
                 {
                     if (weapon != null)
                     {
@@ -2770,8 +2786,34 @@ namespace PhysicalCombatOverhaul
             float matDiffArmor = 0;
             float matDiffBody = 0;
 
-            // If damage was done by a weapon, damage the weapon and armor of the hit body part.
-            if (weapon != null)
+            if (cVars.aUseDummyWep && cVars.aMonsterWeapon != null)
+            {
+                if (cVars.wepType == (short)Skills.Archery)
+                {
+                    // Likely won't do any damage to the bow, that should happen when fired, hit or miss.
+                }
+                else if (cVars.wepType == (short)Skills.BluntWeapon)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.04f) - 2f) : 0;
+                }
+                else if (cVars.wepType == (short)Skills.Axe)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.03f)) : 0;
+                }
+                else if (cVars.wepType == (short)Skills.LongBlade)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                }
+                else if (cVars.wepType == (short)Skills.ShortBlade)
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.013f)) : 0;
+                }
+                else
+                {
+                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
+                }
+            }
+            else if (weapon != null)
             {
                 if (cVars.wepType == (short)Skills.Archery)
                 {
@@ -2853,33 +2895,6 @@ namespace PhysicalCombatOverhaul
                     // and just define what "tier" of material their skin/body is made from and use that as a way to determine how much condition damage the weapon takes, similar to armor, etc.
                     // Suppose could also modify it slightly depending on their strength and endurance stats or something also.
                     // Now with the vanilla enemies "body materials" defined, I guess I can continue on whatever this part was tomorrow, probably.
-                }
-            }
-            else if (cVars.aUseDummyWep && cVars.aMonsterWeapon != null)
-            {
-                if (cVars.wepType == (short)Skills.Archery)
-                {
-                    // Likely won't do any damage to the bow, that should happen when fired, hit or miss.
-                }
-                else if (cVars.wepType == (short)Skills.BluntWeapon)
-                {
-                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.04f) - 2f) : 0;
-                }
-                else if (cVars.wepType == (short)Skills.Axe)
-                {
-                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.03f)) : 0;
-                }
-                else if (cVars.wepType == (short)Skills.LongBlade)
-                {
-                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
-                }
-                else if (cVars.wepType == (short)Skills.ShortBlade)
-                {
-                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.013f)) : 0;
-                }
-                else
-                {
-                    matDiffArmor = armor != null ? GetArmorMaterial(armor) - (GetWeaponMaterial(cVars.aMonsterWeapon) + ((cVars.aStrn + 50) * 0.02f)) : 0;
                 }
             }
             else // Handles Unarmed attacks.
