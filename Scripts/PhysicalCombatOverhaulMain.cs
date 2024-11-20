@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		11/18/2024, 11:50 PM
+// Last Edit:		11/19/2024, 7:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -906,11 +906,24 @@ namespace PhysicalCombatOverhaul
 
         public static int CalcMonsterVsMonsterAttack(EnemyEntity attacker, EnemyEntity target, bool enemyAnimStateRecord, int weaponAnimTime, DaggerfallUnityItem weapon)
         {
-            CVARS cVars = GetCombatVariables(attacker, target); // Continue here tomorrow I suppose.
+            CVARS cVars = GetCombatVariables(attacker, target);
             cVars.atkCareer = GetCreatureCareer(attacker);
             cVars.tarCareer = GetCreatureCareer(target);
             GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
             GetMonsterSpecificCombatVariables(true, target, ref cVars);
+
+            if (weapon == null)
+            {
+                cVars.aUseDummyWep = true;
+            }
+            else if (weapon != null && cVars.aMonsterWeapon != null)
+            {
+                if (cVars.aMonsterWeapon.nativeMaterialValue >= weapon.nativeMaterialValue && cVars.aMonsterWeapon.GetBaseDamageMax() >= weapon.GetBaseDamageMax())
+                {
+                    cVars.aUseDummyWep = true;
+                    weapon = null;
+                }
+            }
 
             // Choose whether weapon-wielding enemies use their weapons or weaponless attacks.
             // In classic, weapon-wielding enemies use the damage values of their weapons, instead of their weaponless values.
@@ -924,6 +937,17 @@ namespace PhysicalCombatOverhaul
                 {
                     // Use hand-to-hand
                     weapon = null;
+                }
+            }
+
+            if (cVars.aMonsterWeapon != null)
+            {
+                int weaponAverage = (cVars.aMonsterWeapon.GetBaseDamageMin() + cVars.aMonsterWeapon.GetBaseDamageMax()) / 2;
+                int noWeaponAverage = (attacker.MobileEnemy.MinDamage + attacker.MobileEnemy.MaxDamage) / 2;
+                if (noWeaponAverage > weaponAverage)
+                {
+                    // Use hand-to-hand
+                    cVars.aMonsterWeapon = null;
                 }
             }
 
@@ -948,6 +972,33 @@ namespace PhysicalCombatOverhaul
                 else
                 {
                     if (target.MinMetalToHit > (WeaponMaterialTypes)weapon.NativeMaterialValue)
+                    {
+                        PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
+                        return 0;
+                    }
+                }
+            }
+            else if (cVars.aMonsterWeapon != null)
+            {
+                cVars.wepType = cVars.aMonsterWeapon.GetWeaponSkillIDAsShort();
+
+                if (softMatRequireModuleCheck)
+                {
+                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.aMonsterWeapon.nativeMaterialValue)
+                    {
+                        int targetMatRequire = (int)target.MinMetalToHit;
+                        int weaponMatValue = cVars.aMonsterWeapon.nativeMaterialValue;
+                        cVars.matReqDamMulti = targetMatRequire - weaponMatValue;
+
+                        if (cVars.matReqDamMulti <= 0) // There is no "bonus" damage for meeting material requirements, nor for exceeding them, just normal unmodded damage.
+                            cVars.matReqDamMulti = 1;
+                        else // There is a damage penalty for attacking a target with below the minimum material requirements of that target, more as the difference between becomes greater.
+                            cVars.matReqDamMulti = (Mathf.Min(cVars.matReqDamMulti * 0.2f, 0.9f) - 1) * -1; // Keeps the damage multiplier penalty from going above 90% reduced damage.
+                    }
+                }
+                else
+                {
+                    if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.aMonsterWeapon.nativeMaterialValue)
                     {
                         PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
                         return 0;
@@ -984,12 +1035,6 @@ namespace PhysicalCombatOverhaul
                 }
                 else // attacker is a monster
                 {
-                    if (cVars.monsterWeapon != null)
-                    {
-                        cVars.unarmedAttack = false;
-                        cVars.wepType = cVars.monsterWeapon.GetWeaponSkillIDAsShort();
-                    }
-
                     // Handle multiple attacks by AI
                     int minBaseDamage = 0;
                     int maxBaseDamage = 0;
@@ -1021,7 +1066,10 @@ namespace PhysicalCombatOverhaul
                         ++attackNumber;
                     }
                     if (cVars.damage >= 1)
+                    {
                         cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damage, false); // Added my own, non-overriden version of this method for modification.
+                        RollMonsterAttackType(ref cVars);
+                    }
                 }
             }
             // Handle weapon attacks
@@ -1033,6 +1081,18 @@ namespace PhysicalCombatOverhaul
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
                     cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
+                    DetermineWeaponAttackType(ref cVars);
+                }
+            }
+            else if (cVars.aMonsterWeapon != null)
+            {
+                // Apply weapon material modifier.
+                cVars.chanceToHitMod += CalculateWeaponToHit(cVars.aMonsterWeapon);
+
+                if (CalculateHitSuccess(attacker, target, ref cVars))
+                {
+                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon);
+                    DetermineWeaponAttackType(ref cVars);
                 }
             }
 
@@ -1057,8 +1117,16 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damage > 0)
             {
-                if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
-                    return 0;
+                if (weapon != null)
+                {
+                    if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
+                        return 0;
+                }
+                else
+                {
+                    if (FactorInArmor(attacker, target, cVars.aMonsterWeapon, shield, armor, ref cVars))
+                        return 0;
+                }
             }
             else
             {
@@ -1069,10 +1137,24 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damAfterDT > 0)
             {
-                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
-                    return 0;
+                if (weapon != null)
+                {
+                    if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
+                        return 0;
+                    else
+                    {
+                        return (int)cVars.damAfterDT;
+                    }
+                }
                 else
-                    return (int)cVars.damAfterDT;
+                {
+                    if (FactorInNaturalArmor(attacker, target, cVars.aMonsterWeapon, ref cVars))
+                        return 0;
+                    else
+                    {
+                        return (int)cVars.damAfterDT;
+                    }
+                }
             }
             else
             {
