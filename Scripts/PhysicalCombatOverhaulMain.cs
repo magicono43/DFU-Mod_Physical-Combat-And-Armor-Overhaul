@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		11/22/2024, 10:30 PM
+// Last Edit:		12/1/2024, 8:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -172,6 +172,10 @@ namespace PhysicalCombatOverhaul
 
             if (monsterDict == null)
                 monsterDict = PCOEnemyBasics.BuildMonsterDict();
+
+            DaggerfallWorkshop.Game.UserInterfaceWindows.PCODebugHUD debugHUD = new DaggerfallWorkshop.Game.UserInterfaceWindows.PCODebugHUD();
+            DaggerfallWorkshop.Game.UserInterfaceWindows.DaggerfallHUD dfuHud = DaggerfallUI.Instance.DaggerfallHUD;
+            dfuHud.ParentPanel.Components.Add(debugHUD);
 
             Debug.Log("Finished mod init: Physical Combat And Armor Overhaul");
         }
