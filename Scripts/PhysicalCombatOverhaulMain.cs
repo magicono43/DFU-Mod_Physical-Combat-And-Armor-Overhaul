@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/1/2024, 8:00 PM
+// Last Edit:		12/2/2024, 8:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -402,6 +402,55 @@ namespace PhysicalCombatOverhaul
             return cvars;
         }
 
+        /// <summary>'CombatData' Struct for various combat related values and properties of this current attack, to be used for debug info mostly.</summary>
+        public struct CDATA
+        {
+            public MonsterCareers aCareer;
+            public BodySize aSize;
+            public string aWeapon;
+            public AttackType attackType;
+            public AttackElementType attackElement;
+
+            public MonsterCareers tCareer;
+            public BodySize tSize;
+            public string tArmor;
+            public string tShield;
+            public NaturalArmorType tNatArmType;
+
+            public int struckBodyPart;
+            public bool critHit;
+
+            public int initialDam;
+            public float damAfterArmor;
+            public float damAfterNatArmor;
+        }
+
+        /// <summary>Fill in basic data for a new 'CombatVariables' struct variable.</summary>
+        public static CDATA GetCombatVarsData(ref CVARS cVars)
+        {
+            CDATA cdata = new CDATA();
+            cdata.aCareer = (MonsterCareers)cVars.atkCareer;
+            cdata.aSize = cVars.atkSize;
+            cdata.aWeapon = "Unarmed";
+            cdata.attackType = AttackType.Bash;
+            cdata.attackElement = AttackElementType.None;
+
+            cdata.tCareer = (MonsterCareers)cVars.tarCareer;
+            cdata.tSize = cVars.tarSize;
+            cdata.tArmor = "Unarmored";
+            cdata.tShield = "No Shield";
+            cdata.tNatArmType = cVars.tNatArm;
+
+            cdata.struckBodyPart = -1;
+            cdata.critHit = false;
+
+            cdata.initialDam = 0;
+            cdata.damAfterArmor = 0;
+            cdata.damAfterNatArmor = 0;
+
+            return cdata;
+        }
+
         /// <summary>Return the natural armor type of the player.</summary>
         public static NaturalArmorType GetPlayerNaturalArmorType(PlayerEntity player)
         {
@@ -502,9 +551,14 @@ namespace PhysicalCombatOverhaul
             cVars.tarCareer = GetCreatureCareer(target);
             GetMonsterSpecificCombatVariables(true, target, ref cVars);
 
+            CDATA cData = GetCombatVarsData(ref cVars);
+
+            Instance.RaiseOnPlayerAttackedMonsterEvent(cData); // Continue here tomorrow, adding these events where they should be, then testing ingame of course.
+
             if (weapon != null)
             {
-                cVars.wepType = weapon.GetWeaponSkillIDAsShort(); // Tomorrow, get the new "attackType" and "attackElement" values set where they should and continue from there.
+                cVars.wepType = weapon.GetWeaponSkillIDAsShort();
+                cData.aWeapon = weapon.LongName;
 
                 if (softMatRequireModuleCheck)
                 {
@@ -536,9 +590,12 @@ namespace PhysicalCombatOverhaul
             cVars.chanceToHitMod = playerWeaponSkill;
 
             cVars.attackType = GetPlayerAttackType(ref cVars);
+            cData.attackType = cVars.attackType;
             cVars.attackElement = GetPlayerAttackElement(ref cVars);
+            cData.attackElement = cVars.attackElement;
 
             cVars.critSuccess = CriticalStrikeHandler(attacker);
+            cData.critHit = cVars.critSuccess;
 
             if (cVars.critSuccess)
             {
@@ -568,6 +625,7 @@ namespace PhysicalCombatOverhaul
             cVars.chanceToHitMod += cVars.backstabChance;
 
             cVars.struckBodyPart = CalculateStruckBodyPart();
+            cData.struckBodyPart = cVars.struckBodyPart;
 
             // Get damage for weaponless attacks
             if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
@@ -613,15 +671,20 @@ namespace PhysicalCombatOverhaul
                 cVars.damage = (int)Mathf.Round(cVars.damage * cVars.critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
             }
 
+            cData.initialDam = cVars.damage;
+
             DaggerfallUnityItem shield = null;
             DaggerfallUnityItem armor = null;
 
             EvaluateArmorAndShieldCoverage(target, ref cVars, out shield, out armor);
 
+            if (shield != null) { cData.tShield = shield.LongName; }
+            if (armor != null) { cData.tArmor = armor.LongName; }
+
             if (cVars.damage > 0)
             {
-                if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
-                    return 0;
+                if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars)) { return 0; }
+                cData.damAfterArmor = cVars.damAfterDT;
             }
             else
             {
@@ -632,10 +695,8 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damAfterDT > 0)
             {
-                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
-                    return 0;
-                else
-                    return (int)cVars.damAfterDT;
+                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars)) { return 0; }
+                else { cData.damAfterNatArmor = cVars.damAfterDT; return (int)cVars.damAfterDT; }
             }
             else
             {
@@ -3214,8 +3275,6 @@ namespace PhysicalCombatOverhaul
             return clip;
         }
 
-        // Continue working on implementing sounds and testing tomorrow I suppose? Maybe try making a list of all the sounds I plan on using, atleast for the target right now.
-
         #region Load Audio Clips
 
 
@@ -3380,6 +3439,20 @@ namespace PhysicalCombatOverhaul
                 throw new Exception("[Warning] PhysicalCombatOverhaul: Missing sound asset");
         }
 
+
+        #endregion
+
+        #region Events
+
+        // OnPlayerAttackedMonster
+        public delegate void OnPlayerVSMonsterAttackEventHandler (CDATA args);
+        public static event OnPlayerVSMonsterAttackEventHandler OnPlayerAttackedMonster;
+        protected virtual void RaiseOnPlayerAttackedMonsterEvent(CDATA cData)
+        {
+            CDATA args = cData;
+            if (OnPlayerAttackedMonster != null)
+                OnPlayerAttackedMonster(args);
+        }
 
         #endregion
     }

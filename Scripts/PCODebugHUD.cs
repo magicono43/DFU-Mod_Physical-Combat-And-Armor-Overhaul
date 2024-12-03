@@ -3,6 +3,7 @@ using DaggerfallWorkshop.Game.UserInterface;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Utility;
 using System;
+using PhysicalCombatOverhaul;
 
 namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 {
@@ -35,6 +36,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             SetupDebugPanelOne();
             SetupDebugPanelTwo();
             SetDebugPanelThree();
+
+            PhysicalCombatOverhaulMain.OnPlayerAttackedMonster += UpdateCategoryOneText_OnPlayerAttackedMonster;
         }
 
         #endregion
@@ -74,6 +77,11 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             thirdCatHeaderText.TextColor = Color.white;
             thirdCatHeaderText.TextScale = 2.3f;
             thirdCatHeaderText.HorizontalAlignment = HorizontalAlignment.Center;
+        }
+
+        public void UpdateCategoryOneText_OnPlayerAttackedMonster(PhysicalCombatOverhaulMain.CDATA args)
+        {
+            throw new NotImplementedException();
         }
 
         public override void Update()
