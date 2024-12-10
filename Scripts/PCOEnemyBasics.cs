@@ -811,6 +811,12 @@ namespace PhysicalCombatOverhaul
                 PierceDR = 0.6f,
             },
 
+            // Horse (unused)
+            new Monster()
+            {
+                ID = 39,
+            },
+
             // Dragonling Alternate
             new Monster()
             {

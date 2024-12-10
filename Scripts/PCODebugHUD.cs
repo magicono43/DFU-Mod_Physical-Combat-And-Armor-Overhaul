@@ -13,6 +13,17 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         Panel firstCategoryPanel;
         TextLabel firstCatHeaderText;
+        TextLabel pvmCareerText;
+        TextLabel pvmBodySizeText;
+        TextLabel pvmBodyPartHitText;
+        TextLabel pvmWeaponAndArmorText;
+        TextLabel pvmAttackTypeEleText;
+        TextLabel pvmCritStateText;
+        TextLabel pvmInitialDamText;
+        TextLabel pvmTargetArmorTypeText;
+        TextLabel pvmDamAfterArmorText;
+        TextLabel pvmTargetNatArmorTypeText;
+        TextLabel pvmDamAfterNatArmorText;
 
         Panel secondCategoryPanel;
         TextLabel secondCatHeaderText;
@@ -52,7 +63,11 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             firstCatHeaderText.TextScale = 2.3f;
             firstCatHeaderText.HorizontalAlignment = HorizontalAlignment.Center;
 
-            testTextLabel1 = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 42), string.Empty, firstCategoryPanel);
+            pvmCareerText = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 56), "Nothing", firstCategoryPanel);
+            pvmCareerText.TextColor = Color.white;
+            pvmCareerText.TextScale = 2.3f;
+
+            testTextLabel1 = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 40), string.Empty, firstCategoryPanel);
             testTextLabel1.TextColor = Color.white;
             testTextLabel1.TextScale = 2.3f;
         }
@@ -81,7 +96,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         public void UpdateCategoryOneText_OnPlayerAttackedMonster(PhysicalCombatOverhaulMain.CDATA args)
         {
-            throw new NotImplementedException();
+            pvmCareerText.Text = "A Car: " + args.aCareer.ToString() + "  T Car: " + args.tCareer.ToString(); // Continue here tomorrow I suppose.
         }
 
         public override void Update()

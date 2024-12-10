@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/2/2024, 8:30 PM
+// Last Edit:		12/10/2024, 2:10 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -50,12 +50,16 @@ namespace PhysicalCombatOverhaul
         public static readonly short[] weightMultipliersByMaterial = { 4, 5, 4, 4, 3, 4, 4, 2, 4, 5 };
 
         static Dictionary<int, Monster> monsterDict;
+        public static int monsterCareerCount = 0;
         public static Dictionary<int, Monster> MonsterDict
         {
             get
             {
                 if (monsterDict == null)
                     monsterDict = PCOEnemyBasics.BuildMonsterDict();
+
+                monsterCareerCount = monsterDict.Count - 1;
+
                 return monsterDict;
             }
         }
@@ -425,7 +429,7 @@ namespace PhysicalCombatOverhaul
             public float damAfterNatArmor;
         }
 
-        /// <summary>Fill in basic data for a new 'CombatVariables' struct variable.</summary>
+        /// <summary>Fill in basic data for a new 'CombatData' struct variable.</summary>
         public static CDATA GetCombatVarsData(ref CVARS cVars)
         {
             CDATA cdata = new CDATA();
@@ -517,26 +521,34 @@ namespace PhysicalCombatOverhaul
         /// <summary>Populate common static combat variables stored for this particular creature.</summary>
         public static void GetMonsterSpecificCombatVariables(bool target, DaggerfallEntity creature, ref CVARS cVars)
         {
-            Monster monster = MonsterDict[cVars.tarCareer];
-
             if (target)
             {
-                cVars.tarSize = monster.Size;
-                cVars.tNatArm = monster.ArmorType;
-                cVars.tArmHardness = monster.ArmorHardness;
-                cVars.aMonsterWeapon = monster.MonsterWeapon;
-                cVars.tNatDT = monster.NaturalDT;
-                cVars.tBluntMulti = monster.BluntDR;
-                cVars.tSlashMulti = monster.SlashDR;
-                cVars.tPierceMulti = monster.PierceDR;
+                if (cVars.tarCareer >= 0 && cVars.tarCareer <= monsterCareerCount)
+                {
+                    Monster monster = MonsterDict[cVars.tarCareer];
+
+                    cVars.tarSize = monster.Size;
+                    cVars.tNatArm = monster.ArmorType;
+                    cVars.tArmHardness = monster.ArmorHardness;
+                    cVars.aMonsterWeapon = monster.MonsterWeapon;
+                    cVars.tNatDT = monster.NaturalDT;
+                    cVars.tBluntMulti = monster.BluntDR;
+                    cVars.tSlashMulti = monster.SlashDR;
+                    cVars.tPierceMulti = monster.PierceDR;
+                }
             }
             else
             {
-                cVars.atkSize = monster.Size;
-                cVars.attackList = (int[])monster.AttacksList.Clone();
-                cVars.attackType = (AttackType)cVars.attackList[1];
-                cVars.attackElement = (AttackElementType)cVars.attackList[2];
-                cVars.tMonsterWeapon = monster.MonsterWeapon;
+                if (cVars.atkCareer >= 0 && cVars.atkCareer <= monsterCareerCount)
+                {
+                    Monster monster = MonsterDict[cVars.atkCareer];
+
+                    cVars.atkSize = monster.Size;
+                    cVars.attackList = (int[])monster.AttacksList.Clone();
+                    cVars.attackType = (AttackType)cVars.attackList[1];
+                    cVars.attackElement = (AttackElementType)cVars.attackList[2];
+                    cVars.tMonsterWeapon = monster.MonsterWeapon;
+                }
             }
         }
 
@@ -552,8 +564,6 @@ namespace PhysicalCombatOverhaul
             GetMonsterSpecificCombatVariables(true, target, ref cVars);
 
             CDATA cData = GetCombatVarsData(ref cVars);
-
-            Instance.RaiseOnPlayerAttackedMonsterEvent(cData); // Continue here tomorrow, adding these events where they should be, then testing ingame of course.
 
             if (weapon != null)
             {
@@ -580,6 +590,7 @@ namespace PhysicalCombatOverhaul
                     {
                         DaggerfallUI.Instance.PopupMessage(TextManager.Instance.GetLocalizedText("materialIneffective"));
                         PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
+                        Instance.RaiseOnPlayerAttackedMonsterEvent(cData);
                         return 0;
                     }
                 }
@@ -663,6 +674,7 @@ namespace PhysicalCombatOverhaul
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnPlayerAttackedMonsterEvent(cData);
                 return 0;
             }
 
@@ -683,25 +695,27 @@ namespace PhysicalCombatOverhaul
 
             if (cVars.damage > 0)
             {
-                if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars)) { return 0; }
+                if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars)) { Instance.RaiseOnPlayerAttackedMonsterEvent(cData); return 0; }
                 cData.damAfterArmor = cVars.damAfterDT;
             }
             else
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnPlayerAttackedMonsterEvent(cData);
                 return 0;
             }
 
             if (cVars.damAfterDT > 0)
             {
-                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars)) { return 0; }
-                else { cData.damAfterNatArmor = cVars.damAfterDT; return (int)cVars.damAfterDT; }
+                if (FactorInNaturalArmor(attacker, target, weapon, ref cVars)) { Instance.RaiseOnPlayerAttackedMonsterEvent(cData); return 0; }
+                else { cData.damAfterNatArmor = cVars.damAfterDT; Instance.RaiseOnPlayerAttackedMonsterEvent(cData); return (int)cVars.damAfterDT; }
             }
             else
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnPlayerAttackedMonsterEvent(cData);
                 return 0;
             }
         }
@@ -1313,8 +1327,8 @@ namespace PhysicalCombatOverhaul
                         int attackType = list[i * 3 + 1];
                         int attackElement = list[i * 3 + 2];
 
-                        cVars.attackType = (AttackType)list[attackType];
-                        cVars.attackElement = (AttackElementType)list[attackElement];
+                        cVars.attackType = (AttackType)attackType;
+                        cVars.attackElement = (AttackElementType)attackElement;
                         return;
                     }
                 }
