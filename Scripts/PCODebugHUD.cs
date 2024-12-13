@@ -41,7 +41,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             Enabled = true;
             Position = Vector2.zero;
-            Size = new Vector2(600, 200);
+            Size = new Vector2(900, 300);
             BackgroundColor = Color.black;
 
             SetupDebugPanelOne();
@@ -55,7 +55,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         public void SetupDebugPanelOne()
         {
-            firstCategoryPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 200, 200), this);
+            firstCategoryPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 300, 300), this);
             firstCategoryPanel.BackgroundColor = Color.red;
 
             firstCatHeaderText = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 0), "Player VS Monster", firstCategoryPanel);
@@ -63,18 +63,42 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             firstCatHeaderText.TextScale = 2.3f;
             firstCatHeaderText.HorizontalAlignment = HorizontalAlignment.Center;
 
-            pvmCareerText = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 56), "Nothing", firstCategoryPanel);
+            pvmCareerText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 70), "Nothing", firstCategoryPanel);
             pvmCareerText.TextColor = Color.white;
-            pvmCareerText.TextScale = 2.3f;
+            pvmCareerText.TextScale = 3.0f;
 
-            testTextLabel1 = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 40), string.Empty, firstCategoryPanel);
+            pvmBodySizeText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 90), "Nothing", firstCategoryPanel);
+            pvmBodySizeText.TextColor = Color.white;
+            pvmBodySizeText.TextScale = 3.0f;
+
+            pvmBodyPartHitText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 110), "Nothing", firstCategoryPanel);
+            pvmBodyPartHitText.TextColor = Color.white;
+            pvmBodyPartHitText.TextScale = 3.0f;
+
+            pvmWeaponAndArmorText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 130), "Nothing", firstCategoryPanel);
+            pvmWeaponAndArmorText.TextColor = Color.white;
+            pvmWeaponAndArmorText.TextScale = 3.0f;
+
+            pvmAttackTypeEleText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 150), "Nothing", firstCategoryPanel);
+            pvmAttackTypeEleText.TextColor = Color.white;
+            pvmAttackTypeEleText.TextScale = 3.0f;
+
+            pvmCritStateText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 170), "Nothing", firstCategoryPanel);
+            pvmCritStateText.TextColor = Color.white;
+            pvmCritStateText.TextScale = 3.0f;
+
+            pvmInitialDamText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 190), "Nothing", firstCategoryPanel);
+            pvmInitialDamText.TextColor = Color.white;
+            pvmInitialDamText.TextScale = 3.0f; // Continue here tomorrow, I suppose.
+
+            testTextLabel1 = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 30), string.Empty, firstCategoryPanel);
             testTextLabel1.TextColor = Color.white;
             testTextLabel1.TextScale = 2.3f;
         }
 
         public void SetupDebugPanelTwo()
         {
-            secondCategoryPanel = DaggerfallUI.AddPanel(new Rect(200, 0, 200, 200), this);
+            secondCategoryPanel = DaggerfallUI.AddPanel(new Rect(300, 0, 300, 300), this);
             secondCategoryPanel.BackgroundColor = Color.blue;
 
             secondCatHeaderText = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 0), "Monster VS Player", secondCategoryPanel);
@@ -85,7 +109,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         public void SetDebugPanelThree()
         {
-            thirdCategoryPanel = DaggerfallUI.AddPanel(new Rect(400, 0, 200, 200), this);
+            thirdCategoryPanel = DaggerfallUI.AddPanel(new Rect(600, 0, 300, 300), this);
             thirdCategoryPanel.BackgroundColor = Color.green;
 
             thirdCatHeaderText = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 0), "Monster VS Monster", thirdCategoryPanel);
@@ -96,7 +120,13 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         public void UpdateCategoryOneText_OnPlayerAttackedMonster(PhysicalCombatOverhaulMain.CDATA args)
         {
-            pvmCareerText.Text = "A Car: " + args.aCareer.ToString() + "  T Car: " + args.tCareer.ToString(); // Continue here tomorrow I suppose.
+            pvmCareerText.Text = "A Car: " + args.aCareer.ToString() + "  T Car: " + args.tCareer.ToString();
+            pvmBodySizeText.Text = "A Size: " + args.aSize.ToString() + "  T Size: " + args.tSize.ToString();
+            pvmBodyPartHitText.Text = "Body Part: " + (BodyParts)args.struckBodyPart;
+            pvmWeaponAndArmorText.Text = "A Wep: " + args.aWeapon + "  T Armor: " + args.tArmor;
+            pvmAttackTypeEleText.Text = "A Type: " + args.attackType + "  A Ele: " + args.attackElement;
+            pvmCritStateText.Text = "Crit Hit: " + args.critHit;
+            pvmInitialDamText.Text = "Initial Damage: " + args.initialDam;
         }
 
         public override void Update()

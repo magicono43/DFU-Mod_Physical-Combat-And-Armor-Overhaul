@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/10/2024, 2:10 AM
+// Last Edit:		12/12/2024, 7:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -2462,31 +2462,35 @@ namespace PhysicalCombatOverhaul
 
         public static int GetWeaponMaterial(DaggerfallUnityItem weapon)
         {
-            int mat = weapon.NativeMaterialValue;
-
-            switch (mat)
+            if (weapon != null)
             {
-                case (int)WeaponMaterialTypes.Iron:
-                    return 0;
-                case (int)WeaponMaterialTypes.Steel:
-                case (int)WeaponMaterialTypes.Silver:
-                    return 1;
-                case (int)WeaponMaterialTypes.Elven:
-                    return 2;
-                case (int)WeaponMaterialTypes.Dwarven:
-                    return 3;
-                case (int)WeaponMaterialTypes.Mithril:
-                case (int)WeaponMaterialTypes.Adamantium:
-                    return 4;
-                case (int)WeaponMaterialTypes.Ebony:
-                    return 5;
-                case (int)WeaponMaterialTypes.Orcish:
-                    return 6;
-                case (int)WeaponMaterialTypes.Daedric:
-                    return 7;
-                default:
-                    return -1;
+                int mat = weapon.NativeMaterialValue;
+
+                switch (mat)
+                {
+                    case (int)WeaponMaterialTypes.Iron:
+                        return 0;
+                    case (int)WeaponMaterialTypes.Steel:
+                    case (int)WeaponMaterialTypes.Silver:
+                        return 1;
+                    case (int)WeaponMaterialTypes.Elven:
+                        return 2;
+                    case (int)WeaponMaterialTypes.Dwarven:
+                        return 3;
+                    case (int)WeaponMaterialTypes.Mithril:
+                    case (int)WeaponMaterialTypes.Adamantium:
+                        return 4;
+                    case (int)WeaponMaterialTypes.Ebony:
+                        return 5;
+                    case (int)WeaponMaterialTypes.Orcish:
+                        return 6;
+                    case (int)WeaponMaterialTypes.Daedric:
+                        return 7;
+                    default:
+                        return -1;
+                }
             }
+            return -1;
         }
 
         /// <summary>Retrieves the multiplier based on the condition modifier of a material, the idea being that items will take around the same amount of damage as other items in that category.</summary>
