@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/12/2024, 7:30 PM
+// Last Edit:		12/13/2024, 10:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -50,7 +50,7 @@ namespace PhysicalCombatOverhaul
         public static readonly short[] weightMultipliersByMaterial = { 4, 5, 4, 4, 3, 4, 4, 2, 4, 5 };
 
         static Dictionary<int, Monster> monsterDict;
-        public static int monsterCareerCount = 0;
+        public const int monsterCareerCount = 42;
         public static Dictionary<int, Monster> MonsterDict
         {
             get
@@ -58,7 +58,7 @@ namespace PhysicalCombatOverhaul
                 if (monsterDict == null)
                     monsterDict = PCOEnemyBasics.BuildMonsterDict();
 
-                monsterCareerCount = monsterDict.Count - 1;
+                //monsterCareerCount = monsterDict.Count - 1;
 
                 return monsterDict;
             }

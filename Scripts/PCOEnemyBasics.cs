@@ -196,6 +196,8 @@ namespace PhysicalCombatOverhaul
                     AttackType.Maul, AttackElementType.None, 25),
                 NaturalDT = 2f,
                 BluntDR = 0.8f,
+                SlashDR = 1f,
+                PierceDR = 1f,
             },
 
             // Sabertooth Tiger
@@ -216,6 +218,8 @@ namespace PhysicalCombatOverhaul
                     AttackType.Claw, AttackElementType.None, 50),
                 NaturalDT = 1f,
                 BluntDR = 0.8f,
+                SlashDR = 1f,
+                PierceDR = 1f,
             },
 
             // Spider
@@ -284,6 +288,8 @@ namespace PhysicalCombatOverhaul
                     AttackType.Bite, AttackElementType.None, 20),
                 NaturalDT = 1f,
                 BluntDR = 0.8f,
+                SlashDR = 1f,
+                PierceDR = 1f,
             },
 
             // Nymph
@@ -313,7 +319,9 @@ namespace PhysicalCombatOverhaul
                 AttacksList = CombineIntoAttacksList(
                     AttackType.Bite, AttackElementType.None, 100),
                 NaturalDT = 1f,
+                BluntDR = 1f,
                 SlashDR = 0.8f,
+                PierceDR = 1f,
             },
 
             // Orc Sergeant
@@ -344,6 +352,8 @@ namespace PhysicalCombatOverhaul
                 AttacksList = CombineIntoAttacksList(
                     AttackType.Claw, AttackElementType.None, 100),
                 BluntDR = 0.9f,
+                SlashDR = 1f,
+                PierceDR = 1f,
             },
 
             // Wereboar
@@ -368,6 +378,8 @@ namespace PhysicalCombatOverhaul
                     AttackType.Bite, AttackElementType.None, 10),
                 NaturalDT = 1.5f,
                 BluntDR = 0.8f,
+                SlashDR = 1f,
+                PierceDR = 1f,
             },
 
             // Skeletal Warrior
@@ -566,6 +578,7 @@ namespace PhysicalCombatOverhaul
                 MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Warhammer, WeaponMaterialTypes.Daedric),
                 NaturalDT = 4f,
                 BluntDR = 1.25f,
+                SlashDR = 1f,
                 PierceDR = 0.8f,
             },
 
@@ -583,6 +596,9 @@ namespace PhysicalCombatOverhaul
                     AttackType.Elemental_Slash, AttackElementType.Fire, 100),
                 MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric),
                 NaturalDT = 3f,
+                BluntDR = 1f,
+                SlashDR = 1f,
+                PierceDR = 1f,
             },
 
             // Daedroth
@@ -599,7 +615,9 @@ namespace PhysicalCombatOverhaul
                     AttackType.Bite, AttackElementType.None, 100),
                 MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Orcish),
                 NaturalDT = 3f,
+                BluntDR = 1f,
                 SlashDR = 0.7f,
+                PierceDR = 1f,
             },
 
             // Vampire
@@ -670,6 +688,9 @@ namespace PhysicalCombatOverhaul
                     AttackType.Bash, AttackElementType.None, 100),
                 MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Broadsword, WeaponMaterialTypes.Daedric),
                 NaturalDT = 3f,
+                BluntDR = 1f,
+                SlashDR = 1f,
+                PierceDR = 1f,
             },
 
             // Lich
@@ -743,7 +764,9 @@ namespace PhysicalCombatOverhaul
                     AttackType.Elemental_Breath, AttackElementType.Fire, 70,
                     AttackType.Claw, AttackElementType.None, 30),
                 NaturalDT = 2.75f,
+                BluntDR = 1f,
                 SlashDR = 0.7f,
+                PierceDR = 1f,
             },
 
             // Fire Atronach
@@ -808,6 +831,7 @@ namespace PhysicalCombatOverhaul
                 MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Katana, WeaponMaterialTypes.Elven),
                 NaturalDT = 3.25f,
                 BluntDR = 1.5f,
+                SlashDR = 1f,
                 PierceDR = 0.6f,
             },
 
@@ -878,7 +902,9 @@ namespace PhysicalCombatOverhaul
                     AttackType.Elemental_Touch, AttackElementType.Draining, 75,
                     AttackType.Scratch, AttackElementType.None, 25),
                 NaturalDT = 1f,
+                BluntDR = 1f,
                 SlashDR = 0.8f,
+                PierceDR = 1f,
             },
         };
 

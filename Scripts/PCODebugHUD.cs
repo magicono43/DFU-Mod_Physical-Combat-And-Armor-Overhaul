@@ -20,7 +20,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         TextLabel pvmAttackTypeEleText;
         TextLabel pvmCritStateText;
         TextLabel pvmInitialDamText;
-        TextLabel pvmTargetArmorTypeText;
         TextLabel pvmDamAfterArmorText;
         TextLabel pvmTargetNatArmorTypeText;
         TextLabel pvmDamAfterNatArmorText;
@@ -89,7 +88,19 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
             pvmInitialDamText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 190), "Nothing", firstCategoryPanel);
             pvmInitialDamText.TextColor = Color.white;
-            pvmInitialDamText.TextScale = 3.0f; // Continue here tomorrow, I suppose.
+            pvmInitialDamText.TextScale = 3.0f;
+
+            pvmDamAfterArmorText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 210), "Nothing", firstCategoryPanel);
+            pvmDamAfterArmorText.TextColor = Color.white;
+            pvmDamAfterArmorText.TextScale = 3.0f;
+
+            pvmTargetNatArmorTypeText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 230), "Nothing", firstCategoryPanel);
+            pvmTargetNatArmorTypeText.TextColor = Color.white;
+            pvmTargetNatArmorTypeText.TextScale = 3.0f;
+
+            pvmDamAfterNatArmorText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 250), "Nothing", firstCategoryPanel);
+            pvmDamAfterNatArmorText.TextColor = Color.white;
+            pvmDamAfterNatArmorText.TextScale = 3.0f;
 
             testTextLabel1 = DaggerfallUI.AddTextLabel(DaggerfallUI.LargeFont, new Vector2(0, 30), string.Empty, firstCategoryPanel);
             testTextLabel1.TextColor = Color.white;
@@ -127,6 +138,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             pvmAttackTypeEleText.Text = "A Type: " + args.attackType + "  A Ele: " + args.attackElement;
             pvmCritStateText.Text = "Crit Hit: " + args.critHit;
             pvmInitialDamText.Text = "Initial Damage: " + args.initialDam;
+            pvmDamAfterArmorText.Text = "Dam After Armor: " + args.damAfterArmor;
+            pvmTargetNatArmorTypeText.Text = "T Nat Armor Type: " + args.tNatArmType;
+            pvmDamAfterNatArmorText.Text = "Final Damage: " + args.damAfterNatArmor; // Continue refining this more tomorrow I suppose?
         }
 
         public override void Update()
