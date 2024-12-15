@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/13/2024, 10:30 PM
+// Last Edit:		12/14/2024, 9:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -321,6 +321,7 @@ namespace PhysicalCombatOverhaul
             public bool aUseDummyWep;
             public DaggerfallUnityItem tMonsterWeapon;
             public bool tUseDummyWep;
+            public bool modDamRange;
         }
 
         /// <summary>Fill in basic data for a new 'CombatVariables' struct variable.</summary>
@@ -402,6 +403,7 @@ namespace PhysicalCombatOverhaul
             cvars.aUseDummyWep = false;
             cvars.tMonsterWeapon = null;
             cvars.tUseDummyWep = false;
+            cvars.modDamRange = false;
 
             return cvars;
         }
@@ -530,7 +532,7 @@ namespace PhysicalCombatOverhaul
                     cVars.tarSize = monster.Size;
                     cVars.tNatArm = monster.ArmorType;
                     cVars.tArmHardness = monster.ArmorHardness;
-                    cVars.aMonsterWeapon = monster.MonsterWeapon;
+                    cVars.tMonsterWeapon = monster.MonsterWeapon;
                     cVars.tNatDT = monster.NaturalDT;
                     cVars.tBluntMulti = monster.BluntDR;
                     cVars.tSlashMulti = monster.SlashDR;
@@ -547,7 +549,7 @@ namespace PhysicalCombatOverhaul
                     cVars.attackList = (int[])monster.AttacksList.Clone();
                     cVars.attackType = (AttackType)cVars.attackList[1];
                     cVars.attackElement = (AttackElementType)cVars.attackList[2];
-                    cVars.tMonsterWeapon = monster.MonsterWeapon;
+                    cVars.aMonsterWeapon = monster.MonsterWeapon;
                 }
             }
         }
@@ -729,6 +731,8 @@ namespace PhysicalCombatOverhaul
             cVars.atkCareer = GetCreatureCareer(attacker);
             GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
 
+            CDATA cData = GetCombatVarsData(ref cVars);
+
             if (weapon == null)
             {
                 cVars.aUseDummyWep = true;
@@ -752,8 +756,8 @@ namespace PhysicalCombatOverhaul
                 int noWeaponAverage = (attacker.MobileEnemy.MinDamage + attacker.MobileEnemy.MaxDamage) / 2;
                 if (noWeaponAverage > weaponAverage)
                 {
-                    // Use hand-to-hand
-                    weapon = null;
+                    // Use hand-to-hand damage ranges
+                    cVars.modDamRange = true;
                 }
             }
 
@@ -763,14 +767,15 @@ namespace PhysicalCombatOverhaul
                 int noWeaponAverage = (attacker.MobileEnemy.MinDamage + attacker.MobileEnemy.MaxDamage) / 2;
                 if (noWeaponAverage > weaponAverage)
                 {
-                    // Use hand-to-hand
-                    cVars.aMonsterWeapon = null;
+                    // Use hand-to-hand damage ranges
+                    cVars.modDamRange = true;
                 }
             }
 
             if (weapon != null)
             {
                 cVars.wepType = weapon.GetWeaponSkillIDAsShort();
+                cData.aWeapon = weapon.LongName;
 
                 if (softMatRequireModuleCheck)
                 {
@@ -791,6 +796,7 @@ namespace PhysicalCombatOverhaul
                     if (target.MinMetalToHit > (WeaponMaterialTypes)weapon.NativeMaterialValue)
                     {
                         PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
+                        Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                         return 0;
                     }
                 }
@@ -798,6 +804,7 @@ namespace PhysicalCombatOverhaul
             else if (cVars.aMonsterWeapon != null)
             {
                 cVars.wepType = cVars.aMonsterWeapon.GetWeaponSkillIDAsShort();
+                cData.aWeapon = cVars.aMonsterWeapon.LongName;
 
                 if (softMatRequireModuleCheck)
                 {
@@ -818,6 +825,7 @@ namespace PhysicalCombatOverhaul
                     if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.aMonsterWeapon.nativeMaterialValue)
                     {
                         PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
+                        Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                         return 0;
                     }
                 }
@@ -826,6 +834,7 @@ namespace PhysicalCombatOverhaul
             cVars.chanceToHitMod = attacker.Skills.GetLiveSkillValue(cVars.wepType);
 
             cVars.critSuccess = CriticalStrikeHandler(attacker);
+            cData.critHit = cVars.critSuccess;
 
             if (cVars.critSuccess)
             {
@@ -837,6 +846,7 @@ namespace PhysicalCombatOverhaul
             }
 
             cVars.struckBodyPart = CalculateStruckBodyPart();
+            cData.struckBodyPart = cVars.struckBodyPart;
 
             // Get damage for weaponless attacks
             if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
@@ -886,6 +896,8 @@ namespace PhysicalCombatOverhaul
                     {
                         cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damage, false); // Added my own, non-overriden version of this method for modification.
                         RollMonsterAttackType(ref cVars);
+                        cData.attackType = cVars.attackType;
+                        cData.attackElement = cVars.attackElement;
                     }
                 }
             }
@@ -897,8 +909,18 @@ namespace PhysicalCombatOverhaul
 
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
-                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
+                    if (cVars.modDamRange)
+                    {
+                        cVars.damage = CalculateModifiedWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon, ref cVars);
+                    }
+                    else
+                    {
+                        cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
+                    }
+
                     DetermineWeaponAttackType(ref cVars);
+                    cData.attackType = cVars.attackType;
+                    cData.attackElement = cVars.attackElement;
                 }
             }
             else if (cVars.aMonsterWeapon != null)
@@ -908,8 +930,18 @@ namespace PhysicalCombatOverhaul
 
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
-                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon);
+                    if (cVars.modDamRange)
+                    {
+                        cVars.damage = CalculateModifiedWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon, ref cVars);
+                    }
+                    else
+                    {
+                        cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon);
+                    }
+
                     DetermineWeaponAttackType(ref cVars);
+                    cData.attackType = cVars.attackType;
+                    cData.attackElement = cVars.attackElement;
                 }
             }
 
@@ -919,6 +951,7 @@ namespace PhysicalCombatOverhaul
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                 return 0;
             }
 
@@ -927,28 +960,34 @@ namespace PhysicalCombatOverhaul
                 cVars.damage = (int)Mathf.Round(cVars.damage * cVars.critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
             }
 
+            cData.initialDam = cVars.damage;
+
             DaggerfallUnityItem shield = null;
             DaggerfallUnityItem armor = null;
 
             EvaluateArmorAndShieldCoverage(target, ref cVars, out shield, out armor);
 
+            if (shield != null) { cData.tShield = shield.LongName; }
+            if (armor != null) { cData.tArmor = armor.LongName; }
+
             if (cVars.damage > 0)
             {
                 if (weapon != null)
                 {
-                    if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
-                        return 0;
+                    if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars)) { Instance.RaiseOnMonsterAttackedPlayerEvent(cData); return 0; }
+                    cData.damAfterArmor = cVars.damAfterDT;
                 }
                 else
                 {
-                    if (FactorInArmor(attacker, target, cVars.aMonsterWeapon, shield, armor, ref cVars))
-                        return 0;
+                    if (FactorInArmor(attacker, target, cVars.aMonsterWeapon, shield, armor, ref cVars)) { Instance.RaiseOnMonsterAttackedPlayerEvent(cData); return 0; }
+                    cData.damAfterArmor = cVars.damAfterDT;
                 }
             }
             else
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                 return 0;
             }
 
@@ -957,20 +996,30 @@ namespace PhysicalCombatOverhaul
                 if (weapon != null)
                 {
                     if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
+                    {
+                        Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                         return 0;
+                    }
                     else
                     {
+                        cData.damAfterNatArmor = cVars.damAfterDT;
                         ApplyRingOfNamiraEffect(attacker, target, ref cVars);
+                        Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                         return (int)cVars.damAfterDT;
                     }
                 }
                 else
                 {
                     if (FactorInNaturalArmor(attacker, target, cVars.aMonsterWeapon, ref cVars))
+                    {
+                        Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                         return 0;
+                    }
                     else
                     {
+                        cData.damAfterNatArmor = cVars.damAfterDT;
                         ApplyRingOfNamiraEffect(attacker, target, ref cVars);
+                        Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                         return (int)cVars.damAfterDT;
                     }
                 }
@@ -979,6 +1028,7 @@ namespace PhysicalCombatOverhaul
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnMonsterAttackedPlayerEvent(cData);
                 return 0;
             }
         }
@@ -1821,6 +1871,64 @@ namespace PhysicalCombatOverhaul
             // Mod hook for adjusting final damage. (is a no-op in DFU)
             if (attacker == player && archeryModuleCheck)
                 damage = AdjustWeaponAttackDamage(attacker, target, damage, weaponAnimTime, weapon);
+
+            return damage;
+        }
+
+        public static int CalculateModifiedWeaponAttackDamage(DaggerfallEntity attacker, DaggerfallEntity target, int damageModifier, int weaponAnimTime, DaggerfallUnityItem weapon, ref CVARS cVars)
+        {
+            EnemyEntity AIAttacker = attacker as EnemyEntity;
+            int damage = UnityEngine.Random.Range(AIAttacker.MobileEnemy.MinDamage, AIAttacker.MobileEnemy.MaxDamage + 1) + damageModifier;
+
+            PlayerEntity player = GameManager.Instance.PlayerEntity;
+            EnemyEntity AITarget = null;
+
+            if (conditionBasedWeaponEffectiveness && !cVars.aUseDummyWep)
+            {
+                damage = AlterDamageBasedOnWepCondition(damage, false, weapon);
+            }
+
+            if (target == player)
+            {
+                if (GameManager.Instance.PlayerEffectManager.HasLycanthropy() || GameManager.Instance.PlayerEffectManager.HasVampirism())
+                {
+                    if (weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Silver)
+                        damage *= 2;
+                }
+            }
+            else
+            {
+                // Has most of the "obvious" enemies take extra damage from silver weapons, most of the lower level undead, as well as werebeasts.
+                AITarget = target as EnemyEntity;
+                switch (AITarget.CareerIndex)
+                {
+                    case (int)MonsterCareers.Werewolf:
+                    case (int)MonsterCareers.Wereboar:
+                    case (int)MonsterCareers.SkeletalWarrior:
+                    case (int)MonsterCareers.Ghost:
+                    case (int)MonsterCareers.Mummy:
+                    case (int)MonsterCareers.Wraith:
+                    case (int)MonsterCareers.Vampire:
+                        if (weapon.NativeMaterialValue == (int)WeaponMaterialTypes.Silver) { damage *= 2; }
+                        break;
+                    default: break;
+                }
+            }
+
+            // Apply strength modifier
+            if (ItemEquipTable.GetItemHands(weapon) == ItemHands.Both && weapon.TemplateIndex != (int)Weapons.Short_Bow && weapon.TemplateIndex != (int)Weapons.Long_Bow)
+                damage += (DamageModifier(attacker.Stats.LiveStrength)) * 2; // Multiplying by 2, so that two-handed weapons gets double the damage mod from Strength, except bows.
+            else
+                damage += DamageModifier(attacker.Stats.LiveStrength);
+
+            // Apply material modifier.
+            // The in-game display in Daggerfall of weapon damages with material modifiers is incorrect. The material modifier is half of what the display suggests.
+            damage += weapon.GetWeaponMaterialModifier();
+            if (damage < 1)
+                damage = 0;
+
+            if (damage >= 1)
+                damage += GetBonusOrPenaltyByEnemyType(attacker, target); // Added my own, non-overriden version of this method for modification.
 
             return damage;
         }
@@ -3470,6 +3578,16 @@ namespace PhysicalCombatOverhaul
             CDATA args = cData;
             if (OnPlayerAttackedMonster != null)
                 OnPlayerAttackedMonster(args);
+        }
+
+        // OnMonsterAttackedPlayer
+        public delegate void OnMonsterVSPlayerAttackEventHandler(CDATA args);
+        public static event OnMonsterVSPlayerAttackEventHandler OnMonsterAttackedPlayer;
+        protected virtual void RaiseOnMonsterAttackedPlayerEvent(CDATA cData)
+        {
+            CDATA args = cData;
+            if (OnMonsterAttackedPlayer != null)
+                OnMonsterAttackedPlayer(args);
         }
 
         #endregion

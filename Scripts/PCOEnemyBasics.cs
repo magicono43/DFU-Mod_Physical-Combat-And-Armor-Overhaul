@@ -394,7 +394,7 @@ namespace PhysicalCombatOverhaul
                 AttackOdds = 100,
                 AttacksList = CombineIntoAttacksList(
                     AttackType.Bash, AttackElementType.None, 100),
-                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.War_Axe, WeaponMaterialTypes.Steel),
+                MonsterWeapon = ItemBuilder.CreateWeapon(Weapons.Battle_Axe, WeaponMaterialTypes.Steel),
                 NaturalDT = 2f,
                 BluntDR = 1.5f,
                 SlashDR = 0.9f,
