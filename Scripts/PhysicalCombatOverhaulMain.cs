@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/14/2024, 9:00 PM
+// Last Edit:		12/17/2024, 10:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -1041,6 +1041,8 @@ namespace PhysicalCombatOverhaul
             GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
             GetMonsterSpecificCombatVariables(true, target, ref cVars);
 
+            CDATA cData = GetCombatVarsData(ref cVars);
+
             if (weapon == null)
             {
                 cVars.aUseDummyWep = true;
@@ -1064,8 +1066,8 @@ namespace PhysicalCombatOverhaul
                 int noWeaponAverage = (attacker.MobileEnemy.MinDamage + attacker.MobileEnemy.MaxDamage) / 2;
                 if (noWeaponAverage > weaponAverage)
                 {
-                    // Use hand-to-hand
-                    weapon = null;
+                    // Use hand-to-hand damage ranges
+                    cVars.modDamRange = true;
                 }
             }
 
@@ -1075,14 +1077,15 @@ namespace PhysicalCombatOverhaul
                 int noWeaponAverage = (attacker.MobileEnemy.MinDamage + attacker.MobileEnemy.MaxDamage) / 2;
                 if (noWeaponAverage > weaponAverage)
                 {
-                    // Use hand-to-hand
-                    cVars.aMonsterWeapon = null;
+                    // Use hand-to-hand damage ranges
+                    cVars.modDamRange = true;
                 }
             }
 
             if (weapon != null)
             {
                 cVars.wepType = weapon.GetWeaponSkillIDAsShort();
+                cData.aWeapon = weapon.LongName;
 
                 if (softMatRequireModuleCheck)
                 {
@@ -1103,6 +1106,7 @@ namespace PhysicalCombatOverhaul
                     if (target.MinMetalToHit > (WeaponMaterialTypes)weapon.NativeMaterialValue)
                     {
                         PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
+                        Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                         return 0;
                     }
                 }
@@ -1110,6 +1114,7 @@ namespace PhysicalCombatOverhaul
             else if (cVars.aMonsterWeapon != null)
             {
                 cVars.wepType = cVars.aMonsterWeapon.GetWeaponSkillIDAsShort();
+                cData.aWeapon = cVars.aMonsterWeapon.LongName;
 
                 if (softMatRequireModuleCheck)
                 {
@@ -1130,6 +1135,7 @@ namespace PhysicalCombatOverhaul
                     if (target.MinMetalToHit > (WeaponMaterialTypes)cVars.aMonsterWeapon.nativeMaterialValue)
                     {
                         PlayRelevantCombatSound(CombatSoundTypes.Mat_Resist, attacker, target, ref cVars);
+                        Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                         return 0;
                     }
                 }
@@ -1138,6 +1144,7 @@ namespace PhysicalCombatOverhaul
             cVars.chanceToHitMod = attacker.Skills.GetLiveSkillValue(cVars.wepType);
 
             cVars.critSuccess = CriticalStrikeHandler(attacker);
+            cData.critHit = cVars.critSuccess;
 
             if (cVars.critSuccess)
             {
@@ -1149,6 +1156,7 @@ namespace PhysicalCombatOverhaul
             }
 
             cVars.struckBodyPart = CalculateStruckBodyPart();
+            cData.struckBodyPart = cVars.struckBodyPart;
 
             // Get damage for weaponless attacks
             if (cVars.wepType == (short)DFCareer.Skills.HandToHand)
@@ -1198,6 +1206,8 @@ namespace PhysicalCombatOverhaul
                     {
                         cVars.damage = CalculateHandToHandAttackDamage(attacker, target, cVars.damage, false); // Added my own, non-overriden version of this method for modification.
                         RollMonsterAttackType(ref cVars);
+                        cData.attackType = cVars.attackType;
+                        cData.attackElement = cVars.attackElement;
                     }
                 }
             }
@@ -1209,8 +1219,18 @@ namespace PhysicalCombatOverhaul
 
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
-                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
+                    if (cVars.modDamRange)
+                    {
+                        cVars.damage = CalculateModifiedWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon, ref cVars);
+                    }
+                    else
+                    {
+                        cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, weapon);
+                    }
+
                     DetermineWeaponAttackType(ref cVars);
+                    cData.attackType = cVars.attackType;
+                    cData.attackElement = cVars.attackElement;
                 }
             }
             else if (cVars.aMonsterWeapon != null)
@@ -1220,8 +1240,18 @@ namespace PhysicalCombatOverhaul
 
                 if (CalculateHitSuccess(attacker, target, ref cVars))
                 {
-                    cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon);
+                    if (cVars.modDamRange)
+                    {
+                        cVars.damage = CalculateModifiedWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon, ref cVars);
+                    }
+                    else
+                    {
+                        cVars.damage = CalculateWeaponAttackDamage(attacker, target, cVars.damageModifiers, weaponAnimTime, cVars.aMonsterWeapon);
+                    }
+
                     DetermineWeaponAttackType(ref cVars);
+                    cData.attackType = cVars.attackType;
+                    cData.attackElement = cVars.attackElement;
                 }
             }
 
@@ -1231,6 +1261,7 @@ namespace PhysicalCombatOverhaul
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                 return 0;
             }
 
@@ -1239,28 +1270,34 @@ namespace PhysicalCombatOverhaul
                 cVars.damage = (int)Mathf.Round(cVars.damage * cVars.critDamMulti); // Multiplies 'Final' damage values, before reductions, with the critical damage multiplier.
             }
 
+            cData.initialDam = cVars.damage;
+
             DaggerfallUnityItem shield = null;
             DaggerfallUnityItem armor = null;
 
             EvaluateArmorAndShieldCoverage(target, ref cVars, out shield, out armor);
 
+            if (shield != null) { cData.tShield = shield.LongName; }
+            if (armor != null) { cData.tArmor = armor.LongName; }
+
             if (cVars.damage > 0)
             {
                 if (weapon != null)
                 {
-                    if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars))
-                        return 0;
+                    if (FactorInArmor(attacker, target, weapon, shield, armor, ref cVars)) { Instance.RaiseOnMonsterAttackedMonsterEvent(cData); return 0; }
+                    cData.damAfterArmor = cVars.damAfterDT;
                 }
                 else
                 {
-                    if (FactorInArmor(attacker, target, cVars.aMonsterWeapon, shield, armor, ref cVars))
-                        return 0;
+                    if (FactorInArmor(attacker, target, cVars.aMonsterWeapon, shield, armor, ref cVars)) { Instance.RaiseOnMonsterAttackedMonsterEvent(cData); return 0; }
+                    cData.damAfterArmor = cVars.damAfterDT;
                 }
             }
             else
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                 return 0;
             }
 
@@ -1269,18 +1306,28 @@ namespace PhysicalCombatOverhaul
                 if (weapon != null)
                 {
                     if (FactorInNaturalArmor(attacker, target, weapon, ref cVars))
+                    {
+                        Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                         return 0;
+                    }
                     else
                     {
+                        cData.damAfterNatArmor = cVars.damAfterDT;
+                        Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                         return (int)cVars.damAfterDT;
                     }
                 }
                 else
                 {
                     if (FactorInNaturalArmor(attacker, target, cVars.aMonsterWeapon, ref cVars))
+                    {
+                        Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                         return 0;
+                    }
                     else
                     {
+                        cData.damAfterNatArmor = cVars.damAfterDT;
+                        Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                         return (int)cVars.damAfterDT;
                     }
                 }
@@ -1289,6 +1336,7 @@ namespace PhysicalCombatOverhaul
             {
                 if (cVars.missWasDodge) { PlayRelevantCombatSound(CombatSoundTypes.Dodge, attacker, target, ref cVars); }
                 else { PlayRelevantCombatSound(CombatSoundTypes.Miss, attacker, target, ref cVars); }
+                Instance.RaiseOnMonsterAttackedMonsterEvent(cData);
                 return 0;
             }
         }
@@ -3588,6 +3636,16 @@ namespace PhysicalCombatOverhaul
             CDATA args = cData;
             if (OnMonsterAttackedPlayer != null)
                 OnMonsterAttackedPlayer(args);
+        }
+
+        // OnMonsterAttackedMonster
+        public delegate void OnMonsterVSMonsterAttackEventHandler(CDATA args);
+        public static event OnMonsterVSMonsterAttackEventHandler OnMonsterAttackedMonster;
+        protected virtual void RaiseOnMonsterAttackedMonsterEvent(CDATA cData)
+        {
+            CDATA args = cData;
+            if (OnMonsterAttackedMonster != null)
+                OnMonsterAttackedMonster(args);
         }
 
         #endregion

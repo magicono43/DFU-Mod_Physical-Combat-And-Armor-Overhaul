@@ -41,6 +41,17 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         Panel thirdCategoryPanel;
         TextLabel thirdCatHeaderText;
+        TextLabel mvmCareerText;
+        TextLabel mvmBodySizeText;
+        TextLabel mvmBodyPartHitText;
+        TextLabel mvmWeaponText;
+        TextLabel mvmAttackTypeEleText;
+        TextLabel mvmCritStateText;
+        TextLabel mvmInitialDamText;
+        TextLabel mvmArmorText;
+        TextLabel mvmDamAfterArmorText;
+        TextLabel mvmTargetNatArmorTypeText;
+        TextLabel mvmDamAfterNatArmorText;
 
         TextLabel testTextLabel1 = new TextLabel();
         int numberd = 0;
@@ -61,6 +72,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
             PhysicalCombatOverhaulMain.OnPlayerAttackedMonster += UpdateCategoryOneText_OnPlayerAttackedMonster;
             PhysicalCombatOverhaulMain.OnMonsterAttackedPlayer += UpdateCategoryTwoText_OnMonsterAttackedPlayer;
+            PhysicalCombatOverhaulMain.OnMonsterAttackedMonster += UpdateCategoryThreeText_OnMonsterAttackedMonster;
         }
 
         #endregion
@@ -188,6 +200,50 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             thirdCatHeaderText.TextColor = Color.white;
             thirdCatHeaderText.TextScale = 2.3f;
             thirdCatHeaderText.HorizontalAlignment = HorizontalAlignment.Center;
+
+            mvmCareerText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 70), "Nothing", thirdCategoryPanel);
+            mvmCareerText.TextColor = Color.white;
+            mvmCareerText.TextScale = 3.0f;
+
+            mvmBodySizeText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 90), "Nothing", thirdCategoryPanel);
+            mvmBodySizeText.TextColor = Color.white;
+            mvmBodySizeText.TextScale = 3.0f;
+
+            mvmBodyPartHitText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 110), "Nothing", thirdCategoryPanel);
+            mvmBodyPartHitText.TextColor = Color.white;
+            mvmBodyPartHitText.TextScale = 3.0f;
+
+            mvmWeaponText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 130), "Nothing", thirdCategoryPanel);
+            mvmWeaponText.TextColor = Color.white;
+            mvmWeaponText.TextScale = 3.0f;
+
+            mvmAttackTypeEleText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 150), "Nothing", thirdCategoryPanel);
+            mvmAttackTypeEleText.TextColor = Color.white;
+            mvmAttackTypeEleText.TextScale = 3.0f;
+
+            mvmCritStateText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 170), "Nothing", thirdCategoryPanel);
+            mvmCritStateText.TextColor = Color.white;
+            mvmCritStateText.TextScale = 3.0f;
+
+            mvmInitialDamText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 190), "Nothing", thirdCategoryPanel);
+            mvmInitialDamText.TextColor = Color.white;
+            mvmInitialDamText.TextScale = 3.0f;
+
+            mvmArmorText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 210), "Nothing", thirdCategoryPanel);
+            mvmArmorText.TextColor = Color.white;
+            mvmArmorText.TextScale = 3.0f;
+
+            mvmDamAfterArmorText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 230), "Nothing", thirdCategoryPanel);
+            mvmDamAfterArmorText.TextColor = Color.white;
+            mvmDamAfterArmorText.TextScale = 3.0f;
+
+            mvmTargetNatArmorTypeText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 250), "Nothing", thirdCategoryPanel);
+            mvmTargetNatArmorTypeText.TextColor = Color.white;
+            mvmTargetNatArmorTypeText.TextScale = 3.0f;
+
+            mvmDamAfterNatArmorText = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 270), "Nothing", thirdCategoryPanel);
+            mvmDamAfterNatArmorText.TextColor = Color.white;
+            mvmDamAfterNatArmorText.TextScale = 3.0f;
         }
 
         public void UpdateCategoryOneText_OnPlayerAttackedMonster(PhysicalCombatOverhaulMain.CDATA args)
@@ -217,7 +273,24 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             mvpArmorText.Text = "Armor Worn: " + args.tArmor;
             mvpDamAfterArmorText.Text = "Dam After Armor: " + args.damAfterArmor;
             mvpTargetNatArmorTypeText.Text = "Nat Armor Type: " + args.tNatArmType;
-            mvpDamAfterNatArmorText.Text = "Final Damage: " + args.damAfterNatArmor; // Continue refining this more tomorrow I suppose?
+            mvpDamAfterNatArmorText.Text = "Final Damage: " + args.damAfterNatArmor;
+        }
+
+        public void UpdateCategoryThreeText_OnMonsterAttackedMonster(PhysicalCombatOverhaulMain.CDATA args)
+        {
+            mvmCareerText.Text = "Career: " + args.aCareer.ToString();
+            mvmBodySizeText.Text = "Size: " + args.aSize.ToString();
+            mvmBodyPartHitText.Text = "Body Part: " + (BodyParts)args.struckBodyPart;
+            mvmWeaponText.Text = "Weapon Used: " + args.aWeapon;
+            mvmAttackTypeEleText.Text = "A Type: " + args.attackType + "  A Ele: " + args.attackElement;
+            mvmCritStateText.Text = "Crit Hit: " + args.critHit;
+            mvmInitialDamText.Text = "Initial Damage: " + args.initialDam;
+            mvmArmorText.Text = "Armor Worn: " + args.tArmor;
+            mvmDamAfterArmorText.Text = "Dam After Armor: " + args.damAfterArmor;
+            mvmTargetNatArmorTypeText.Text = "Nat Armor Type: " + args.tNatArmType;
+            mvmDamAfterNatArmorText.Text = "Final Damage: " + args.damAfterNatArmor;
+            // Maybe tomorrow, try to pretty all this debug stuff up a bit, so it can better be used, maybe add some commands to toggle it on and off and such, will see.
+            // After that I'm not certain what to work on next, I'll just have to think a bit and see what the next thing to work on will be I guess.
         }
 
         public override void Update()
