@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/17/2024, 10:00 PM
+// Last Edit:		12/21/2024, 10:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -309,6 +309,7 @@ namespace PhysicalCombatOverhaul
             public int tArmHardness;
             public int tAvoidContrib;
             public bool missWasDodge;
+            public int tCurrentHP;
 
             public BodySize atkSize;
             public BodySize tarSize;
@@ -391,6 +392,7 @@ namespace PhysicalCombatOverhaul
             cvars.tArmHardness = -1;
             cvars.tAvoidContrib = 0;
             cvars.missWasDodge = false;
+            cvars.tCurrentHP = 0;
 
             cvars.atkSize = BodySize.Average;
             cvars.tarSize = BodySize.Average;
@@ -422,6 +424,7 @@ namespace PhysicalCombatOverhaul
             public string tArmor;
             public string tShield;
             public NaturalArmorType tNatArmType;
+            public int tStartHP;
 
             public int struckBodyPart;
             public bool critHit;
@@ -446,6 +449,7 @@ namespace PhysicalCombatOverhaul
             cdata.tArmor = "Unarmored";
             cdata.tShield = "No Shield";
             cdata.tNatArmType = cVars.tNatArm;
+            cdata.tStartHP = cVars.tCurrentHP;
 
             cdata.struckBodyPart = -1;
             cdata.critHit = false;
@@ -563,6 +567,7 @@ namespace PhysicalCombatOverhaul
             cVars.atkCareer = GetPlayerCareer(attacker);
             cVars.atkSize = GetPlayerBodySize(attacker);
             cVars.tarCareer = GetCreatureCareer(target);
+            cVars.tCurrentHP = target.CurrentHealth;
             GetMonsterSpecificCombatVariables(true, target, ref cVars);
 
             CDATA cData = GetCombatVarsData(ref cVars);
@@ -729,6 +734,7 @@ namespace PhysicalCombatOverhaul
             cVars.tarSize = GetPlayerBodySize(target);
             cVars.tarCareer = GetPlayerCareer(target);
             cVars.atkCareer = GetCreatureCareer(attacker);
+            cVars.tCurrentHP = target.CurrentHealth;
             GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
 
             CDATA cData = GetCombatVarsData(ref cVars);
@@ -1038,6 +1044,7 @@ namespace PhysicalCombatOverhaul
             CVARS cVars = GetCombatVariables(attacker, target);
             cVars.atkCareer = GetCreatureCareer(attacker);
             cVars.tarCareer = GetCreatureCareer(target);
+            cVars.tCurrentHP = target.CurrentHealth;
             GetMonsterSpecificCombatVariables(false, attacker, ref cVars);
             GetMonsterSpecificCombatVariables(true, target, ref cVars);
 
