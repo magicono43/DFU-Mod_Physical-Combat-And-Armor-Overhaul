@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/24/2024, 12:30 AM
+// Last Edit:		12/24/2024, 2:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -3074,7 +3074,7 @@ namespace PhysicalCombatOverhaul
                     }
                     else // Attack was only partially reduced by natural armor, so the DT value was overcome.
                     {
-                        DamageEquipment(weapon, null, attacker, target, ref cVars); // Maybe continue here tomorrow, and try to get a sound to play at the spot even if the target dies from said attack, etc.
+                        DamageEquipment(weapon, null, attacker, target, ref cVars);
 
                         switch (cVars.tNatArm)
                         {
@@ -3426,7 +3426,14 @@ namespace PhysicalCombatOverhaul
 
             if (dfAudioSource != null)
             {
-                dfAudioSource.AudioSource.PlayOneShot(clip, DaggerfallUnity.Settings.SoundVolume);
+                if ((cVars.tCurrentHP - cVars.damAfterDT) <= 0)
+                {
+                    AudioSource.PlayClipAtPoint(clip, target.EntityBehaviour.gameObject.transform.position, DaggerfallUnity.Settings.SoundVolume);
+                }
+                else
+                {
+                    dfAudioSource.AudioSource.PlayOneShot(clip, DaggerfallUnity.Settings.SoundVolume);
+                }
             }
         }
 
