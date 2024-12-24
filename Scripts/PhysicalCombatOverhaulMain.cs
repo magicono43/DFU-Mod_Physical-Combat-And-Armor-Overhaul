@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/21/2024, 10:00 PM
+// Last Edit:		12/24/2024, 12:30 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -102,17 +102,65 @@ namespace PhysicalCombatOverhaul
         public static AudioClip[] SlashHitFleshClips = { null, null, null };
         public static AudioClip[] PierceHitFleshClips = { null, null, null };
 
+        public static AudioClip[] BluntHitFleshUnderMetalClips = { null, null, null };
+        public static AudioClip[] SlashHitFleshUnderMetalClips = { null, null, null };
+        public static AudioClip[] PierceHitFleshUnderMetalClips = { null, null, null };
+
+        public static AudioClip[] BluntHitFleshUnderChainClips = { null, null, null };
+        public static AudioClip[] SlashHitFleshUnderChainClips = { null, null, null };
+        public static AudioClip[] PierceHitFleshUnderChainClips = { null, null, null };
+
+        public static AudioClip[] BluntHitFleshUnderLeatherClips = { null, null, null };
+        public static AudioClip[] SlashHitFleshUnderLeatherClips = { null, null, null };
+        public static AudioClip[] PierceHitFleshUnderLeatherClips = { null, null, null };
+
         public static AudioClip[] BluntHitFurClips = { null, null, null };
         public static AudioClip[] SlashHitFurClips = { null, null, null };
         public static AudioClip[] PierceHitFurClips = { null, null, null };
+
+        public static AudioClip[] BluntHitFurUnderMetalClips = { null, null, null };
+        public static AudioClip[] SlashHitFurUnderMetalClips = { null, null, null };
+        public static AudioClip[] PierceHitFurUnderMetalClips = { null, null, null };
+
+        public static AudioClip[] BluntHitFurUnderChainClips = { null, null, null };
+        public static AudioClip[] SlashHitFurUnderChainClips = { null, null, null };
+        public static AudioClip[] PierceHitFurUnderChainClips = { null, null, null };
+
+        public static AudioClip[] BluntHitFurUnderLeatherClips = { null, null, null };
+        public static AudioClip[] SlashHitFurUnderLeatherClips = { null, null, null };
+        public static AudioClip[] PierceHitFurUnderLeatherClips = { null, null, null };
 
         public static AudioClip[] BluntHitScaleClips = { null, null, null };
         public static AudioClip[] SlashHitScaleClips = { null, null, null };
         public static AudioClip[] PierceHitScaleClips = { null, null, null };
 
+        public static AudioClip[] BluntHitScaleUnderMetalClips = { null, null, null };
+        public static AudioClip[] SlashHitScaleUnderMetalClips = { null, null, null };
+        public static AudioClip[] PierceHitScaleUnderMetalClips = { null, null, null };
+
+        public static AudioClip[] BluntHitScaleUnderChainClips = { null, null, null };
+        public static AudioClip[] SlashHitScaleUnderChainClips = { null, null, null };
+        public static AudioClip[] PierceHitScaleUnderChainClips = { null, null, null };
+
+        public static AudioClip[] BluntHitScaleUnderLeatherClips = { null, null, null };
+        public static AudioClip[] SlashHitScaleUnderLeatherClips = { null, null, null };
+        public static AudioClip[] PierceHitScaleUnderLeatherClips = { null, null, null };
+
         public static AudioClip[] BluntHitBoneClips = { null, null, null };
         public static AudioClip[] SlashHitBoneClips = { null, null, null };
         public static AudioClip[] PierceHitBoneClips = { null, null, null };
+
+        public static AudioClip[] BluntHitBoneUnderMetalClips = { null, null, null };
+        public static AudioClip[] SlashHitBoneUnderMetalClips = { null, null, null };
+        public static AudioClip[] PierceHitBoneUnderMetalClips = { null, null, null };
+
+        public static AudioClip[] BluntHitBoneUnderChainClips = { null, null, null };
+        public static AudioClip[] SlashHitBoneUnderChainClips = { null, null, null };
+        public static AudioClip[] PierceHitBoneUnderChainClips = { null, null, null };
+
+        public static AudioClip[] BluntHitBoneUnderLeatherClips = { null, null, null };
+        public static AudioClip[] SlashHitBoneUnderLeatherClips = { null, null, null };
+        public static AudioClip[] PierceHitBoneUnderLeatherClips = { null, null, null };
 
         public static AudioClip[] BluntHitRockClips = { null, null, null };
         public static AudioClip[] SlashHitRockClips = { null, null, null };
@@ -310,6 +358,7 @@ namespace PhysicalCombatOverhaul
             public int tAvoidContrib;
             public bool missWasDodge;
             public int tCurrentHP;
+            public CombatSoundTypes tCombatSound;
 
             public BodySize atkSize;
             public BodySize tarSize;
@@ -393,6 +442,7 @@ namespace PhysicalCombatOverhaul
             cvars.tAvoidContrib = 0;
             cvars.missWasDodge = false;
             cvars.tCurrentHP = 0;
+            cvars.tCombatSound = CombatSoundTypes.None;
 
             cvars.atkSize = BodySize.Average;
             cvars.tarSize = BodySize.Average;
@@ -2929,12 +2979,6 @@ namespace PhysicalCombatOverhaul
                         if (armor != null)
                         {
                             DamageEquipment(weapon, armor, attacker, target, ref cVars);
-                            if (cVars.armorType == 2)
-                                PlayRelevantCombatSound(CombatSoundTypes.Part_Neg_Metal_Armor, attacker, target, ref cVars);
-                            else if (cVars.armorType == 1)
-                                PlayRelevantCombatSound(CombatSoundTypes.Part_Neg_Chain_Armor, attacker, target, ref cVars);
-                            else
-                                PlayRelevantCombatSound(CombatSoundTypes.Part_Neg_Leather_Armor, attacker, target, ref cVars);
                             return false;
                         }
                     }
@@ -3030,18 +3074,23 @@ namespace PhysicalCombatOverhaul
                     }
                     else // Attack was only partially reduced by natural armor, so the DT value was overcome.
                     {
-                        DamageEquipment(weapon, null, attacker, target, ref cVars);
+                        DamageEquipment(weapon, null, attacker, target, ref cVars); // Maybe continue here tomorrow, and try to get a sound to play at the spot even if the target dies from said attack, etc.
 
                         switch (cVars.tNatArm)
                         {
                             default:
-                            case NaturalArmorType.Flesh: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Flesh, attacker, target, ref cVars); break;
-                            case NaturalArmorType.Fur: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Fur, attacker, target, ref cVars); break;
-                            case NaturalArmorType.Scale: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Scale, attacker, target, ref cVars); break;
-                            case NaturalArmorType.Bone: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Bone, attacker, target, ref cVars); break;
-                            case NaturalArmorType.Rock: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Rock, attacker, target, ref cVars); break;
-                            case NaturalArmorType.Metal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Metal, attacker, target, ref cVars); break;
-                            case NaturalArmorType.Ethereal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Ethereal, attacker, target, ref cVars); break;
+                            case NaturalArmorType.Flesh: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Flesh; break;
+                            case NaturalArmorType.Fur: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Fur; break;
+                            case NaturalArmorType.Scale: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Scale; break;
+                            case NaturalArmorType.Bone: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Bone; break;
+                            case NaturalArmorType.Rock: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Rock; break;
+                            case NaturalArmorType.Metal: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Metal; break;
+                            case NaturalArmorType.Ethereal: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Ethereal; break;
+                        }
+
+                        if (cVars.tCombatSound != CombatSoundTypes.None)
+                        {
+                            PlayRelevantCombatSound(cVars.tCombatSound, attacker, target, ref cVars);
                         }
 
                         // Handle poisoned weapons
@@ -3070,13 +3119,18 @@ namespace PhysicalCombatOverhaul
                     switch (cVars.tNatArm)
                     {
                         default:
-                        case NaturalArmorType.Flesh: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Flesh, attacker, target, ref cVars); break;
-                        case NaturalArmorType.Fur: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Fur, attacker, target, ref cVars); break;
-                        case NaturalArmorType.Scale: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Scale, attacker, target, ref cVars); break;
-                        case NaturalArmorType.Bone: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Bone, attacker, target, ref cVars); break;
-                        case NaturalArmorType.Rock: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Rock, attacker, target, ref cVars); break;
-                        case NaturalArmorType.Metal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Metal, attacker, target, ref cVars); break;
-                        case NaturalArmorType.Ethereal: PlayRelevantCombatSound(CombatSoundTypes.Attack_Hit_Ethereal, attacker, target, ref cVars); break;
+                        case NaturalArmorType.Flesh: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Flesh; break;
+                        case NaturalArmorType.Fur: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Fur; break;
+                        case NaturalArmorType.Scale: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Scale; break;
+                        case NaturalArmorType.Bone: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Bone; break;
+                        case NaturalArmorType.Rock: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Rock; break;
+                        case NaturalArmorType.Metal: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Metal; break;
+                        case NaturalArmorType.Ethereal: cVars.tCombatSound = CombatSoundTypes.Attack_Hit_Ethereal; break;
+                    }
+
+                    if (cVars.tCombatSound != CombatSoundTypes.None)
+                    {
+                        PlayRelevantCombatSound(cVars.tCombatSound, attacker, target, ref cVars);
                     }
 
                     // Handle poisoned weapons
@@ -3392,9 +3446,6 @@ namespace PhysicalCombatOverhaul
                 case CombatSoundTypes.Full_Neg_Leather_Armor: return FulNegLeatherArmClips;
                 case CombatSoundTypes.Part_Act_Block: return ParNegActShieldClips;
                 case CombatSoundTypes.Part_Pas_Block: return ParNegPasShieldClips;
-                case CombatSoundTypes.Part_Neg_Metal_Armor: return ParNegMetalArmClips;
-                case CombatSoundTypes.Part_Neg_Chain_Armor: return ParNegChainArmClips;
-                case CombatSoundTypes.Part_Neg_Leather_Armor: return ParNegLeatherArmClips;
                 case CombatSoundTypes.Full_Neg_Flesh: return FulNegNatArmFleshClips;
                 case CombatSoundTypes.Full_Neg_Fur: return FulNegNatArmFurClips;
                 case CombatSoundTypes.Full_Neg_Scale: return FulNegNatArmScaleClips;
@@ -3402,33 +3453,153 @@ namespace PhysicalCombatOverhaul
                 case CombatSoundTypes.Full_Neg_Rock: return FulNegNatArmRockClips;
                 case CombatSoundTypes.Full_Neg_Metal: return FulNegNatArmMetalClips;
                 case CombatSoundTypes.Attack_Hit_Flesh:
-                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
-                        return SlashHitFleshClips;
-                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
-                        return PierceHitFleshClips;
+                    if (cVars.armorType == -1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFleshClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFleshClips;
+                        else
+                            return BluntHitFleshClips;
+                    }
+                    else if (cVars.armorType == 2)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFleshUnderMetalClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFleshUnderMetalClips;
+                        else
+                            return BluntHitFleshUnderMetalClips;
+                    }
+                    else if (cVars.armorType == 1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFleshUnderChainClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFleshUnderChainClips;
+                        else
+                            return BluntHitFleshUnderChainClips;
+                    }
                     else
-                        return BluntHitFleshClips;
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFleshUnderLeatherClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFleshUnderLeatherClips;
+                        else
+                            return BluntHitFleshUnderLeatherClips;
+                    }
                 case CombatSoundTypes.Attack_Hit_Fur:
-                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
-                        return SlashHitFurClips;
-                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
-                        return PierceHitFurClips;
+                    if (cVars.armorType == -1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFurClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFurClips;
+                        else
+                            return BluntHitFurClips;
+                    }
+                    else if (cVars.armorType == 2)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFurUnderMetalClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFurUnderMetalClips;
+                        else
+                            return BluntHitFurUnderMetalClips;
+                    }
+                    else if (cVars.armorType == 1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFurUnderChainClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFurUnderChainClips;
+                        else
+                            return BluntHitFurUnderChainClips;
+                    }
                     else
-                        return BluntHitFurClips;
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitFurUnderLeatherClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitFurUnderLeatherClips;
+                        else
+                            return BluntHitFurUnderLeatherClips;
+                    }
                 case CombatSoundTypes.Attack_Hit_Scale:
-                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
-                        return SlashHitScaleClips;
-                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
-                        return PierceHitScaleClips;
+                    if (cVars.armorType == -1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitScaleClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitScaleClips;
+                        else
+                            return BluntHitScaleClips;
+                    }
+                    else if (cVars.armorType == 2)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitScaleUnderMetalClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitScaleUnderMetalClips;
+                        else
+                            return BluntHitScaleUnderMetalClips;
+                    }
+                    else if (cVars.armorType == 1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitScaleUnderChainClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitScaleUnderChainClips;
+                        else
+                            return BluntHitScaleUnderChainClips;
+                    }
                     else
-                        return BluntHitScaleClips;
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitScaleUnderLeatherClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitScaleUnderLeatherClips;
+                        else
+                            return BluntHitScaleUnderLeatherClips;
+                    }
                 case CombatSoundTypes.Attack_Hit_Bone:
-                    if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
-                        return SlashHitBoneClips;
-                    else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
-                        return PierceHitBoneClips;
+                    if (cVars.armorType == -1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitBoneClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitBoneClips;
+                        else
+                            return BluntHitBoneClips;
+                    }
+                    else if (cVars.armorType == 2)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitBoneUnderMetalClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitBoneUnderMetalClips;
+                        else
+                            return BluntHitBoneUnderMetalClips;
+                    }
+                    else if (cVars.armorType == 1)
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitBoneUnderChainClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitBoneUnderChainClips;
+                        else
+                            return BluntHitBoneUnderChainClips;
+                    }
                     else
-                        return BluntHitBoneClips;
+                    {
+                        if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
+                            return SlashHitBoneUnderLeatherClips;
+                        else if (cVars.wepType == (short)DFCareer.Skills.ShortBlade || cVars.wepType == (short)DFCareer.Skills.Archery)
+                            return PierceHitBoneUnderLeatherClips;
+                        else
+                            return BluntHitBoneUnderLeatherClips;
+                    }
                 case CombatSoundTypes.Attack_Hit_Rock:
                     if (cVars.wepType == (short)DFCareer.Skills.LongBlade || cVars.wepType == (short)DFCareer.Skills.Axe)
                         return SlashHitRockClips;
@@ -3552,6 +3723,42 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_2", false, out PierceHitFleshClips[1]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_3", false, out PierceHitFleshClips[2]);
 
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_1", false, out BluntHitFleshUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_2", false, out BluntHitFleshUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_3", false, out BluntHitFleshUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_1", false, out SlashHitFleshUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_2", false, out SlashHitFleshUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_3", false, out SlashHitFleshUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_1", false, out PierceHitFleshUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_2", false, out PierceHitFleshUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_3", false, out PierceHitFleshUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_1", false, out BluntHitFleshUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_2", false, out BluntHitFleshUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_3", false, out BluntHitFleshUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_1", false, out SlashHitFleshUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_2", false, out SlashHitFleshUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_3", false, out SlashHitFleshUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_1", false, out PierceHitFleshUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_2", false, out PierceHitFleshUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_3", false, out PierceHitFleshUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_1", false, out BluntHitFleshUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_2", false, out BluntHitFleshUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Flesh_3", false, out BluntHitFleshUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_1", false, out SlashHitFleshUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_2", false, out SlashHitFleshUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Flesh_3", false, out SlashHitFleshUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_1", false, out PierceHitFleshUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_2", false, out PierceHitFleshUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Flesh_3", false, out PierceHitFleshUnderLeatherClips[2]);
+
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_1", false, out BluntHitFurClips[0]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_2", false, out BluntHitFurClips[1]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_3", false, out BluntHitFurClips[2]);
@@ -3563,6 +3770,42 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_1", false, out PierceHitFurClips[0]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_2", false, out PierceHitFurClips[1]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_3", false, out PierceHitFurClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_1", false, out BluntHitFurUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_2", false, out BluntHitFurUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_3", false, out BluntHitFurUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_1", false, out SlashHitFurUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_2", false, out SlashHitFurUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_3", false, out SlashHitFurUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_1", false, out PierceHitFurUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_2", false, out PierceHitFurUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_3", false, out PierceHitFurUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_1", false, out BluntHitFurUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_2", false, out BluntHitFurUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_3", false, out BluntHitFurUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_1", false, out SlashHitFurUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_2", false, out SlashHitFurUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_3", false, out SlashHitFurUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_1", false, out PierceHitFurUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_2", false, out PierceHitFurUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_3", false, out PierceHitFurUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_1", false, out BluntHitFurUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_2", false, out BluntHitFurUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Fur_3", false, out BluntHitFurUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_1", false, out SlashHitFurUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_2", false, out SlashHitFurUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Fur_3", false, out SlashHitFurUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_1", false, out PierceHitFurUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_2", false, out PierceHitFurUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Fur_3", false, out PierceHitFurUnderLeatherClips[2]);
 
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_1", false, out BluntHitScaleClips[0]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_2", false, out BluntHitScaleClips[1]);
@@ -3576,6 +3819,42 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_2", false, out PierceHitScaleClips[1]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_3", false, out PierceHitScaleClips[2]);
 
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_1", false, out BluntHitScaleUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_2", false, out BluntHitScaleUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_3", false, out BluntHitScaleUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_1", false, out SlashHitScaleUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_2", false, out SlashHitScaleUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_3", false, out SlashHitScaleUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_1", false, out PierceHitScaleUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_2", false, out PierceHitScaleUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_3", false, out PierceHitScaleUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_1", false, out BluntHitScaleUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_2", false, out BluntHitScaleUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_3", false, out BluntHitScaleUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_1", false, out SlashHitScaleUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_2", false, out SlashHitScaleUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_3", false, out SlashHitScaleUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_1", false, out PierceHitScaleUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_2", false, out PierceHitScaleUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_3", false, out PierceHitScaleUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_1", false, out BluntHitScaleUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_2", false, out BluntHitScaleUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Scale_3", false, out BluntHitScaleUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_1", false, out SlashHitScaleUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_2", false, out SlashHitScaleUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Scale_3", false, out SlashHitScaleUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_1", false, out PierceHitScaleUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_2", false, out PierceHitScaleUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Scale_3", false, out PierceHitScaleUnderLeatherClips[2]);
+
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_1", false, out BluntHitBoneClips[0]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_2", false, out BluntHitBoneClips[1]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_3", false, out BluntHitBoneClips[2]);
@@ -3587,6 +3866,42 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_1", false, out PierceHitBoneClips[0]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_2", false, out PierceHitBoneClips[1]);
             success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_3", false, out PierceHitBoneClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_1", false, out BluntHitBoneUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_2", false, out BluntHitBoneUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_3", false, out BluntHitBoneUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_1", false, out SlashHitBoneUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_2", false, out SlashHitBoneUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_3", false, out SlashHitBoneUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_1", false, out PierceHitBoneUnderMetalClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_2", false, out PierceHitBoneUnderMetalClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_3", false, out PierceHitBoneUnderMetalClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_1", false, out BluntHitBoneUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_2", false, out BluntHitBoneUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_3", false, out BluntHitBoneUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_1", false, out SlashHitBoneUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_2", false, out SlashHitBoneUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_3", false, out SlashHitBoneUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_1", false, out PierceHitBoneUnderChainClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_2", false, out PierceHitBoneUnderChainClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_3", false, out PierceHitBoneUnderChainClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_1", false, out BluntHitBoneUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_2", false, out BluntHitBoneUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Blunt_Hit_Bone_3", false, out BluntHitBoneUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_1", false, out SlashHitBoneUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_2", false, out SlashHitBoneUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Slash_Hit_Bone_3", false, out SlashHitBoneUnderLeatherClips[2]);
+
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_1", false, out PierceHitBoneUnderLeatherClips[0]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_2", false, out PierceHitBoneUnderLeatherClips[1]);
+            success &= modManager.TryGetAsset("HQ_Pierce_Hit_Bone_3", false, out PierceHitBoneUnderLeatherClips[2]);
 
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Rock_1", false, out BluntHitRockClips[0]);
             success &= modManager.TryGetAsset("HQ_Blunt_Hit_Rock_2", false, out BluntHitRockClips[1]);
