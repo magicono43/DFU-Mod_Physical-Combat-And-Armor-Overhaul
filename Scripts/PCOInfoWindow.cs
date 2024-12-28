@@ -62,7 +62,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         protected virtual void LoadTextures()
         {
-            //baseTexture = LockedLootContainersMain.Instance.ChestChoiceMenuTexture;
+            baseTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoGUITexture;
         }
 
         protected void SetupChestChoiceButtons()

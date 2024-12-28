@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/24/2024, 9:30 PM
+// Last Edit:		12/27/2024, 11:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -22,6 +22,8 @@ using DaggerfallWorkshop.Game.Utility;
 using System;
 using DaggerfallConnect.FallExe;
 using System.Collections.Generic;
+using DaggerfallWorkshop.Game.UserInterfaceWindows;
+using Wenzil.Console;
 
 namespace PhysicalCombatOverhaul
 {
@@ -48,6 +50,9 @@ namespace PhysicalCombatOverhaul
 
         // Global Variables
         public static readonly short[] weightMultipliersByMaterial = { 4, 5, 4, 4, 3, 4, 4, 2, 4, 5 };
+
+        // Mod Textures || GUI
+        public Texture2D EquipInfoGUITexture;
 
         static Dictionary<int, Monster> monsterDict;
         public const int monsterCareerCount = 42;
@@ -220,7 +225,10 @@ namespace PhysicalCombatOverhaul
             FormulaHelper.RegisterOverride(mod, "AdjustWeaponAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, int, int, DaggerfallUnityItem, int>)AdjustWeaponAttackDamage);
 
             // Load Resources
+            LoadTextures();
             LoadAudio();
+
+            RegisterPCOCommands();
 
             if (monsterDict == null)
                 monsterDict = PCOEnemyBasics.BuildMonsterDict();
@@ -3942,6 +3950,197 @@ namespace PhysicalCombatOverhaul
                 throw new Exception("[Warning] PhysicalCombatOverhaul: Missing sound asset");
         }
 
+
+        #endregion
+
+        #region Load Textures
+
+        private void LoadTextures() // Example taken from Penwick Papers Mod
+        {
+            ModManager modManager = ModManager.Instance;
+            bool success = true;
+
+            success &= modManager.TryGetAsset("PCO_Equip_Info_GUI_1", false, out EquipInfoGUITexture);
+
+            if (!success)
+                throw new Exception("PhysicalCombatOverhaul: Missing texture asset");
+        }
+
+        #endregion
+
+        #region Console Commands
+
+        public static void RegisterPCOCommands()
+        {
+            Debug.Log("[PhysicalCombatOverhaul] Trying to register console commands.");
+            try
+            {
+                //ConsoleCommandsDatabase.RegisterCommand(PCOSoundTest.command, PCOSoundTest.description, PCOSoundTest.usage, PCOSoundTest.Execute);
+                //ConsoleCommandsDatabase.RegisterCommand(ChangeButtonRect.command, ChangeButtonRect.description, ChangeButtonRect.usage, ChangeButtonRect.Execute);
+                ConsoleCommandsDatabase.RegisterCommand(TestPCOInfoGUI.command, TestPCOInfoGUI.description, TestPCOInfoGUI.usage, TestPCOInfoGUI.Execute);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(string.Format("Error Registering PhysicalCombatOverhaul Console commands: {0}", e.Message));
+            }
+        }
+
+        private static class TestPCOInfoGUI
+        {
+            public static readonly string command = "pcogui";
+            public static readonly string description = "Opens up PCO Info Test GUI Window.";
+            public static readonly string usage = "pcogui; try something like: pcogui";
+
+            public static string Execute(params string[] args)
+            {
+                GameObject player = GameManager.Instance.PlayerObject;
+                PlayerEntity playerEntity = player.GetComponent<DaggerfallEntityBehaviour>().Entity as PlayerEntity;
+                ItemCollection playerItems = playerEntity.Items;
+                PCOInfoWindow infoWindow = new PCOInfoWindow(DaggerfallUI.UIManager);
+
+                if (args.Length > 0)
+                    return "Error - Too many arguments, check the usage notes.";
+
+                if (player != null)
+                {
+                    DaggerfallUI.UIManager.PushWindow(infoWindow);
+                    return "Opening Magic Shop Shelf.";
+                }
+                else
+                    return "Error - Something went wrong.";
+            }
+        }
+
+        // Will disable this for the live mod since it's only really useful for testing.
+        /*
+        private static class PCOSoundTest
+        {
+            public static readonly string command = "llcsound";
+            public static readonly string description = "Allowed playing of mod's sound-clips for testing purposes.";
+            public static readonly string usage = "llcsound [groupName] [clipIndex] [volumeMod]";
+
+            public static string Execute(params string[] args)
+            {
+                string errorText = "Error: something went wrong";
+                string group = args[0];
+                float volume = 1f;
+                AudioClip[] clips = { null };
+
+                if (args.Length < 2 || args.Length > 3) return "Invalid entry, see usage notes.";
+
+                if (!int.TryParse(args[1], out int clipIndex))
+                    return string.Format("`{0}` is not a number, please use a number for [clipIndex].", args[1]);
+
+                if (args.Length == 3)
+                {
+                    if (!float.TryParse(args[2], out volume))
+                        return string.Format("`{0}` is not a number, please use a number for [volumeMod].", args[2]);
+                }
+
+                if (clipIndex < 0)
+                    clipIndex = 0;
+
+                if (Player != null)
+                {
+                    if (args[0] == "lastsound") { clips[0] = lastSoundPlayed; }
+                    else if (args[0] == "unarmedhitwoodlight") { clips = UnarmedHitWoodLightClips; }
+                    else if (args[0] == "unarmedhitwoodhard") { clips = UnarmedHitWoodHardClips; }
+                    else if (args[0] == "unarmedhitmetal") { clips = UnarmedHitMetalClips; }
+                    else if (args[0] == "blunthitwoodlight") { clips = BluntHitWoodLightClips; }
+                    else if (args[0] == "blunthitwoodhard") { clips = BluntHitWoodHardClips; }
+                    else if (args[0] == "blunthitmetallight") { clips = BluntHitMetalLightClips; }
+                    else if (args[0] == "blunthitmetalhard") { clips = BluntHitMetalHardClips; }
+                    else if (args[0] == "bladehitwoodlight") { clips = BladeHitWoodLightClips; }
+                    else if (args[0] == "bladehitwoodhard") { clips = BladeHitWoodHardClips; }
+                    else if (args[0] == "bladehitmetallight") { clips = BladeHitMetalLightClips; }
+                    else if (args[0] == "bladehitmetalhard") { clips = BladeHitMetalHardClips; }
+                    else if (args[0] == "arrowhitwood") { clips = ArrowHitWoodClips; }
+                    else if (args[0] == "arrowhitmetal") { clips = ArrowHitMetalClips; }
+                    else if (args[0] == "hitmetallock") { clips = HitMetalLockClips; }
+                    else if (args[0] == "bashopenwood") { clips = BashOpenWoodChestClips; }
+                    else if (args[0] == "bashopenmetal") { clips = BashOpenMetalChestClips; }
+                    else if (args[0] == "bashofflock") { clips = BashOffLockClips; }
+                    else if (args[0] == "resistspell") { clips = ChestResistedSpellClips; }
+                    else if (args[0] == "blownopen") { clips = ChestBlownOpenSpellClips; }
+                    else if (args[0] == "turntodust") { clips = ChestDisintegratedSpellClips; }
+                    else if (args[0] == "lockpickfailed") { clips = LockpickAttemptClips; }
+                    else if (args[0] == "lockpickjammed") { clips = LockpickJammedClips; }
+                    else if (args[0] == "lockstilljammed") { clips = LockAlreadyJammedClips; }
+                    else if (args[0] == "lockpickworked") { clips = LockpickSuccessfulClips; }
+                    else if (args[0] == "magiclockpickfailed") { clips = MagicLockpickAttemptClips; }
+                    else if (args[0] == "magiclockpickjammed") { clips = MagicLockpickJammedClips; }
+                    else if (args[0] == "magiclockstilljammed") { clips = MagicLockAlreadyJammedClips; }
+                    else if (args[0] == "magiclockpickworked") { clips = MagicLockpickSuccessfulClips; }
+                    else { return "Error: invalid soundclip group name"; }
+                }
+
+                if (clips.Length <= 0)
+                    return "Error: soundclip group is empty";
+
+                if (clips.Length == 1)
+                {
+                    clipIndex = 0;
+                    if (clips[0] == null)
+                        return "Error: last soundclip is null";
+                }
+                else
+                {
+                    if (clips.Length <= clipIndex)
+                    {
+                        clipIndex = clips.Length - 1;
+                        errorText = string.Format("clipIndex entry larger than clip group, using max index {0} instead", clipIndex);
+                    }
+                }
+
+                if (clips[clipIndex] == null)
+                    return "Error: that clip group entry is null or empty";
+
+                if (DaggerfallUI.Instance.DaggerfallAudioSource != null)
+                {
+                    DaggerfallUI.Instance.AudioSource.PlayOneShot(clips[clipIndex], volume * DaggerfallUnity.Settings.SoundVolume);
+                    errorText = string.Format("Played entry {0}, of clip group {1}, at {2}x volume, clip name was: {3}", clipIndex, args[0], volume, clips[clipIndex].name);
+                }
+
+                return errorText;
+            }
+        }
+        */
+
+        // Will likely have use for this console command when working with more interface stuff in the future
+        /*
+        private static class ChangeButtonRect
+        {
+            public static readonly string command = "butt";
+            public static readonly string description = "Changes the dimensions of this GUI button.";
+            public static readonly string usage = "butt [butt#] [x] [y] [w] [h]";
+
+            public static string Execute(params string[] args)
+            {
+                if (args.Length < 5 || args.Length > 5) return "Invalid entry, see usage notes.";
+
+                if (!int.TryParse(args[0], out int buttNum))
+                    return string.Format("`{0}` is not a number, please use a number for [butt#].", args[0]);
+                if (!int.TryParse(args[1], out int x))
+                    return string.Format("`{0}` is not a number, please use a number for [x].", args[1]);
+                if (!int.TryParse(args[2], out int y))
+                    return string.Format("`{0}` is not a number, please use a number for [y].", args[2]);
+                if (!int.TryParse(args[3], out int w))
+                    return string.Format("`{0}` is not a number, please use a number for [w].", args[3]);
+                if (!int.TryParse(args[4], out int h))
+                    return string.Format("`{0}` is not a number, please use a number for [h].", args[4]);
+
+                if (buttNum == 1)
+                    InspectionInfoWindow.butt1 = new Rect(x, y, w, h);
+                else if (buttNum == 2)
+                    InspectionInfoWindow.butt2 = new Rect(x, y, w, h);
+                else if (buttNum == 3)
+                    InspectionInfoWindow.butt3 = new Rect(x, y, w, h);
+                else
+                    return "Error: Something went wrong.";
+                return string.Format("Button {0} Rect Adjusted.", buttNum);
+            }
+        }
+        */
 
         #endregion
 
