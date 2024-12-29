@@ -13,6 +13,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
     /// </summary>
     public class PCOInfoWindow : DaggerfallPopupWindow
     {
+        public static PCOInfoWindow Instance;
+
         PlayerEntity player;
 
         PlayerEntity Player
@@ -33,6 +35,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         public PCOInfoWindow(IUserInterfaceManager uiManager)
             : base(uiManager)
         {
+            Instance = this;
         }
 
         #endregion
@@ -42,6 +45,18 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Texture2D baseTexture;
 
         #endregion
+
+        Panel headItemIconPanel;
+        Panel rightArmItemIconPanel;
+        Panel chestItemIconPanel;
+        Panel glovesItemIconPanel;
+        Panel rightHandItemIconPanel;
+
+        Panel extraInfoItemIconPanel;
+        Panel leftArmItemIconPanel;
+        Panel legsItemIconPanel;
+        Panel bootsItemIconPanel;
+        Panel leftHandItemIconPanel;
 
         protected override void Setup()
         {
@@ -58,6 +73,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             NativePanel.BackgroundTexture = baseTexture;
 
             SetupChestChoiceButtons();
+
+            SetupTestItemImagePanels();
         }
 
         protected virtual void LoadTextures()
@@ -85,6 +102,89 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             Button exitButton = DaggerfallUI.AddButton(new Rect(142, 114, 36, 17), NativePanel);
             exitButton.OnMouseClick += ExitButton_OnMouseClick;
             exitButton.ClickSound = DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick);
+        }
+
+        protected void SetupTestItemImagePanels()
+        {
+            headItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 14, 30, 28), NativePanel);
+            headItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            headItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(headItemIconPanel, EquipSlots.Head);
+
+            rightArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 50, 30, 28), NativePanel);
+            rightArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            rightArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(rightArmItemIconPanel, EquipSlots.RightArm);
+
+            chestItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 86, 30, 28), NativePanel);
+            chestItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            chestItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(chestItemIconPanel, EquipSlots.ChestArmor);
+
+            glovesItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 122, 30, 28), NativePanel);
+            glovesItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            glovesItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(glovesItemIconPanel, EquipSlots.Gloves);
+
+            rightHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 158, 30, 28), NativePanel);
+            rightHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            rightHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(rightHandItemIconPanel, EquipSlots.RightHand);
+
+            extraInfoItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 14, 30, 28), NativePanel);
+            extraInfoItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            extraInfoItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(extraInfoItemIconPanel, EquipSlots.Amulet0);
+
+            leftArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 50, 30, 28), NativePanel);
+            leftArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            leftArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(leftArmItemIconPanel, EquipSlots.LeftArm);
+
+            legsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 86, 30, 28), NativePanel);
+            legsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            legsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(legsItemIconPanel, EquipSlots.LegsArmor);
+
+            bootsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 122, 30, 28), NativePanel);
+            bootsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            bootsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(bootsItemIconPanel, EquipSlots.Feet);
+
+            leftHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 158, 30, 28), NativePanel);
+            leftHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
+            leftHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            DrawEquipItemToIconPanel(leftHandItemIconPanel, EquipSlots.LeftHand);
+        }
+
+        public void DrawEquipItemToIconPanel(Panel iconPanel, EquipSlots slot)
+        {
+            PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
+            DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
+
+            if (item == null)
+            {
+                iconPanel.BackgroundTexture = null;
+                //button.ToolTipText = string.Empty;
+                //button.AnimatedBackgroundTextures = null;
+                return;
+            }
+
+            ImageData image = DaggerfallUnity.Instance.ItemHelper.GetInventoryImage(item);
+            iconPanel.BackgroundTexture = image.texture;
+            //button.ToolTipText = item.LongName;
+            //button.AnimatedBackgroundTextures = (item.IsEnchanted) ? magicAnimation.animatedTextures : null;
+        }
+
+        public void UpdatePanels()
+        {
+            /*
+            firstCategoryPanel.Position = new Vector2(butt1.x, butt1.y);
+            firstCategoryPanel.Size = new Vector2(butt1.width, butt1.height);
+
+            secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
+            secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
+            */
         }
 
         /*

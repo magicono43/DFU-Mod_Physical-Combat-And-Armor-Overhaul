@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/27/2024, 11:50 PM
+// Last Edit:		12/28/2024, 10:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -3976,12 +3976,46 @@ namespace PhysicalCombatOverhaul
             try
             {
                 //ConsoleCommandsDatabase.RegisterCommand(PCOSoundTest.command, PCOSoundTest.description, PCOSoundTest.usage, PCOSoundTest.Execute);
-                //ConsoleCommandsDatabase.RegisterCommand(ChangeButtonRect.command, ChangeButtonRect.description, ChangeButtonRect.usage, ChangeButtonRect.Execute);
+                ConsoleCommandsDatabase.RegisterCommand(ChangeButtonRect.command, ChangeButtonRect.description, ChangeButtonRect.usage, ChangeButtonRect.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(TestPCOInfoGUI.command, TestPCOInfoGUI.description, TestPCOInfoGUI.usage, TestPCOInfoGUI.Execute);
             }
             catch (Exception e)
             {
                 Debug.LogError(string.Format("Error Registering PhysicalCombatOverhaul Console commands: {0}", e.Message));
+            }
+        }
+
+        private static class ChangeButtonRect
+        {
+            public static readonly string command = "butt";
+            public static readonly string description = "Changes the dimensions of this GUI button.";
+            public static readonly string usage = "butt [butt#] [x] [y] [w] [h]";
+
+            public static string Execute(params string[] args)
+            {
+                if (args.Length < 5 || args.Length > 5) return "Invalid entry, see usage notes.";
+
+                if (!int.TryParse(args[0], out int buttNum))
+                    return string.Format("`{0}` is not a number, please use a number for [butt#].", args[0]);
+                if (!int.TryParse(args[1], out int x))
+                    return string.Format("`{0}` is not a number, please use a number for [x].", args[1]);
+                if (!int.TryParse(args[2], out int y))
+                    return string.Format("`{0}` is not a number, please use a number for [y].", args[2]);
+                if (!int.TryParse(args[3], out int w))
+                    return string.Format("`{0}` is not a number, please use a number for [w].", args[3]);
+                if (!int.TryParse(args[4], out int h))
+                    return string.Format("`{0}` is not a number, please use a number for [h].", args[4]);
+
+                if (buttNum == 1)
+                    PCOInfoWindow.butt1 = new Rect(x, y, w, h);
+                else if (buttNum == 2)
+                    PCOInfoWindow.butt2 = new Rect(x, y, w, h);
+                else if (buttNum == 3)
+                    PCOInfoWindow.butt3 = new Rect(x, y, w, h);
+                else
+                    return "Error: Something went wrong.";
+                PCOInfoWindow.Instance.UpdatePanels();
+                return string.Format("Button {0} Rect Adjusted.", buttNum);
             }
         }
 
@@ -4102,42 +4136,6 @@ namespace PhysicalCombatOverhaul
                 }
 
                 return errorText;
-            }
-        }
-        */
-
-        // Will likely have use for this console command when working with more interface stuff in the future
-        /*
-        private static class ChangeButtonRect
-        {
-            public static readonly string command = "butt";
-            public static readonly string description = "Changes the dimensions of this GUI button.";
-            public static readonly string usage = "butt [butt#] [x] [y] [w] [h]";
-
-            public static string Execute(params string[] args)
-            {
-                if (args.Length < 5 || args.Length > 5) return "Invalid entry, see usage notes.";
-
-                if (!int.TryParse(args[0], out int buttNum))
-                    return string.Format("`{0}` is not a number, please use a number for [butt#].", args[0]);
-                if (!int.TryParse(args[1], out int x))
-                    return string.Format("`{0}` is not a number, please use a number for [x].", args[1]);
-                if (!int.TryParse(args[2], out int y))
-                    return string.Format("`{0}` is not a number, please use a number for [y].", args[2]);
-                if (!int.TryParse(args[3], out int w))
-                    return string.Format("`{0}` is not a number, please use a number for [w].", args[3]);
-                if (!int.TryParse(args[4], out int h))
-                    return string.Format("`{0}` is not a number, please use a number for [h].", args[4]);
-
-                if (buttNum == 1)
-                    InspectionInfoWindow.butt1 = new Rect(x, y, w, h);
-                else if (buttNum == 2)
-                    InspectionInfoWindow.butt2 = new Rect(x, y, w, h);
-                else if (buttNum == 3)
-                    InspectionInfoWindow.butt3 = new Rect(x, y, w, h);
-                else
-                    return "Error: Something went wrong.";
-                return string.Format("Button {0} Rect Adjusted.", buttNum);
             }
         }
         */
