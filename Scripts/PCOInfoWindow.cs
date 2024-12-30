@@ -58,6 +58,20 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel bootsItemIconPanel;
         Panel leftHandItemIconPanel;
 
+        Panel headItemDurabilityBarPanel;
+        Panel rightArmItemDurabilityBarPanel;
+        Panel chestItemDurabilityBarPanel;
+        Panel glovesItemDurabilityBarPanel;
+        Panel rightHandItemDurabilityBarPanel;
+
+        Panel extraInfoItemDurabilityBarPanel;
+        Panel leftArmItemDurabilityBarPanel;
+        Panel legsItemDurabilityBarPanel;
+        Panel bootsItemDurabilityBarPanel;
+        Panel leftHandItemDurabilityBarPanel;
+
+        Panel[] itemDurBars = {null, null, null, null, null, null, null, null, null, null};
+
         protected override void Setup()
         {
             base.Setup();
@@ -110,51 +124,62 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             headItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             headItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(headItemIconPanel, EquipSlots.Head);
+            headItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 43, 54, 2), NativePanel);
+            AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
             rightArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 50, 30, 28), NativePanel);
             rightArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(rightArmItemIconPanel, EquipSlots.RightArm);
+            rightArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 79, 54, 2), NativePanel);
 
             chestItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 86, 30, 28), NativePanel);
             chestItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             chestItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(chestItemIconPanel, EquipSlots.ChestArmor);
+            chestItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 115, 54, 2), NativePanel);
 
             glovesItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 122, 30, 28), NativePanel);
             glovesItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             glovesItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(glovesItemIconPanel, EquipSlots.Gloves);
+            glovesItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 151, 54, 2), NativePanel);
 
             rightHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 158, 30, 28), NativePanel);
             rightHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(rightHandItemIconPanel, EquipSlots.RightHand);
+            rightHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 187, 54, 2), NativePanel);
 
             extraInfoItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 14, 30, 28), NativePanel);
             extraInfoItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             extraInfoItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(extraInfoItemIconPanel, EquipSlots.Amulet0);
+            extraInfoItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 43, 54, 2), NativePanel);
 
             leftArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 50, 30, 28), NativePanel);
             leftArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(leftArmItemIconPanel, EquipSlots.LeftArm);
+            leftArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 79, 54, 2), NativePanel);
 
             legsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 86, 30, 28), NativePanel);
             legsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             legsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(legsItemIconPanel, EquipSlots.LegsArmor);
+            legsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 115, 54, 2), NativePanel);
 
             bootsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 122, 30, 28), NativePanel);
             bootsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             bootsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(bootsItemIconPanel, EquipSlots.Feet);
+            bootsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 151, 54, 2), NativePanel);
 
             leftHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 158, 30, 28), NativePanel);
             leftHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(leftHandItemIconPanel, EquipSlots.LeftHand);
+            leftHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 187, 54, 2), NativePanel);
         }
 
         public void DrawEquipItemToIconPanel(Panel iconPanel, EquipSlots slot)
@@ -176,15 +201,55 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             //button.AnimatedBackgroundTextures = (item.IsEnchanted) ? magicAnimation.animatedTextures : null;
         }
 
+        public void AddItemDurabilityBar(Panel itemDurPanel, EquipSlots slot, int index)
+        {
+            PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
+            DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
+
+            // Define the gradient once, ideally in a class-level field or during initialization
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] {
+        new GradientColorKey(Color.red, 0f),       // Red at 0% durability
+        new GradientColorKey(Color.yellow, 0.5f), // Yellow at 50% durability
+        new GradientColorKey(Color.green, 1f)     // Green at 100% durability
+                },
+                new GradientAlphaKey[] {
+        new GradientAlphaKey(0.47f, 0f),          // Semi-transparent
+        new GradientAlphaKey(0.47f, 1f)           // Semi-transparent
+                }
+            );
+
+            int maxBarWidth = 54;
+            float curDur = 10f;
+            float maxDur = 100f;
+
+            // Tomorrow, I think I'm just going to remove this gradient stuff and do a few if-else statements with a few predetermined colors like Numidium did it.
+
+            float barWidth = Mathf.Floor((curDur / maxDur) * maxBarWidth);
+
+            float offset = (maxBarWidth - barWidth) / 2;
+
+            // Interpolate color based on condition ratio (0 = red, 1 = green)
+            float conditionRatio = curDur / maxDur;
+            //Color barColor = Color.Lerp(Color.red, Color.green, conditionRatio); // Red for low, Green for high
+
+            // Get the color from the gradient
+            Color barColor = gradient.Evaluate(conditionRatio);
+
+            itemDurBars[index] = DaggerfallUI.AddPanel(new Rect(offset, 0, barWidth, 2), itemDurPanel);
+            //itemDurBars[index].BackgroundColor = new Color32(255, 0, 0, 120);
+            itemDurBars[index].BackgroundColor = new Color32((byte)(barColor.r * 255), (byte)(barColor.g * 255), (byte)(barColor.b * 255), 120); // Set transparency to 120
+            itemDurBars[index].VerticalAlignment = VerticalAlignment.Middle;
+        }
+
         public void UpdatePanels()
         {
-            /*
-            firstCategoryPanel.Position = new Vector2(butt1.x, butt1.y);
-            firstCategoryPanel.Size = new Vector2(butt1.width, butt1.height);
+            headItemDurabilityBarPanel.Position = new Vector2(butt1.x, butt1.y);
+            headItemDurabilityBarPanel.Size = new Vector2(butt1.width, butt1.height);
 
-            secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
-            secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
-            */
+            //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
+            //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
         }
 
         /*
