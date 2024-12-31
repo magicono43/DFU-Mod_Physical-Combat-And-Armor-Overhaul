@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		12/29/2024, 11:00 PM
+// Last Edit:		12/30/2024, 11:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -3976,12 +3976,37 @@ namespace PhysicalCombatOverhaul
             try
             {
                 //ConsoleCommandsDatabase.RegisterCommand(PCOSoundTest.command, PCOSoundTest.description, PCOSoundTest.usage, PCOSoundTest.Execute);
+                ConsoleCommandsDatabase.RegisterCommand(ChangeTestNumber.command, ChangeTestNumber.description, ChangeTestNumber.usage, ChangeTestNumber.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(ChangeButtonRect.command, ChangeButtonRect.description, ChangeButtonRect.usage, ChangeButtonRect.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(TestPCOInfoGUI.command, TestPCOInfoGUI.description, TestPCOInfoGUI.usage, TestPCOInfoGUI.Execute);
             }
             catch (Exception e)
             {
                 Debug.LogError(string.Format("Error Registering PhysicalCombatOverhaul Console commands: {0}", e.Message));
+            }
+        }
+
+        private static class ChangeTestNumber
+        {
+            public static readonly string command = "num";
+            public static readonly string description = "Changes this specific test value.";
+            public static readonly string usage = "num [value]";
+
+            public static string Execute(params string[] args)
+            {
+                if (args.Length < 1 || args.Length > 1) return "Invalid entry, see usage notes.";
+
+                if (!int.TryParse(args[0], out int num))
+                    return string.Format("`{0}` is not a number, please use a number for [value].", args[0]);
+
+                if (num <= 100 && num >= 0)
+                {
+                    PCOInfoWindow.Instance.testNum1 = num;
+                    PCOInfoWindow.Instance.UpdatePanels();
+                    return string.Format("Test Number Adjusted To: {0}", num);
+                }
+                else
+                    return "Error: Something went wrong.";
             }
         }
 

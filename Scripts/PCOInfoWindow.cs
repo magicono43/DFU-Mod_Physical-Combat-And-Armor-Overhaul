@@ -27,6 +27,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         public static Rect butt1 = new Rect(0, 0, 0, 0);
         public static Rect butt2 = new Rect(0, 0, 0, 0);
         public static Rect butt3 = new Rect(0, 0, 0, 0);
+        public float testNum1 = 100f;
 
         #endregion
 
@@ -206,47 +207,42 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
             DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
 
-            // Define the gradient once, ideally in a class-level field or during initialization
-            Gradient gradient = new Gradient();
-            gradient.SetKeys(
-                new GradientColorKey[] {
-        new GradientColorKey(Color.red, 0f),       // Red at 0% durability
-        new GradientColorKey(Color.yellow, 0.5f), // Yellow at 50% durability
-        new GradientColorKey(Color.green, 1f)     // Green at 100% durability
-                },
-                new GradientAlphaKey[] {
-        new GradientAlphaKey(0.47f, 0f),          // Semi-transparent
-        new GradientAlphaKey(0.47f, 1f)           // Semi-transparent
-                }
-            );
-
             int maxBarWidth = 54;
-            float curDur = 10f;
+            float curDur = testNum1;
             float maxDur = 100f;
 
-            // Tomorrow, I think I'm just going to remove this gradient stuff and do a few if-else statements with a few predetermined colors like Numidium did it.
-
             float barWidth = Mathf.Floor((curDur / maxDur) * maxBarWidth);
-
             float offset = (maxBarWidth - barWidth) / 2;
+            float condPerc = (curDur / maxDur) * 100;
 
-            // Interpolate color based on condition ratio (0 = red, 1 = green)
-            float conditionRatio = curDur / maxDur;
-            //Color barColor = Color.Lerp(Color.red, Color.green, conditionRatio); // Red for low, Green for high
+            byte colorAlpha = 180;
+            Color32 barColor = new Color32(0, 255, 0, colorAlpha);
 
-            // Get the color from the gradient
-            Color barColor = gradient.Evaluate(conditionRatio);
+            // Tomorrow get the rest of the condition bars in place, as well as tie the status to the current condition of the item in that slot, also remove if slot is empty, etc.
 
+            if (condPerc <= 91 && condPerc >= 76)  // Almost New
+                barColor = new Color32(120, 255, 0, colorAlpha);
+            else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
+                barColor = new Color32(180, 255, 0, colorAlpha);
+            else if (condPerc <= 60 && condPerc >= 41)  // Used
+                barColor = new Color32(255, 255, 0, colorAlpha);
+            else if (condPerc <= 40 && condPerc >= 16)  // Worn
+                barColor = new Color32(255, 150, 0, colorAlpha);
+            else if (condPerc <= 15)   // Battered & Useless, Broken
+                barColor = new Color32(255, 0, 0, colorAlpha);
+
+            itemDurPanel.Components.Clear();
             itemDurBars[index] = DaggerfallUI.AddPanel(new Rect(offset, 0, barWidth, 2), itemDurPanel);
-            //itemDurBars[index].BackgroundColor = new Color32(255, 0, 0, 120);
-            itemDurBars[index].BackgroundColor = new Color32((byte)(barColor.r * 255), (byte)(barColor.g * 255), (byte)(barColor.b * 255), 120); // Set transparency to 120
+            itemDurBars[index].BackgroundColor = barColor;
             itemDurBars[index].VerticalAlignment = VerticalAlignment.Middle;
         }
 
         public void UpdatePanels()
         {
-            headItemDurabilityBarPanel.Position = new Vector2(butt1.x, butt1.y);
-            headItemDurabilityBarPanel.Size = new Vector2(butt1.width, butt1.height);
+            AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
+
+            //headItemDurabilityBarPanel.Position = new Vector2(butt1.x, butt1.y);
+            //headItemDurabilityBarPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
