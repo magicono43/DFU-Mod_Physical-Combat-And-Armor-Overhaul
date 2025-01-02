@@ -71,8 +71,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel bootsItemDurabilityBarPanel;
         Panel leftHandItemDurabilityBarPanel;
 
-        Panel[] itemDurBars = {null, null, null, null, null, null, null, null, null, null};
-
         protected override void Setup()
         {
             base.Setup();
@@ -133,54 +131,65 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(rightArmItemIconPanel, EquipSlots.RightArm);
             rightArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 79, 54, 2), NativePanel);
+            AddItemDurabilityBar(rightArmItemDurabilityBarPanel, EquipSlots.RightArm, 1);
 
             chestItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 86, 30, 28), NativePanel);
             chestItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             chestItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(chestItemIconPanel, EquipSlots.ChestArmor);
             chestItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 115, 54, 2), NativePanel);
+            AddItemDurabilityBar(chestItemDurabilityBarPanel, EquipSlots.ChestArmor, 2);
 
             glovesItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 122, 30, 28), NativePanel);
             glovesItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             glovesItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(glovesItemIconPanel, EquipSlots.Gloves);
             glovesItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 151, 54, 2), NativePanel);
+            AddItemDurabilityBar(glovesItemDurabilityBarPanel, EquipSlots.Gloves, 3);
 
             rightHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 158, 30, 28), NativePanel);
             rightHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(rightHandItemIconPanel, EquipSlots.RightHand);
             rightHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 187, 54, 2), NativePanel);
+            AddItemDurabilityBar(rightHandItemDurabilityBarPanel, EquipSlots.RightHand, 4);
 
             extraInfoItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 14, 30, 28), NativePanel);
             extraInfoItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             extraInfoItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(extraInfoItemIconPanel, EquipSlots.Amulet0);
             extraInfoItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 43, 54, 2), NativePanel);
+            AddItemDurabilityBar(extraInfoItemDurabilityBarPanel, EquipSlots.Amulet0, 5);
 
             leftArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 50, 30, 28), NativePanel);
             leftArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(leftArmItemIconPanel, EquipSlots.LeftArm);
             leftArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 79, 54, 2), NativePanel);
+            AddItemDurabilityBar(leftArmItemDurabilityBarPanel, EquipSlots.LeftArm, 6);
 
             legsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 86, 30, 28), NativePanel);
             legsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             legsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(legsItemIconPanel, EquipSlots.LegsArmor);
             legsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 115, 54, 2), NativePanel);
+            AddItemDurabilityBar(legsItemDurabilityBarPanel, EquipSlots.LegsArmor, 7);
 
             bootsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 122, 30, 28), NativePanel);
             bootsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             bootsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(bootsItemIconPanel, EquipSlots.Feet);
             bootsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 151, 54, 2), NativePanel);
+            AddItemDurabilityBar(bootsItemDurabilityBarPanel, EquipSlots.Feet, 8);
 
             leftHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 158, 30, 28), NativePanel);
             leftHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(leftHandItemIconPanel, EquipSlots.LeftHand);
             leftHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 187, 54, 2), NativePanel);
+            AddItemDurabilityBar(leftHandItemDurabilityBarPanel, EquipSlots.LeftHand, 9);
+
+            // Tomorrow, possibly start working on the text values to be displayed next to the equip slot items, then after that maybe the "extra info" windows, will see.
         }
 
         public void DrawEquipItemToIconPanel(Panel iconPanel, EquipSlots slot)
@@ -207,34 +216,45 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
             DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
 
-            int maxBarWidth = 54;
-            float curDur = testNum1;
-            float maxDur = 100f;
+            if (item != null)
+            {
+                int maxBarWidth = 54;
+                float curDur = item.currentCondition;
+                float maxDur = item.maxCondition;
 
-            float barWidth = Mathf.Floor((curDur / maxDur) * maxBarWidth);
-            float offset = (maxBarWidth - barWidth) / 2;
-            float condPerc = (curDur / maxDur) * 100;
+                float barWidth = Mathf.Floor((curDur / maxDur) * maxBarWidth);
+                float offset = (maxBarWidth - barWidth) / 2;
+                float condPerc = (curDur / maxDur) * 100;
 
-            byte colorAlpha = 180;
-            Color32 barColor = new Color32(0, 255, 0, colorAlpha);
+                byte colorAlpha = 180;
+                Color32 barColor = new Color32(0, 255, 0, colorAlpha);
 
-            // Tomorrow get the rest of the condition bars in place, as well as tie the status to the current condition of the item in that slot, also remove if slot is empty, etc.
+                string itemName = item.LongName;
+                string condName;
 
-            if (condPerc <= 91 && condPerc >= 76)  // Almost New
-                barColor = new Color32(120, 255, 0, colorAlpha);
-            else if (condPerc <= 75 && condPerc >= 61)  // Slightly Used
-                barColor = new Color32(180, 255, 0, colorAlpha);
-            else if (condPerc <= 60 && condPerc >= 41)  // Used
-                barColor = new Color32(255, 255, 0, colorAlpha);
-            else if (condPerc <= 40 && condPerc >= 16)  // Worn
-                barColor = new Color32(255, 150, 0, colorAlpha);
-            else if (condPerc <= 15)   // Battered & Useless, Broken
-                barColor = new Color32(255, 0, 0, colorAlpha);
+                if (condPerc >= 92) { condName = "New"; barColor = new Color32(120, 255, 0, colorAlpha); }
+                else if (condPerc <= 91 && condPerc >= 76) { condName = "Almost New"; barColor = new Color32(120, 255, 0, colorAlpha); }
+                else if (condPerc <= 75 && condPerc >= 61) { condName = "Slightly Used"; barColor = new Color32(180, 255, 0, colorAlpha); }
+                else if (condPerc <= 60 && condPerc >= 41) { condName = "Used"; barColor = new Color32(255, 255, 0, colorAlpha); }
+                else if (condPerc <= 40 && condPerc >= 16) { condName = "Worn"; barColor = new Color32(255, 150, 0, colorAlpha); }
+                else if (condPerc <= 15 && condPerc >= 6) { condName = "Battered"; barColor = new Color32(255, 0, 0, colorAlpha); }
+                else if (condPerc <= 5) { condName = "Useless"; barColor = new Color32(255, 0, 0, colorAlpha); }
+                else { condName = "New"; barColor = new Color32(120, 255, 0, colorAlpha); }
 
-            itemDurPanel.Components.Clear();
-            itemDurBars[index] = DaggerfallUI.AddPanel(new Rect(offset, 0, barWidth, 2), itemDurPanel);
-            itemDurBars[index].BackgroundColor = barColor;
-            itemDurBars[index].VerticalAlignment = VerticalAlignment.Middle;
+                string toolTipText = string.Format(itemName + "\r" + condName + "\r{0}%        {1} / {2}", Mathf.CeilToInt(condPerc), curDur, maxDur);
+
+                itemDurPanel.Components.Clear();
+                Panel itemDurBar = DaggerfallUI.AddPanel(new Rect(offset, 0, barWidth, 2), itemDurPanel);
+                itemDurBar.BackgroundColor = barColor;
+                itemDurBar.VerticalAlignment = VerticalAlignment.Middle;
+                Panel itemDurBarToolTipPanel = DaggerfallUI.AddPanel(new Rect(0, 0, maxBarWidth, 2), itemDurBar);
+                itemDurBarToolTipPanel.ToolTip = defaultToolTip;
+                itemDurBarToolTipPanel.ToolTipText = toolTipText;
+            }
+            else
+            {
+                itemDurPanel.Components.Clear();
+            }
         }
 
         public void UpdatePanels()
