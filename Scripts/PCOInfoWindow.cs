@@ -22,6 +22,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             get { return (player != null) ? player : player = GameManager.Instance.PlayerEntity; }
         }
 
+        PhysicalCombatOverhaulMain.CVARS holder;
+
         #region Testing Properties
 
         public static Rect butt1 = new Rect(0, 0, 0, 0);
@@ -71,6 +73,18 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel bootsItemDurabilityBarPanel;
         Panel leftHandItemDurabilityBarPanel;
 
+        Panel headItemTextPanel;
+        Panel rightArmItemTextPanel;
+        Panel chestItemTextPanel;
+        Panel glovesItemTextPanel;
+        Panel rightHandItemTextPanel;
+
+        Panel extraInfoItemTextPanel;
+        Panel leftArmItemTextPanel;
+        Panel legsItemTextPanel;
+        Panel bootsItemTextPanel;
+        Panel leftHandItemTextPanel;
+
         protected override void Setup()
         {
             base.Setup();
@@ -84,6 +98,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             // Setup native panel background
             NativePanel.BackgroundColor = ScreenDimColor;
             NativePanel.BackgroundTexture = baseTexture;
+
+            holder = new PhysicalCombatOverhaulMain.CVARS();
 
             SetupChestChoiceButtons();
 
@@ -119,77 +135,109 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         protected void SetupTestItemImagePanels()
         {
-            headItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 14, 30, 28), NativePanel);
+            headItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 14, 20, 28), NativePanel);
             headItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             headItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(headItemIconPanel, EquipSlots.Head);
             headItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 43, 54, 2), NativePanel);
-            AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
+            AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head);
+            headItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 14, 34, 28), NativePanel);
+            headItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(headItemTextPanel, EquipSlots.Head, "Head");
 
-            rightArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 50, 30, 28), NativePanel);
+            rightArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 50, 20, 28), NativePanel);
             rightArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(rightArmItemIconPanel, EquipSlots.RightArm);
             rightArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 79, 54, 2), NativePanel);
-            AddItemDurabilityBar(rightArmItemDurabilityBarPanel, EquipSlots.RightArm, 1);
+            AddItemDurabilityBar(rightArmItemDurabilityBarPanel, EquipSlots.RightArm);
+            rightArmItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 50, 34, 28), NativePanel);
+            rightArmItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(rightArmItemTextPanel, EquipSlots.RightArm, "Right Arm");
 
-            chestItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 86, 30, 28), NativePanel);
+            chestItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 86, 20, 28), NativePanel);
             chestItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             chestItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(chestItemIconPanel, EquipSlots.ChestArmor);
             chestItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 115, 54, 2), NativePanel);
-            AddItemDurabilityBar(chestItemDurabilityBarPanel, EquipSlots.ChestArmor, 2);
+            AddItemDurabilityBar(chestItemDurabilityBarPanel, EquipSlots.ChestArmor);
+            chestItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 86, 34, 28), NativePanel);
+            chestItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(chestItemTextPanel, EquipSlots.ChestArmor, "Chest");
 
-            glovesItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 122, 30, 28), NativePanel);
+            glovesItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 122, 20, 28), NativePanel);
             glovesItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             glovesItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(glovesItemIconPanel, EquipSlots.Gloves);
             glovesItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 151, 54, 2), NativePanel);
-            AddItemDurabilityBar(glovesItemDurabilityBarPanel, EquipSlots.Gloves, 3);
+            AddItemDurabilityBar(glovesItemDurabilityBarPanel, EquipSlots.Gloves);
+            glovesItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 122, 34, 28), NativePanel);
+            glovesItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(glovesItemTextPanel, EquipSlots.Gloves, "Gloves");
 
-            rightHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 158, 30, 28), NativePanel);
+            rightHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 158, 20, 28), NativePanel);
             rightHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(rightHandItemIconPanel, EquipSlots.RightHand);
             rightHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 187, 54, 2), NativePanel);
-            AddItemDurabilityBar(rightHandItemDurabilityBarPanel, EquipSlots.RightHand, 4);
+            AddItemDurabilityBar(rightHandItemDurabilityBarPanel, EquipSlots.RightHand);
+            rightHandItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 158, 34, 28), NativePanel);
+            rightHandItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(rightHandItemTextPanel, EquipSlots.RightHand, "Right Hand");
 
-            extraInfoItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 14, 30, 28), NativePanel);
+            extraInfoItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 14, 20, 28), NativePanel);
             extraInfoItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             extraInfoItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(extraInfoItemIconPanel, EquipSlots.Amulet0);
             extraInfoItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 43, 54, 2), NativePanel);
-            AddItemDurabilityBar(extraInfoItemDurabilityBarPanel, EquipSlots.Amulet0, 5);
+            AddItemDurabilityBar(extraInfoItemDurabilityBarPanel, EquipSlots.Amulet0);
+            extraInfoItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 14, 34, 28), NativePanel);
+            extraInfoItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(extraInfoItemTextPanel, EquipSlots.Amulet0, "Extra Info");
 
-            leftArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 50, 30, 28), NativePanel);
+            leftArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 50, 20, 28), NativePanel);
             leftArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(leftArmItemIconPanel, EquipSlots.LeftArm);
             leftArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 79, 54, 2), NativePanel);
-            AddItemDurabilityBar(leftArmItemDurabilityBarPanel, EquipSlots.LeftArm, 6);
+            AddItemDurabilityBar(leftArmItemDurabilityBarPanel, EquipSlots.LeftArm);
+            leftArmItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 50, 34, 28), NativePanel);
+            leftArmItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(leftArmItemTextPanel, EquipSlots.LeftArm, "Left Arm");
 
-            legsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 86, 30, 28), NativePanel);
+            legsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 86, 20, 28), NativePanel);
             legsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             legsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(legsItemIconPanel, EquipSlots.LegsArmor);
             legsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 115, 54, 2), NativePanel);
-            AddItemDurabilityBar(legsItemDurabilityBarPanel, EquipSlots.LegsArmor, 7);
+            AddItemDurabilityBar(legsItemDurabilityBarPanel, EquipSlots.LegsArmor);
+            legsItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 86, 34, 28), NativePanel);
+            legsItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(legsItemTextPanel, EquipSlots.LegsArmor, "Legs");
 
-            bootsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 122, 30, 28), NativePanel);
+            bootsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 122, 20, 28), NativePanel);
             bootsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             bootsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(bootsItemIconPanel, EquipSlots.Feet);
             bootsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 151, 54, 2), NativePanel);
-            AddItemDurabilityBar(bootsItemDurabilityBarPanel, EquipSlots.Feet, 8);
+            AddItemDurabilityBar(bootsItemDurabilityBarPanel, EquipSlots.Feet);
+            bootsItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 122, 34, 28), NativePanel);
+            bootsItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(bootsItemTextPanel, EquipSlots.Feet, "Feet");
 
-            leftHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 158, 30, 28), NativePanel);
+            leftHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 158, 20, 28), NativePanel);
             leftHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             DrawEquipItemToIconPanel(leftHandItemIconPanel, EquipSlots.LeftHand);
             leftHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 187, 54, 2), NativePanel);
-            AddItemDurabilityBar(leftHandItemDurabilityBarPanel, EquipSlots.LeftHand, 9);
+            AddItemDurabilityBar(leftHandItemDurabilityBarPanel, EquipSlots.LeftHand);
+            leftHandItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 158, 34, 28), NativePanel);
+            leftHandItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            AddItemTextLabels(leftHandItemTextPanel, EquipSlots.LeftHand, "Left Hand");
 
             // Tomorrow, possibly start working on the text values to be displayed next to the equip slot items, then after that maybe the "extra info" windows, will see.
+            // After that maybe add an "EXIT" button, as well as a keybind to open the window instead of the current console command only.
+            // And after that maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
         }
 
         public void DrawEquipItemToIconPanel(Panel iconPanel, EquipSlots slot)
@@ -211,7 +259,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             //button.AnimatedBackgroundTextures = (item.IsEnchanted) ? magicAnimation.animatedTextures : null;
         }
 
-        public void AddItemDurabilityBar(Panel itemDurPanel, EquipSlots slot, int index)
+        public void AddItemDurabilityBar(Panel itemDurPanel, EquipSlots slot)
         {
             PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
             DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
@@ -257,12 +305,54 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             }
         }
 
+        public void AddItemTextLabels(Panel itemTextPanel, EquipSlots slot, string slotName)
+        {
+            PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
+            DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
+
+            if (item != null)
+            {
+                if (slot == EquipSlots.RightHand || slot == EquipSlots.LeftHand)
+                {
+                    // Work on this tomorrow I suppose, that being showing the different text depending on if using a shield or a weapon, etc.
+                }
+                else
+                {
+                    int maxLineWidth = 34;
+                    int maxHeight = 28;
+
+                    float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(item, player, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    //string toolTipText = string.Format(itemName + "\r" + condName + "\r{0}%        {1} / {2}", Mathf.CeilToInt(condPerc), curDur, maxDur);
+
+                    itemTextPanel.Components.Clear();
+                    TextLabel itemTestText1 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 1), slotName, itemTextPanel);
+                    itemTestText1.HorizontalAlignment = HorizontalAlignment.Center;
+                    TextLabel itemTestText2 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 5), "-------", itemTextPanel);
+                    itemTestText2.HorizontalAlignment = HorizontalAlignment.Center;
+                    TextLabel itemTestText3 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 11), "DR: " + armorDR + "%", itemTextPanel);
+                    itemTestText3.HorizontalAlignment = HorizontalAlignment.Center;
+                    TextLabel itemTestText4 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 19), "DT: " + armorDT, itemTextPanel);
+                    itemTestText4.HorizontalAlignment = HorizontalAlignment.Center;
+                }
+            }
+            else
+            {
+                itemTextPanel.Components.Clear();
+                TextLabel itemTestText1 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 1), slotName, itemTextPanel);
+                itemTestText1.HorizontalAlignment = HorizontalAlignment.Center;
+                TextLabel itemTestText2 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 5), "-------", itemTextPanel);
+                itemTestText2.HorizontalAlignment = HorizontalAlignment.Center;
+            }
+        }
+
         public void UpdatePanels()
         {
-            AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
+            //AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
-            //headItemDurabilityBarPanel.Position = new Vector2(butt1.x, butt1.y);
-            //headItemDurabilityBarPanel.Size = new Vector2(butt1.width, butt1.height);
+            //extraInfoItemTextPanel.Position = new Vector2(butt1.x, butt1.y);
+            //extraInfoItemTextPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);

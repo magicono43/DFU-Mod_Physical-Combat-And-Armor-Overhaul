@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		1/2/2025, 5:45 PM
+// Last Edit:		1/7/2025, 1:30 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -42,7 +42,8 @@ namespace PhysicalCombatOverhaul
         public static bool softMatRequireModuleCheck { get; set; }
 
         public static bool conditionBasedWeaponEffectiveness { get; set; }
-        public static bool conditionBasedArmorEffectiveness { get; set; }
+        //public static bool conditionBasedArmorEffectiveness { get; set; }
+        public static bool conditionBasedArmorEffectiveness = true;
 
         // Mod Compatibility Check Values
         public static bool RolePlayRealismArcheryModuleCheck { get; set; }
@@ -233,9 +234,11 @@ namespace PhysicalCombatOverhaul
             if (monsterDict == null)
                 monsterDict = PCOEnemyBasics.BuildMonsterDict();
 
+            /*
             DaggerfallWorkshop.Game.UserInterfaceWindows.PCODebugHUD debugHUD = new DaggerfallWorkshop.Game.UserInterfaceWindows.PCODebugHUD();
             DaggerfallWorkshop.Game.UserInterfaceWindows.DaggerfallHUD dfuHud = DaggerfallUI.Instance.DaggerfallHUD;
             dfuHud.ParentPanel.Components.Add(debugHUD);
+            */
 
             Debug.Log("Finished mod init: Physical Combat And Armor Overhaul");
         }
