@@ -1,10 +1,8 @@
 using UnityEngine;
-using DaggerfallWorkshop.Utility;
 using DaggerfallWorkshop.Game.UserInterface;
 using PhysicalCombatOverhaul;
 using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
-using DaggerfallWorkshop.Game.Serialization;
 
 namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 {
@@ -23,6 +21,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         }
 
         PhysicalCombatOverhaulMain.CVARS holder;
+
+        public static byte[] validEquipSlots = new byte[9] {12, 13, 18, 20, 19, 15, 23, 26, 21};
 
         #region Testing Properties
 
@@ -55,7 +55,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel glovesItemIconPanel;
         Panel rightHandItemIconPanel;
 
-        Panel extraInfoItemIconPanel;
         Panel leftArmItemIconPanel;
         Panel legsItemIconPanel;
         Panel bootsItemIconPanel;
@@ -67,7 +66,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel glovesItemDurabilityBarPanel;
         Panel rightHandItemDurabilityBarPanel;
 
-        Panel extraInfoItemDurabilityBarPanel;
         Panel leftArmItemDurabilityBarPanel;
         Panel legsItemDurabilityBarPanel;
         Panel bootsItemDurabilityBarPanel;
@@ -79,11 +77,12 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel glovesItemTextPanel;
         Panel rightHandItemTextPanel;
 
-        Panel extraInfoItemTextPanel;
         Panel leftArmItemTextPanel;
         Panel legsItemTextPanel;
         Panel bootsItemTextPanel;
         Panel leftHandItemTextPanel;
+
+        Panel extraInfoTextPanel;
 
         protected override void Setup()
         {
@@ -138,6 +137,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             headItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 14, 20, 28), NativePanel);
             headItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             headItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            headItemIconPanel.Tag = EquipSlots.Head;
             DrawEquipItemToIconPanel(headItemIconPanel, EquipSlots.Head);
             headItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 43, 54, 2), NativePanel);
             AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head);
@@ -148,6 +148,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 50, 20, 28), NativePanel);
             rightArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            rightArmItemIconPanel.Tag = EquipSlots.RightArm;
             DrawEquipItemToIconPanel(rightArmItemIconPanel, EquipSlots.RightArm);
             rightArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 79, 54, 2), NativePanel);
             AddItemDurabilityBar(rightArmItemDurabilityBarPanel, EquipSlots.RightArm);
@@ -158,6 +159,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             chestItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 86, 20, 28), NativePanel);
             chestItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             chestItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            chestItemIconPanel.Tag = EquipSlots.ChestArmor;
             DrawEquipItemToIconPanel(chestItemIconPanel, EquipSlots.ChestArmor);
             chestItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 115, 54, 2), NativePanel);
             AddItemDurabilityBar(chestItemDurabilityBarPanel, EquipSlots.ChestArmor);
@@ -168,6 +170,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             glovesItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 122, 20, 28), NativePanel);
             glovesItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             glovesItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            glovesItemIconPanel.Tag = EquipSlots.Gloves;
             DrawEquipItemToIconPanel(glovesItemIconPanel, EquipSlots.Gloves);
             glovesItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 151, 54, 2), NativePanel);
             AddItemDurabilityBar(glovesItemDurabilityBarPanel, EquipSlots.Gloves);
@@ -178,6 +181,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(103, 158, 20, 28), NativePanel);
             rightHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            rightHandItemIconPanel.Tag = EquipSlots.RightHand;
             DrawEquipItemToIconPanel(rightHandItemIconPanel, EquipSlots.RightHand);
             rightHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 187, 54, 2), NativePanel);
             AddItemDurabilityBar(rightHandItemDurabilityBarPanel, EquipSlots.RightHand);
@@ -185,19 +189,14 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightHandItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
             AddItemTextLabels(rightHandItemTextPanel, EquipSlots.RightHand, "Right Hand");
 
-            extraInfoItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 14, 20, 28), NativePanel);
-            extraInfoItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
-            extraInfoItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
-            DrawEquipItemToIconPanel(extraInfoItemIconPanel, EquipSlots.Amulet0);
-            extraInfoItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 43, 54, 2), NativePanel);
-            AddItemDurabilityBar(extraInfoItemDurabilityBarPanel, EquipSlots.Amulet0);
-            extraInfoItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 14, 34, 28), NativePanel);
-            extraInfoItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
-            AddItemTextLabels(extraInfoItemTextPanel, EquipSlots.Amulet0, "Extra Info");
+            extraInfoTextPanel = DaggerfallUI.AddPanel(new Rect(165, 14, 55, 28), NativePanel);
+            extraInfoTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            //AddExtraInfoTextLabels();
 
             leftArmItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 50, 20, 28), NativePanel);
             leftArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            leftArmItemIconPanel.Tag = EquipSlots.LeftArm;
             DrawEquipItemToIconPanel(leftArmItemIconPanel, EquipSlots.LeftArm);
             leftArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 79, 54, 2), NativePanel);
             AddItemDurabilityBar(leftArmItemDurabilityBarPanel, EquipSlots.LeftArm);
@@ -208,6 +207,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             legsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 86, 20, 28), NativePanel);
             legsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             legsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            legsItemIconPanel.Tag = EquipSlots.LegsArmor;
             DrawEquipItemToIconPanel(legsItemIconPanel, EquipSlots.LegsArmor);
             legsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 115, 54, 2), NativePanel);
             AddItemDurabilityBar(legsItemDurabilityBarPanel, EquipSlots.LegsArmor);
@@ -218,6 +218,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             bootsItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 122, 20, 28), NativePanel);
             bootsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             bootsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            bootsItemIconPanel.Tag = EquipSlots.Feet;
             DrawEquipItemToIconPanel(bootsItemIconPanel, EquipSlots.Feet);
             bootsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 151, 54, 2), NativePanel);
             AddItemDurabilityBar(bootsItemDurabilityBarPanel, EquipSlots.Feet);
@@ -228,6 +229,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftHandItemIconPanel = DaggerfallUI.AddPanel(new Rect(165, 158, 20, 28), NativePanel);
             leftHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
+            leftHandItemIconPanel.Tag = EquipSlots.LeftHand;
             DrawEquipItemToIconPanel(leftHandItemIconPanel, EquipSlots.LeftHand);
             leftHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 187, 54, 2), NativePanel);
             AddItemDurabilityBar(leftHandItemDurabilityBarPanel, EquipSlots.LeftHand);
@@ -235,34 +237,95 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftHandItemTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
             AddItemTextLabels(leftHandItemTextPanel, EquipSlots.LeftHand, "Left Hand");
 
+            if (extraInfoTextPanel != null)
+            {
+                SetupEquipSlotPanelsEventSubscriptions();
+            }
+
             // Tomorrow, possibly start working on the text values to be displayed next to the equip slot items, then after that maybe the "extra info" windows, will see.
             // After that maybe add an "EXIT" button, as well as a keybind to open the window instead of the current console command only.
             // And after that maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
+            // 1/8/2025: I'm thinking I should put a small button that is a child of the "itemIconPanel" for each equip slot, it would probably be a box looking button with a question-mark symbol
+            // in it or something. When clicked it would open a sub-window with much more details about that specific item in that equip slot, probably involving damage type and all that, etc.
         }
 
         public void DrawEquipItemToIconPanel(Panel iconPanel, EquipSlots slot)
         {
-            PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
-            DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
+            DaggerfallUnityItem item = Player.ItemEquipTable.GetItem(slot);
 
             if (item == null)
             {
                 iconPanel.BackgroundTexture = null;
-                //button.ToolTipText = string.Empty;
+                iconPanel.ToolTipText = string.Empty;
                 //button.AnimatedBackgroundTextures = null;
                 return;
             }
 
             ImageData image = DaggerfallUnity.Instance.ItemHelper.GetInventoryImage(item);
             iconPanel.BackgroundTexture = image.texture;
-            //button.ToolTipText = item.LongName;
+            iconPanel.ToolTip = defaultToolTip;
+            iconPanel.ToolTipText = item.LongName;
             //button.AnimatedBackgroundTextures = (item.IsEnchanted) ? magicAnimation.animatedTextures : null;
+        }
+
+        public void AddItemTextLabels(Panel itemTextPanel, EquipSlots slot, string slotName)
+        {
+            DaggerfallUnityItem item = Player.ItemEquipTable.GetItem(slot);
+
+            int maxLineWidth = (int)itemTextPanel.Size.x;
+            int maxHeight = (int)itemTextPanel.Size.y;
+            //string toolTipText = string.Format(itemName + "\r" + condName + "\r{0}%        {1} / {2}", Mathf.CeilToInt(condPerc), curDur, maxDur);
+
+            if (item != null)
+            {
+                if (slot == EquipSlots.RightHand || slot == EquipSlots.LeftHand)
+                {
+                    if (item.IsShield)
+                    {
+                        float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, false, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                        float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(item, player, false, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                        itemTextPanel.Components.Clear();
+                        CreateCenteredTextLabel(slotName, new Vector2(0, 1), maxLineWidth, itemTextPanel);
+                        CreateCenteredTextLabel("-------", new Vector2(0, 5), maxLineWidth, itemTextPanel);
+                        CreateCenteredTextLabel("DR: " + armorDR + "%", new Vector2(0, 11), maxLineWidth, itemTextPanel);
+                        CreateCenteredTextLabel("DT: " + armorDT, new Vector2(0, 19), maxLineWidth, itemTextPanel);
+                    }
+                    else
+                    {
+                        int minDamRoll = PhysicalCombatOverhaulMain.AlterDamageBasedOnWepCondition(item.GetBaseDamageMin() + item.GetWeaponMaterialModifier(), true, item);
+                        int maxDamRoll = PhysicalCombatOverhaulMain.AlterDamageBasedOnWepCondition(item.GetBaseDamageMax() + item.GetWeaponMaterialModifier(), true, item);
+
+                        itemTextPanel.Components.Clear();
+                        CreateCenteredTextLabel(slotName, new Vector2(0, 1), maxLineWidth, itemTextPanel);
+                        CreateCenteredTextLabel("-------", new Vector2(0, 5), maxLineWidth, itemTextPanel);
+                        CreateCenteredTextLabel("Min: " + minDamRoll, new Vector2(0, 11), maxLineWidth, itemTextPanel);
+                        CreateCenteredTextLabel("Max: " + maxDamRoll, new Vector2(0, 19), maxLineWidth, itemTextPanel);
+                    }
+                }
+                else
+                {
+                    float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, false, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(item, player, false, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    itemTextPanel.Components.Clear();
+                    CreateCenteredTextLabel(slotName, new Vector2(0, 1), maxLineWidth, itemTextPanel);
+                    CreateCenteredTextLabel("-------", new Vector2(0, 5), maxLineWidth, itemTextPanel);
+                    CreateCenteredTextLabel("DR: " + armorDR + "%", new Vector2(0, 11), maxLineWidth, itemTextPanel);
+                    CreateCenteredTextLabel("DT: " + armorDT, new Vector2(0, 19), maxLineWidth, itemTextPanel);
+                }
+            }
+            else
+            {
+                itemTextPanel.Components.Clear();
+                CreateCenteredTextLabel(slotName, new Vector2(0, 1), maxLineWidth, itemTextPanel);
+                CreateCenteredTextLabel("-------", new Vector2(0, 5), maxLineWidth, itemTextPanel);
+            }
         }
 
         public void AddItemDurabilityBar(Panel itemDurPanel, EquipSlots slot)
         {
-            PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
-            DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
+            DaggerfallUnityItem item = Player.ItemEquipTable.GetItem(slot);
 
             if (item != null)
             {
@@ -305,45 +368,124 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             }
         }
 
-        public void AddItemTextLabels(Panel itemTextPanel, EquipSlots slot, string slotName)
+        public void UpdateItemInfoPanel(DaggerfallUnityItem item, BaseScreenComponent sender)
         {
-            PlayerEntity playerEnt = GameManager.Instance.PlayerEntity;
-            DaggerfallUnityItem item = playerEnt.ItemEquipTable.GetItem(slot);
-
-            if (item != null)
+            if (item == null || sender == null)
             {
-                if (slot == EquipSlots.RightHand || slot == EquipSlots.LeftHand)
+                extraInfoTextPanel.Components.Clear();
+                return;
+            }
+
+            int maxLineWidth = (int)extraInfoTextPanel.Size.x;
+            int maxHeight = (int)extraInfoTextPanel.Size.y;
+            float textScale = 0.75f;
+            EquipSlots slot = (EquipSlots)sender.Tag;
+
+            if (slot == EquipSlots.RightHand || slot == EquipSlots.LeftHand)
+            {
+                if (item.IsShield)
                 {
-                    // Work on this tomorrow I suppose, that being showing the different text depending on if using a shield or a weapon, etc.
+                    float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(item, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    extraInfoTextPanel.Components.Clear(); // Maybe continue here tomorrow, make some simple methods to get the "types" for armor and weapons, then more after that.
+                    CreateCenteredTextLabel(item.LongName, new Vector2(0, 1), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Type: Plate", new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Base DR: " + armorDR + "%", new Vector2(0, 16), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Base DT: " + armorDT, new Vector2(0, 22), maxLineWidth, extraInfoTextPanel, textScale);
                 }
                 else
                 {
-                    int maxLineWidth = 34;
-                    int maxHeight = 28;
+                    int minDamRoll = item.GetBaseDamageMin() + item.GetWeaponMaterialModifier();
+                    int maxDamRoll = item.GetBaseDamageMax() + item.GetWeaponMaterialModifier();
 
-                    float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
-                    float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(item, player, ref holder), 1, System.MidpointRounding.AwayFromZero);
-
-                    //string toolTipText = string.Format(itemName + "\r" + condName + "\r{0}%        {1} / {2}", Mathf.CeilToInt(condPerc), curDur, maxDur);
-
-                    itemTextPanel.Components.Clear();
-                    TextLabel itemTestText1 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 1), slotName, itemTextPanel);
-                    itemTestText1.HorizontalAlignment = HorizontalAlignment.Center;
-                    TextLabel itemTestText2 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 5), "-------", itemTextPanel);
-                    itemTestText2.HorizontalAlignment = HorizontalAlignment.Center;
-                    TextLabel itemTestText3 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 11), "DR: " + armorDR + "%", itemTextPanel);
-                    itemTestText3.HorizontalAlignment = HorizontalAlignment.Center;
-                    TextLabel itemTestText4 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 19), "DT: " + armorDT, itemTextPanel);
-                    itemTestText4.HorizontalAlignment = HorizontalAlignment.Center;
+                    extraInfoTextPanel.Components.Clear();
+                    CreateCenteredTextLabel(item.LongName, new Vector2(0, 1), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Type: Slash", new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Base Min: " + minDamRoll, new Vector2(0, 16), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Base Max: " + maxDamRoll, new Vector2(0, 22), maxLineWidth, extraInfoTextPanel, textScale);
                 }
             }
             else
             {
-                itemTextPanel.Components.Clear();
-                TextLabel itemTestText1 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 1), slotName, itemTextPanel);
-                itemTestText1.HorizontalAlignment = HorizontalAlignment.Center;
-                TextLabel itemTestText2 = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, new Vector2(0, 5), "-------", itemTextPanel);
-                itemTestText2.HorizontalAlignment = HorizontalAlignment.Center;
+                float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(item, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                extraInfoTextPanel.Components.Clear();
+                CreateCenteredTextLabel(item.LongName, new Vector2(0, 1), maxLineWidth, extraInfoTextPanel, textScale);
+                CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, extraInfoTextPanel, textScale);
+                CreateCenteredTextLabel("Type: Chainmail", new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
+                CreateCenteredTextLabel("Base DR: " + armorDR + "%", new Vector2(0, 16), maxLineWidth, extraInfoTextPanel, textScale);
+                CreateCenteredTextLabel("Base DT: " + armorDT, new Vector2(0, 22), maxLineWidth, extraInfoTextPanel, textScale);
+            }
+        }
+
+        public void SetupEquipSlotPanelsEventSubscriptions()
+        {
+            for (int i = 0; i < validEquipSlots.Length; i++)
+            {
+                Panel panel = GetPanelRefFromEquipSlot((EquipSlots)validEquipSlots[i]);
+                DaggerfallUnityItem item = Player.ItemEquipTable.GetItem((EquipSlots)validEquipSlots[i]);
+
+                if (panel == null) { continue; }
+
+                if (item == null)
+                {
+                    panel.OnMouseEnter -= UpdateExtraInfoPanel_OnMouseEnter;
+                    panel.OnMouseLeave -= UpdateExtraInfoPanel_OnMouseLeave;
+                    continue;
+                }
+
+                panel.OnMouseEnter += UpdateExtraInfoPanel_OnMouseEnter;
+                panel.OnMouseLeave += UpdateExtraInfoPanel_OnMouseLeave;
+            }
+        }
+
+        public static TextLabel CreateCenteredTextLabel(string text, Vector2 position, int maxWidth, Panel parentPanel, float textScale = 1)
+        {
+            TextLabel label = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, position, text, parentPanel);
+            label.MaxWidth = maxWidth;
+            label.TextScale = textScale;
+            label.HorizontalAlignment = HorizontalAlignment.Center;
+            return label;
+        }
+
+        public void UpdateExtraInfoPanel_OnMouseEnter(BaseScreenComponent sender)
+        {
+            EquipSlots slot = (EquipSlots)sender.Tag;
+            DaggerfallUnityItem item = Player.ItemEquipTable.GetItem(slot);
+
+            if (extraInfoTextPanel != null)
+                UpdateItemInfoPanel(item, sender);
+        }
+
+        public void UpdateExtraInfoPanel_OnMouseLeave(BaseScreenComponent sender)
+        {
+            if (extraInfoTextPanel != null)
+                UpdateItemInfoPanel(null, sender);
+        }
+
+        private void ExitButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        {
+            CloseWindow();
+        }
+
+        public Panel GetPanelRefFromEquipSlot(EquipSlots slot)
+        {
+            switch (slot)
+            {
+                case EquipSlots.Head: return headItemIconPanel;
+                case EquipSlots.RightArm: return rightArmItemIconPanel;
+                case EquipSlots.ChestArmor: return chestItemIconPanel;
+                case EquipSlots.Gloves: return glovesItemIconPanel;
+                case EquipSlots.RightHand: return rightHandItemIconPanel;
+                case EquipSlots.LeftArm: return leftArmItemIconPanel;
+                case EquipSlots.LegsArmor: return legsItemIconPanel;
+                case EquipSlots.Feet: return bootsItemIconPanel;
+                case EquipSlots.LeftHand: return leftHandItemIconPanel;
+                default: return null;
             }
         }
 
@@ -372,98 +514,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             InspectionInfoWindow inspectionInfoWindow = new InspectionInfoWindow(DaggerfallUI.UIManager, chest);
             DaggerfallUI.UIManager.PushWindow(inspectionInfoWindow);
         }
-
-        private void AttemptLockpickButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
-        {
-            CloseWindow();
-            if (chest != null)
-            {
-                DaggerfallAudioSource dfAudioSource = chest.GetComponent<DaggerfallAudioSource>();
-                ItemCollection closedChestLoot = chest.AttachedLoot;
-                Transform closedChestTransform = chest.transform;
-                Vector3 pos = chest.transform.position;
-
-                LockedLootContainersMain.IsThisACrime(ChestInteractionType.Lockpick);
-
-                if (chest.IsLockJammed)
-                {
-                    DaggerfallUI.AddHUDText(LockedLootContainersMain.GetLockAlreadyJammedText(), 2f);
-                    if (dfAudioSource != null && !dfAudioSource.IsPlaying())
-                        dfAudioSource.AudioSource.PlayOneShot(LockedLootContainersMain.GetLockAlreadyJammedClip(), UnityEngine.Random.Range(0.9f, 1.42f) * DaggerfallUnity.Settings.SoundVolume);
-                }
-                else if (LockedLootContainersMain.LockPickChance(chest))
-                {
-                    chest.PicksAttempted++;
-                    LockedLootContainersMain.ApplyLockPickAttemptCosts();
-
-                    DaggerfallLoot openChestLoot = null;
-                    if (LockedLootContainersMain.ChestGraphicType == 0) // Use sprite based graphics for chests
-                    {
-                        int spriteID = closedChestLoot.Count <= 0 ? LockedLootContainersMain.OpenEmptyChestSpriteID : LockedLootContainersMain.OpenFullChestSpriteID;
-                        openChestLoot = GameObjectHelper.CreateLootContainer(LootContainerTypes.Nothing, InventoryContainerImages.Chest, pos, closedChestTransform.parent, spriteID, 0, DaggerfallUnity.NextUID, null, false);
-                        openChestLoot.gameObject.name = GameObjectHelper.GetGoFlatName(spriteID, 0);
-                        openChestLoot.Items.TransferAll(closedChestLoot); // Transfers items from closed chest's items to the new open chest's item collection.
-                        GameObject.Destroy(openChestLoot.GetComponent<SerializableLootContainer>());
-                    }
-                    else // Use 3D models for chests
-                    {
-                        GameObject usedModelPrefab = null;
-                        int modelID = 0;
-                        if (closedChestLoot.Count <= 0) { usedModelPrefab = (LockedLootContainersMain.ChestGraphicType == 1) ? LockedLootContainersMain.Instance.LowPolyOpenEmptyChestPrefab : LockedLootContainersMain.Instance.HighPolyOpenEmptyChestPrefab; modelID = LockedLootContainersMain.OpenEmptyChestModelID; }
-                        else { usedModelPrefab = (LockedLootContainersMain.ChestGraphicType == 1) ? LockedLootContainersMain.Instance.LowPolyOpenFullChestPrefab : LockedLootContainersMain.Instance.HighPolyOpenFullChestPrefab; modelID = LockedLootContainersMain.OpenFullChestModelID; }
-                        GameObject chestGo = GameObjectHelper.InstantiatePrefab(usedModelPrefab, GameObjectHelper.GetGoModelName((uint)modelID), closedChestTransform.parent, pos);
-                        chestGo.transform.rotation = chest.gameObject.transform.rotation;
-                        Collider col = chestGo.AddComponent<BoxCollider>();
-                        openChestLoot = chestGo.AddComponent<DaggerfallLoot>();
-                        LockedLootContainersMain.ToggleChestShadowsOrCollision(chestGo);
-                        if (openChestLoot)
-                        {
-                            openChestLoot.ContainerType = LootContainerTypes.Nothing;
-                            openChestLoot.ContainerImage = InventoryContainerImages.Chest;
-                            openChestLoot.LoadID = DaggerfallUnity.NextUID;
-                            openChestLoot.TextureRecord = modelID;
-                            openChestLoot.Items.TransferAll(closedChestLoot); // Transfers items from closed chest's items to the new open chest's item collection.
-                        }
-                    }
-
-                    // Show success and play unlock sound
-                    DaggerfallUI.AddHUDText(LockedLootContainersMain.GetLockPickSuccessText(), 3f);
-                    if (dfAudioSource != null)
-                        AudioSource.PlayClipAtPoint(LockedLootContainersMain.GetLockpickSuccessClip(), chest.gameObject.transform.position, UnityEngine.Random.Range(1.5f, 2.31f) * DaggerfallUnity.Settings.SoundVolume);
-
-                    UnityEngine.Object.Destroy(LockedLootContainersMain.ChestObjRef); // Remove closed chest from scene.
-                    LockedLootContainersMain.ChestObjRef = null;
-                }
-                else
-                {
-                    chest.PicksAttempted++; // Increase picks attempted counter by 1 on the chest.
-                    LockedLootContainersMain.ApplyLockPickAttemptCosts();
-                    int mechDamDealt = LockedLootContainersMain.DetermineDamageToLockMechanism(chest);
-
-                    if (LockedLootContainersMain.DoesLockJam(chest, mechDamDealt))
-                    {
-                        DaggerfallUI.AddHUDText(LockedLootContainersMain.GetJammedLockText(), 3f);
-                        if (dfAudioSource != null)
-                            AudioSource.PlayClipAtPoint(LockedLootContainersMain.GetLockpickJammedClip(), chest.gameObject.transform.position, UnityEngine.Random.Range(8.2f, 9.71f) * DaggerfallUnity.Settings.SoundVolume);
-                    }
-                    else
-                    {
-                        DaggerfallUI.AddHUDText(LockedLootContainersMain.GetLockPickAttemptText(), 2f);
-                        if (dfAudioSource != null && !dfAudioSource.IsPlaying())
-                            dfAudioSource.AudioSource.PlayOneShot(LockedLootContainersMain.GetLockpickAttemptClip(), UnityEngine.Random.Range(1.2f, 1.91f) * DaggerfallUnity.Settings.SoundVolume);
-                    }
-                }
-            }
-            else
-            {
-                DaggerfallUI.AddHUDText("ERROR: Chest Was Found As Null.", 3f);
-            }
-        }
         */
-
-        private void ExitButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
-        {
-            CloseWindow();
-        }
     }
 }

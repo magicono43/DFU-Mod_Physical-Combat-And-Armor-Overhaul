@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		1/7/2025, 1:30 AM
+// Last Edit:		1/9/2025, 2:00 AM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -2131,8 +2131,8 @@ namespace PhysicalCombatOverhaul
             armor = cVars.tEntity.ItemEquipTable.GetItem(hitSlot);
             if (armor != null)
             {
-                cVars.armorDTAmount = GetBaseDTAmount(armor, target, ref cVars);
-                cVars.armorDRAmount = GetBaseDRAmount(armor, target, ref cVars);
+                cVars.armorDTAmount = GetBaseDTAmount(armor, target, false, ref cVars);
+                cVars.armorDRAmount = GetBaseDRAmount(armor, target, false, ref cVars);
 
                 cVars.finalDTAmount = cVars.armorDTAmount;
                 cVars.finalDRAmount = cVars.armorDRAmount;
@@ -2213,8 +2213,8 @@ namespace PhysicalCombatOverhaul
             {
                 float dTMod = 1f;
                 cVars.shieldBlockSuccess = true;
-                cVars.shieldDTAmount = GetBaseDTAmount(shield, owner, ref cVars);
-                cVars.shieldDRAmount = GetBaseDRAmount(shield, owner, ref cVars);
+                cVars.shieldDTAmount = GetBaseDTAmount(shield, owner, false, ref cVars);
+                cVars.shieldDRAmount = GetBaseDRAmount(shield, owner, false, ref cVars);
                 cVars.shieldDTAmount *= 2;
 
                 if (cVars.tarSize < cVars.atkSize)
@@ -2239,8 +2239,8 @@ namespace PhysicalCombatOverhaul
                     float dTMod = 1f;
                     cVars.shieldBlockSuccess = false;
                     cVars.hitShield = true;
-                    cVars.shieldDTAmount = GetBaseDTAmount(shield, owner, ref cVars);
-                    cVars.shieldDRAmount = GetBaseDRAmount(shield, owner, ref cVars);
+                    cVars.shieldDTAmount = GetBaseDTAmount(shield, owner, false, ref cVars);
+                    cVars.shieldDRAmount = GetBaseDRAmount(shield, owner, false, ref cVars);
 
                     if (cVars.tarSize < cVars.atkSize)
                     {
@@ -2263,7 +2263,7 @@ namespace PhysicalCombatOverhaul
             }
         }
 
-        public static float GetBaseDTAmount(DaggerfallUnityItem armor, DaggerfallEntity owner, ref CVARS cVars)
+        public static float GetBaseDTAmount(DaggerfallUnityItem armor, DaggerfallEntity owner, bool noModifs, ref CVARS cVars)
         {
             float dT = 0f;
 
@@ -2361,7 +2361,7 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            if (conditionBasedArmorEffectiveness)
+            if (conditionBasedArmorEffectiveness && !noModifs)
             {
                 if (owner == player)
                     dT = AlterArmorReducBasedOnItemCondition(dT, true, armor);
@@ -2372,7 +2372,7 @@ namespace PhysicalCombatOverhaul
             return dT;
         }
 
-        public static float GetBaseDRAmount(DaggerfallUnityItem armor, DaggerfallEntity owner, ref CVARS cVars)
+        public static float GetBaseDRAmount(DaggerfallUnityItem armor, DaggerfallEntity owner, bool noModifs, ref CVARS cVars)
         {
             float dR = 0f;
 
@@ -2470,7 +2470,7 @@ namespace PhysicalCombatOverhaul
                 }
             }
 
-            if (conditionBasedArmorEffectiveness)
+            if (conditionBasedArmorEffectiveness && !noModifs)
             {
                 if (owner == player)
                     dR = AlterArmorReducBasedOnItemCondition(dR, true, armor);
