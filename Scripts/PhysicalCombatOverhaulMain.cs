@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		1/9/2025, 2:00 AM
+// Last Edit:		1/11/2025, 10:45 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -2715,6 +2715,23 @@ namespace PhysicalCombatOverhaul
                 }
             }
             return -1;
+        }
+
+        /// <summary>Return the attack type the weapon uses as a string.</summary>
+        public static string GetWeaponAttackTypeName(DaggerfallUnityItem weapon)
+        {
+            switch (weapon.GetWeaponSkillIDAsShort())
+            {
+                case (int)Skills.ShortBlade:
+                case (int)Skills.Archery:
+                    return "Piercing";
+                case (int)Skills.LongBlade:
+                case (int)Skills.Axe:
+                default:
+                    return "Slashing";
+                case (int)Skills.BluntWeapon:
+                    return "Bludgeoning";
+            }
         }
 
         /// <summary>Retrieves the multiplier based on the condition modifier of a material, the idea being that items will take around the same amount of damage as other items in that category.</summary>

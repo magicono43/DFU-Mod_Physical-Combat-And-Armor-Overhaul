@@ -49,6 +49,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         #endregion
 
+        Button exitButton;
+
         Panel headItemIconPanel;
         Panel rightArmItemIconPanel;
         Panel chestItemIconPanel;
@@ -112,22 +114,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         protected void SetupChestChoiceButtons()
         {
-            // Inspect Chest button
-            Button inspectChestButton = DaggerfallUI.AddButton(new Rect(144, 70, 33, 16), NativePanel);
-            inspectChestButton.ToolTip = defaultToolTip;
-            inspectChestButton.ToolTipText = "Inspect Chest";
-            //inspectChestButton.OnMouseClick += InspectChestButton_OnMouseClick;
-            inspectChestButton.ClickSound = DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick);
-
-            // Attempt Lockpick button
-            Button attemptLockpickButton = DaggerfallUI.AddButton(new Rect(144, 92, 33, 16), NativePanel);
-            attemptLockpickButton.ToolTip = defaultToolTip;
-            attemptLockpickButton.ToolTipText = "Attempt Lockpick";
-            //attemptLockpickButton.OnMouseClick += AttemptLockpickButton_OnMouseClick;
-            attemptLockpickButton.ClickSound = DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick);
-
             // Exit button
-            Button exitButton = DaggerfallUI.AddButton(new Rect(142, 114, 36, 17), NativePanel);
+            exitButton = DaggerfallUI.AddButton(new Rect(144, 190, 36, 9), NativePanel);
             exitButton.OnMouseClick += ExitButton_OnMouseClick;
             exitButton.ClickSound = DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick);
         }
@@ -388,10 +376,16 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
                     float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(item, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
 
-                    extraInfoTextPanel.Components.Clear(); // Maybe continue here tomorrow, make some simple methods to get the "types" for armor and weapons, then more after that.
+                    string shieldMatType = "Plate";
+                    int shieldMat = PhysicalCombatOverhaulMain.GetArmorMaterial(item);
+
+                    if (shieldMat == 0) { shieldMatType = "Leather"; }
+                    else if (shieldMat == 1) { shieldMatType = "Chain"; }
+
+                    extraInfoTextPanel.Components.Clear();
                     CreateCenteredTextLabel(item.LongName, new Vector2(0, 1), maxLineWidth, extraInfoTextPanel, textScale);
                     CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, extraInfoTextPanel, textScale);
-                    CreateCenteredTextLabel("Type: Plate", new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Type: " + shieldMatType, new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
                     CreateCenteredTextLabel("Base DR: " + armorDR + "%", new Vector2(0, 16), maxLineWidth, extraInfoTextPanel, textScale);
                     CreateCenteredTextLabel("Base DT: " + armorDT, new Vector2(0, 22), maxLineWidth, extraInfoTextPanel, textScale);
                 }
@@ -403,7 +397,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     extraInfoTextPanel.Components.Clear();
                     CreateCenteredTextLabel(item.LongName, new Vector2(0, 1), maxLineWidth, extraInfoTextPanel, textScale);
                     CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, extraInfoTextPanel, textScale);
-                    CreateCenteredTextLabel("Type: Slash", new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
+                    CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(item), new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
                     CreateCenteredTextLabel("Base Min: " + minDamRoll, new Vector2(0, 16), maxLineWidth, extraInfoTextPanel, textScale);
                     CreateCenteredTextLabel("Base Max: " + maxDamRoll, new Vector2(0, 22), maxLineWidth, extraInfoTextPanel, textScale);
                 }
@@ -416,7 +410,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 extraInfoTextPanel.Components.Clear();
                 CreateCenteredTextLabel(item.LongName, new Vector2(0, 1), maxLineWidth, extraInfoTextPanel, textScale);
                 CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, extraInfoTextPanel, textScale);
-                CreateCenteredTextLabel("Type: Chainmail", new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
+                CreateCenteredTextLabel("Type: " + (PhysicalCombatOverhaulMain.ArmorType)PhysicalCombatOverhaulMain.GetArmorMatType(item), new Vector2(0, 10), maxLineWidth, extraInfoTextPanel, textScale);
                 CreateCenteredTextLabel("Base DR: " + armorDR + "%", new Vector2(0, 16), maxLineWidth, extraInfoTextPanel, textScale);
                 CreateCenteredTextLabel("Base DT: " + armorDT, new Vector2(0, 22), maxLineWidth, extraInfoTextPanel, textScale);
             }
