@@ -230,9 +230,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 SetupEquipSlotPanelsEventSubscriptions();
             }
 
-            // Tomorrow, possibly start working on the text values to be displayed next to the equip slot items, then after that maybe the "extra info" windows, will see.
-            // After that maybe add an "EXIT" button, as well as a keybind to open the window instead of the current console command only.
-            // And after that maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
+            // Maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
             // 1/8/2025: I'm thinking I should put a small button that is a child of the "itemIconPanel" for each equip slot, it would probably be a box looking button with a question-mark symbol
             // in it or something. When clicked it would open a sub-window with much more details about that specific item in that equip slot, probably involving damage type and all that, etc.
         }

@@ -1,17 +1,17 @@
 {
     "Version": "1.00",
     "Sections": [
-	{
+        {
             "Name": "GeneralSettings",
             "Description": "Related To General Settings For The Mod",
             "IsAdvanced": false,
             "Keys": [
                 {
-                    "Value": false,
-                    "Name": "ReverseCycleDirections",
-                    "Description": "Reverse What Direction Modes Cycle || Default = False",
+                    "Value": "G",
+                    "Name": "InfoWindowToggleKey",
+                    "Description": "Keybind To Open PCO's Info Window || Default = G",
                     "$version": "v1",
-                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.TextKey"
                 }
             ],
             "$version": "v1"

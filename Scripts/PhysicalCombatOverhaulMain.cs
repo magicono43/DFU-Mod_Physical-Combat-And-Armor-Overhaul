@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		1/11/2025, 10:45 PM
+// Last Edit:		1/13/2025, 8:30 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -24,6 +24,7 @@ using DaggerfallConnect.FallExe;
 using System.Collections.Generic;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using Wenzil.Console;
+using DaggerfallWorkshop.Game.Serialization;
 
 namespace PhysicalCombatOverhaul
 {
@@ -40,6 +41,7 @@ namespace PhysicalCombatOverhaul
         public static bool armorHitFormulaModuleCheck { get; set; }
         public static bool condBasedEffectModuleCheck { get; set; }
         public static bool softMatRequireModuleCheck { get; set; }
+        public static KeyCode InfoWindowKey { get; set; }
 
         public static bool conditionBasedWeaponEffectiveness { get; set; }
         //public static bool conditionBasedArmorEffectiveness { get; set; }
@@ -194,7 +196,7 @@ namespace PhysicalCombatOverhaul
 
         private void Start()
         {
-            Debug.Log("Begin mod init: Physical Combat And Armor Overhaul");
+            Debug.Log("Begin mod init: Physical Combat Overhaul");
 
             Instance = this;
 
@@ -240,12 +242,26 @@ namespace PhysicalCombatOverhaul
             dfuHud.ParentPanel.Components.Add(debugHUD);
             */
 
-            Debug.Log("Finished mod init: Physical Combat And Armor Overhaul");
+            Debug.Log("Finished mod init: Physical Combat Overhaul");
         }
 
         private static void LoadSettings(ModSettings modSettings, ModSettingsChange change)
         {
-            //ReverseCycleDirection = mod.GetSettings().GetValue<bool>("GeneralSettings", "ReverseCycleDirections");
+            InfoWindowKey = RegisterModFunctionKey("GeneralSettings", "InfoWindowToggleKey", KeyCode.G);
+        }
+
+        public static KeyCode RegisterModFunctionKey(string group, string optionName, KeyCode defaultKey)
+        {
+            string keyText = mod.GetSettings().GetValue<string>(group, optionName);
+            if (Enum.TryParse(keyText, out KeyCode result))
+                return result;
+            else
+            {
+                Debug.Log("Physical Combat Overhaul: Invalid '" + optionName + "' keybind detected. Setting default. '" + defaultKey + "' Key");
+                DaggerfallUI.AddHUDText("Physical Combat Overhaul:", 6f);
+                DaggerfallUI.AddHUDText("Invalid '" + optionName + "' keybind detected. Setting default. '" + defaultKey + "' Key", 6f);
+                return defaultKey;
+            }
         }
 
         private void ModCompatibilityChecking()
@@ -265,39 +281,22 @@ namespace PhysicalCombatOverhaul
 
         private void Update()
         {
-            /*
-            if (GameManager.IsGamePaused || SaveLoadManager.Instance.LoadInProgress)
+            if (!GameManager.Instance.StateManager.GameInProgress || SaveLoadManager.Instance.LoadInProgress)
                 return;
 
             // Handle key presses
-            if (InputManager.Instance.GetKeyDown(KeyCode.P))
+            if (InputManager.Instance.GetKeyUp(InfoWindowKey))
             {
-                AudioClip clip = FulNegActShieldClips[0];
-
-                DaggerfallAudioSource dfAudioSource = GameManager.Instance.PlayerObject.GetComponent<DaggerfallAudioSource>();
-
-                if (dfAudioSource != null)
+                if (DaggerfallUI.Instance.UserInterfaceManager.TopWindow is PCOInfoWindow)
                 {
-                    dfAudioSource.AudioSource.PlayOneShot(clip, DaggerfallUnity.Settings.SoundVolume); // Get these hotkeys for testing implemented tomorrow and test which AudioSource sounds better to play from.
+                    (DaggerfallUI.Instance.UserInterfaceManager.TopWindow as PCOInfoWindow).CloseWindow();
                 }
-                else
-                    DaggerfallUI.AddHUDText("Player Object DF Audio Source Is Null.", 2.00f);
-            }
-
-            if (InputManager.Instance.GetKeyDown(KeyCode.O))
-            {
-                AudioClip clip = FulNegActShieldClips[0];
-
-                DaggerfallAudioSource dfAudioSource = GameManager.Instance.WeaponManager.ScreenWeapon.gameObject.GetComponent<DaggerfallAudioSource>();
-
-                if (dfAudioSource != null)
+                else if (GameManager.Instance.PlayerObject != null && DaggerfallUI.UIManager.WindowCount <= 0)
                 {
-                    dfAudioSource.AudioSource.PlayOneShot(clip, DaggerfallUnity.Settings.SoundVolume);
+                    PCOInfoWindow infoWindow = new PCOInfoWindow(DaggerfallUI.UIManager);
+                    DaggerfallUI.UIManager.PushWindow(infoWindow);
                 }
-                else
-                    DaggerfallUI.AddHUDText("FPSWeapon DF Audio Source Is Null.", 2.00f);
             }
-            */
         }
 
         // -- Newly Added Stuff 4-23-2024 --
@@ -3998,7 +3997,7 @@ namespace PhysicalCombatOverhaul
                 //ConsoleCommandsDatabase.RegisterCommand(PCOSoundTest.command, PCOSoundTest.description, PCOSoundTest.usage, PCOSoundTest.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(ChangeTestNumber.command, ChangeTestNumber.description, ChangeTestNumber.usage, ChangeTestNumber.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(ChangeButtonRect.command, ChangeButtonRect.description, ChangeButtonRect.usage, ChangeButtonRect.Execute);
-                ConsoleCommandsDatabase.RegisterCommand(TestPCOInfoGUI.command, TestPCOInfoGUI.description, TestPCOInfoGUI.usage, TestPCOInfoGUI.Execute);
+                //ConsoleCommandsDatabase.RegisterCommand(TestPCOInfoGUI.command, TestPCOInfoGUI.description, TestPCOInfoGUI.usage, TestPCOInfoGUI.Execute);
             }
             catch (Exception e)
             {
@@ -4064,6 +4063,7 @@ namespace PhysicalCombatOverhaul
             }
         }
 
+        /*
         private static class TestPCOInfoGUI
         {
             public static readonly string command = "pcogui";
@@ -4089,6 +4089,7 @@ namespace PhysicalCombatOverhaul
                     return "Error - Something went wrong.";
             }
         }
+        */
 
         // Will disable this for the live mod since it's only really useful for testing.
         /*
