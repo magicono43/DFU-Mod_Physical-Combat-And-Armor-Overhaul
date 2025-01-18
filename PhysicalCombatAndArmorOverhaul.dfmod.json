@@ -147,7 +147,18 @@
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Sound/SwingMediumPitch2.wav",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PCODebugHUD.cs",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PCOInfoWindow.cs",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/PCO_Equip_Info_GUI_1.png"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/PCO_Equip_Info_GUI_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Scripts/PCOItemListScroller.cs",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Green_Arrow_Up_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Right_Red_Arrow_Up_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Red_Arrow_Down_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Extra_Panel_Left_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Right_Green_Arrow_Down_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Extra_Panel_Right_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Right_Green_Arrow_Up_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Green_Arrow_Down_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Right_Red_Arrow_Down_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Red_Arrow_Up_1.png"
     ],
     "Dependencies": []
 }
