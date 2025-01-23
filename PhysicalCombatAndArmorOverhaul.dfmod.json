@@ -158,7 +158,8 @@
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Right_Green_Arrow_Up_1.png",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Green_Arrow_Down_1.png",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Right_Red_Arrow_Down_1.png",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Red_Arrow_Up_1.png"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Red_Arrow_Up_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Slot_Selected_Border_1.png"
     ],
     "Dependencies": []
 }
