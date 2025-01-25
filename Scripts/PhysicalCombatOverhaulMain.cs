@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		1/17/2025, 10:00 PM
+// Last Edit:		1/24/2025, 9:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -56,6 +56,7 @@ namespace PhysicalCombatOverhaul
 
         // Mod Textures || GUI
         public Texture2D EquipInfoGUITexture;
+        public Texture2D EquipInfoSlotBorderTexture;
 
         static Dictionary<int, Monster> monsterDict;
         public const int monsterCareerCount = 42;
@@ -3980,6 +3981,7 @@ namespace PhysicalCombatOverhaul
             bool success = true;
 
             success &= modManager.TryGetAsset("PCO_Equip_Info_GUI_1", false, out EquipInfoGUITexture);
+            success &= modManager.TryGetAsset("Slot_Selected_Border_1", false, out EquipInfoSlotBorderTexture);
 
             if (!success)
                 throw new Exception("PhysicalCombatOverhaul: Missing texture asset");

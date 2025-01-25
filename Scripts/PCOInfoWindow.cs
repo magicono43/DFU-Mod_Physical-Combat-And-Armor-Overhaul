@@ -46,6 +46,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         #region UI Textures
 
         Texture2D baseTexture;
+        Texture2D slotBorderTexture;
 
         #endregion
 
@@ -84,6 +85,17 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel bootsItemTextPanel;
         Panel leftHandItemTextPanel;
 
+        Panel headSlotBorderPanel;
+        Panel rightArmSlotBorderPanel;
+        Panel chestSlotBorderPanel;
+        Panel glovesSlotBorderPanel;
+        Panel rightHandSlotBorderPanel;
+
+        Panel leftArmSlotBorderPanel;
+        Panel legsSlotBorderPanel;
+        Panel bootsSlotBorderPanel;
+        Panel leftHandSlotBorderPanel;
+
         Panel extraInfoTextPanel;
 
         protected override void Setup()
@@ -110,6 +122,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         protected virtual void LoadTextures()
         {
             baseTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoGUITexture;
+            slotBorderTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSlotBorderTexture;
         }
 
         protected void SetupChestChoiceButtons()
@@ -126,7 +139,13 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             headItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             headItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             headItemIconPanel.Tag = EquipSlots.Head;
+            AddEquipSlotSelectionButton(headItemIconPanel);
             DrawEquipItemToIconPanel(headItemIconPanel, EquipSlots.Head);
+            headSlotBorderPanel = DaggerfallUI.AddPanel(new Rect(99, 10, 63, 36), NativePanel);
+            headSlotBorderPanel.BackgroundColor = ScreenDimColor;
+            headSlotBorderPanel.BackgroundTexture = slotBorderTexture;
+            //headSlotBorderPanel = DaggerfallUI.AddPanel(butt1, NativePanel);
+            //headSlotBorderPanel.BackgroundColor = new Color32(150, 0, 225, 120);
             headItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 43, 54, 2), NativePanel);
             AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head);
             headItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 14, 34, 28), NativePanel);
@@ -233,6 +252,13 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             // Maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
             // 1/8/2025: I'm thinking I should put a small button that is a child of the "itemIconPanel" for each equip slot, it would probably be a box looking button with a question-mark symbol
             // in it or something. When clicked it would open a sub-window with much more details about that specific item in that equip slot, probably involving damage type and all that, etc.
+        }
+
+        public void AddEquipSlotSelectionButton(Panel panel)
+        {
+            Button slotButton = DaggerfallUI.AddButton(new Rect(panel.Position, panel.Size), NativePanel);
+            slotButton.OnMouseClick += ShowSlotSelectionBorder_OnMouseClick;
+            slotButton.ClickSound = DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick);
         }
 
         public void DrawEquipItemToIconPanel(Panel iconPanel, EquipSlots slot)
@@ -459,6 +485,20 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 UpdateItemInfoPanel(null, sender);
         }
 
+        private void ShowSlotSelectionBorder_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        {
+            // Tomorrow or next time I work on this, refine and replicate this logic for this slot selection border stuff, will see.
+            // Toggle Slot Selection Border For This Slot
+            if (headSlotBorderPanel.Enabled)
+            {
+                headSlotBorderPanel.Enabled = false;
+            }
+            else
+            {
+                headSlotBorderPanel.Enabled = true;
+            }
+        }
+
         private void ExitButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             CloseWindow();
@@ -485,8 +525,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             //AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
-            //extraInfoItemTextPanel.Position = new Vector2(butt1.x, butt1.y);
-            //extraInfoItemTextPanel.Size = new Vector2(butt1.width, butt1.height);
+            headSlotBorderPanel.Position = new Vector2(butt1.x, butt1.y);
+            headSlotBorderPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
