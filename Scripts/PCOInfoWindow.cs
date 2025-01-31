@@ -141,11 +141,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             headItemIconPanel.Tag = EquipSlots.Head;
             AddEquipSlotSelectionButton(headItemIconPanel);
             DrawEquipItemToIconPanel(headItemIconPanel, EquipSlots.Head);
-            headSlotBorderPanel = DaggerfallUI.AddPanel(new Rect(99, 10, 63, 36), NativePanel);
-            headSlotBorderPanel.BackgroundColor = ScreenDimColor;
-            headSlotBorderPanel.BackgroundTexture = slotBorderTexture;
-            //headSlotBorderPanel = DaggerfallUI.AddPanel(butt1, NativePanel);
-            //headSlotBorderPanel.BackgroundColor = new Color32(150, 0, 225, 120);
+            AddEquipSlotSelectionBorderPanel(ref headSlotBorderPanel, new Rect(99, 10, 63, 36));
             headItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 43, 54, 2), NativePanel);
             AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head);
             headItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 14, 34, 28), NativePanel);
@@ -156,7 +152,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             rightArmItemIconPanel.Tag = EquipSlots.RightArm;
+            AddEquipSlotSelectionButton(rightArmItemIconPanel);
             DrawEquipItemToIconPanel(rightArmItemIconPanel, EquipSlots.RightArm);
+            AddEquipSlotSelectionBorderPanel(ref rightArmSlotBorderPanel, new Rect(99, 46, 63, 36));
             rightArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 79, 54, 2), NativePanel);
             AddItemDurabilityBar(rightArmItemDurabilityBarPanel, EquipSlots.RightArm);
             rightArmItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 50, 34, 28), NativePanel);
@@ -167,7 +165,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             chestItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             chestItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             chestItemIconPanel.Tag = EquipSlots.ChestArmor;
+            AddEquipSlotSelectionButton(chestItemIconPanel);
             DrawEquipItemToIconPanel(chestItemIconPanel, EquipSlots.ChestArmor);
+            AddEquipSlotSelectionBorderPanel(ref chestSlotBorderPanel, new Rect(99, 82, 63, 36));
             chestItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 115, 54, 2), NativePanel);
             AddItemDurabilityBar(chestItemDurabilityBarPanel, EquipSlots.ChestArmor);
             chestItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 86, 34, 28), NativePanel);
@@ -178,7 +178,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             glovesItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             glovesItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             glovesItemIconPanel.Tag = EquipSlots.Gloves;
+            AddEquipSlotSelectionButton(glovesItemIconPanel);
             DrawEquipItemToIconPanel(glovesItemIconPanel, EquipSlots.Gloves);
+            AddEquipSlotSelectionBorderPanel(ref glovesSlotBorderPanel, new Rect(99, 118, 63, 36));
             glovesItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 151, 54, 2), NativePanel);
             AddItemDurabilityBar(glovesItemDurabilityBarPanel, EquipSlots.Gloves);
             glovesItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 122, 34, 28), NativePanel);
@@ -189,7 +191,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             rightHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             rightHandItemIconPanel.Tag = EquipSlots.RightHand;
+            AddEquipSlotSelectionButton(rightHandItemIconPanel);
             DrawEquipItemToIconPanel(rightHandItemIconPanel, EquipSlots.RightHand);
+            AddEquipSlotSelectionBorderPanel(ref rightHandSlotBorderPanel, new Rect(99, 154, 63, 36));
             rightHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(104, 187, 54, 2), NativePanel);
             AddItemDurabilityBar(rightHandItemDurabilityBarPanel, EquipSlots.RightHand);
             rightHandItemTextPanel = DaggerfallUI.AddPanel(new Rect(124, 158, 34, 28), NativePanel);
@@ -204,7 +208,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftArmItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftArmItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             leftArmItemIconPanel.Tag = EquipSlots.LeftArm;
+            AddEquipSlotSelectionButton(leftArmItemIconPanel);
             DrawEquipItemToIconPanel(leftArmItemIconPanel, EquipSlots.LeftArm);
+            AddEquipSlotSelectionBorderPanel(ref leftArmSlotBorderPanel, new Rect(161, 46, 63, 36));
             leftArmItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 79, 54, 2), NativePanel);
             AddItemDurabilityBar(leftArmItemDurabilityBarPanel, EquipSlots.LeftArm);
             leftArmItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 50, 34, 28), NativePanel);
@@ -215,7 +221,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             legsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             legsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             legsItemIconPanel.Tag = EquipSlots.LegsArmor;
+            AddEquipSlotSelectionButton(legsItemIconPanel);
             DrawEquipItemToIconPanel(legsItemIconPanel, EquipSlots.LegsArmor);
+            AddEquipSlotSelectionBorderPanel(ref legsSlotBorderPanel, new Rect(161, 82, 63, 36));
             legsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 115, 54, 2), NativePanel);
             AddItemDurabilityBar(legsItemDurabilityBarPanel, EquipSlots.LegsArmor);
             legsItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 86, 34, 28), NativePanel);
@@ -226,7 +234,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             bootsItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             bootsItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             bootsItemIconPanel.Tag = EquipSlots.Feet;
+            AddEquipSlotSelectionButton(bootsItemIconPanel);
             DrawEquipItemToIconPanel(bootsItemIconPanel, EquipSlots.Feet);
+            AddEquipSlotSelectionBorderPanel(ref bootsSlotBorderPanel, new Rect(161, 118, 63, 36));
             bootsItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 151, 54, 2), NativePanel);
             AddItemDurabilityBar(bootsItemDurabilityBarPanel, EquipSlots.Feet);
             bootsItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 122, 34, 28), NativePanel);
@@ -237,7 +247,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftHandItemIconPanel.BackgroundColor = new Color32(0, 255, 0, 120);
             leftHandItemIconPanel.BackgroundTextureLayout = BackgroundLayout.ScaleToFit;
             leftHandItemIconPanel.Tag = EquipSlots.LeftHand;
+            AddEquipSlotSelectionButton(leftHandItemIconPanel);
             DrawEquipItemToIconPanel(leftHandItemIconPanel, EquipSlots.LeftHand);
+            AddEquipSlotSelectionBorderPanel(ref leftHandSlotBorderPanel, new Rect(161, 154, 63, 36));
             leftHandItemDurabilityBarPanel = DaggerfallUI.AddPanel(new Rect(166, 187, 54, 2), NativePanel);
             AddItemDurabilityBar(leftHandItemDurabilityBarPanel, EquipSlots.LeftHand);
             leftHandItemTextPanel = DaggerfallUI.AddPanel(new Rect(186, 158, 34, 28), NativePanel);
@@ -278,6 +290,14 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             iconPanel.ToolTip = defaultToolTip;
             iconPanel.ToolTipText = item.LongName;
             //button.AnimatedBackgroundTextures = (item.IsEnchanted) ? magicAnimation.animatedTextures : null;
+        }
+
+        public void AddEquipSlotSelectionBorderPanel(ref Panel panel, Rect rect)
+        {
+            panel = DaggerfallUI.AddPanel(rect, NativePanel);
+            panel.BackgroundColor = ScreenDimColor;
+            panel.BackgroundTexture = slotBorderTexture;
+            panel.Enabled = false;
         }
 
         public void AddItemTextLabels(Panel itemTextPanel, EquipSlots slot, string slotName)
@@ -487,15 +507,32 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         private void ShowSlotSelectionBorder_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            // Tomorrow or next time I work on this, refine and replicate this logic for this slot selection border stuff, will see.
+            // Tomorrow or next time I work on this, continue working on this logic so only one selection border shows at a time, and on the correct slot, etc.
             // Toggle Slot Selection Border For This Slot
             if (headSlotBorderPanel.Enabled)
             {
                 headSlotBorderPanel.Enabled = false;
+                rightArmSlotBorderPanel.Enabled = false;
+                chestSlotBorderPanel.Enabled = false;
+                glovesSlotBorderPanel.Enabled = false;
+                rightHandSlotBorderPanel.Enabled = false;
+                leftArmSlotBorderPanel.Enabled = false;
+                legsSlotBorderPanel.Enabled = false;
+                bootsSlotBorderPanel.Enabled = false;
+                leftHandSlotBorderPanel.Enabled = false;
+
             }
             else
             {
                 headSlotBorderPanel.Enabled = true;
+                rightArmSlotBorderPanel.Enabled = true;
+                chestSlotBorderPanel.Enabled = true;
+                glovesSlotBorderPanel.Enabled = true;
+                rightHandSlotBorderPanel.Enabled = true;
+                leftArmSlotBorderPanel.Enabled = true;
+                legsSlotBorderPanel.Enabled = true;
+                bootsSlotBorderPanel.Enabled = true;
+                leftHandSlotBorderPanel.Enabled = true;
             }
         }
 
@@ -525,8 +562,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             //AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
-            headSlotBorderPanel.Position = new Vector2(butt1.x, butt1.y);
-            headSlotBorderPanel.Size = new Vector2(butt1.width, butt1.height);
+            //rightArmSlotBorderPanel.Position = new Vector2(butt1.x, butt1.y);
+            //rightArmSlotBorderPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
