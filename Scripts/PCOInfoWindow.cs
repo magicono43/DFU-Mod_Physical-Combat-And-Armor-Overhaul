@@ -47,6 +47,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         Texture2D baseTexture;
         Texture2D slotBorderTexture;
+        Texture2D rightExtraEquipTexture;
+        Texture2D leftExtraEquipTexture;
 
         #endregion
 
@@ -98,6 +100,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         Panel extraInfoTextPanel;
 
+        Panel rightExtraEquipPanel;
+        Panel leftExtraEquipPanel;
+
         protected override void Setup()
         {
             base.Setup();
@@ -123,6 +128,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             baseTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoGUITexture;
             slotBorderTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSlotBorderTexture;
+            rightExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightPanelTexture;
+            leftExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftPanelTexture;
         }
 
         protected void SetupChestChoiceButtons()
@@ -260,6 +267,16 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             {
                 SetupEquipSlotPanelsEventSubscriptions();
             }
+
+            rightExtraEquipPanel = DaggerfallUI.AddPanel(new Rect(224, 12, 54, 176), NativePanel);
+            rightExtraEquipPanel.BackgroundColor = ScreenDimColor;
+            rightExtraEquipPanel.BackgroundTexture = rightExtraEquipTexture;
+            rightExtraEquipPanel.Enabled = false;
+
+            leftExtraEquipPanel = DaggerfallUI.AddPanel(new Rect(45, 12, 54, 176), NativePanel);
+            leftExtraEquipPanel.BackgroundColor = ScreenDimColor;
+            leftExtraEquipPanel.BackgroundTexture = leftExtraEquipTexture;
+            leftExtraEquipPanel.Enabled = false;
 
             // Maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
             // 1/8/2025: I'm thinking I should put a small button that is a child of the "itemIconPanel" for each equip slot, it would probably be a box looking button with a question-mark symbol
@@ -508,7 +525,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         private void ShowSlotSelectionBorder_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            // Now that I have the simple toggle function working, tomorrow or next time I work on this, get the additional equipment panels where I want them, and have them pop-up as well, etc.
+            // Tomorrow or next time I work on this, get the additional equipment panels actually working for the pop-up, that being the "PCOItemListScroller" object and such, will see.
 
             EquipSlots slot = (EquipSlots)sender.Tag;
 
@@ -524,6 +541,18 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 case EquipSlots.Feet: ToggleSlotBorderPanels(bootsSlotBorderPanel.Enabled, ref bootsSlotBorderPanel); break;
                 case EquipSlots.LeftHand: ToggleSlotBorderPanels(leftHandSlotBorderPanel.Enabled, ref leftHandSlotBorderPanel); break;
                 default: DisabledAllSlotBorderPanels(); break;
+            }
+
+            rightExtraEquipPanel.Enabled = false;
+            leftExtraEquipPanel.Enabled = false;
+
+            if (headSlotBorderPanel.Enabled || rightArmSlotBorderPanel.Enabled || chestSlotBorderPanel.Enabled || glovesSlotBorderPanel.Enabled || rightHandSlotBorderPanel.Enabled)
+            {
+                leftExtraEquipPanel.Enabled = true;
+            }
+            else if (leftArmSlotBorderPanel.Enabled || legsSlotBorderPanel.Enabled || bootsSlotBorderPanel.Enabled || leftHandSlotBorderPanel.Enabled)
+            {
+                rightExtraEquipPanel.Enabled = true;
             }
         }
 
@@ -576,8 +605,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             //AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
-            //rightArmSlotBorderPanel.Position = new Vector2(butt1.x, butt1.y);
-            //rightArmSlotBorderPanel.Size = new Vector2(butt1.width, butt1.height);
+            //rightExtraEquipPanel.Position = new Vector2(butt1.x, butt1.y);
+            //rightExtraEquipPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
