@@ -4,6 +4,7 @@ using DaggerfallConnect.Utility;
 using DaggerfallWorkshop.Utility;
 using DaggerfallWorkshop.Game.Items;
 using System;
+using PhysicalCombatOverhaul;
 
 namespace DaggerfallWorkshop.Game.UserInterface
 {
@@ -14,17 +15,12 @@ namespace DaggerfallWorkshop.Game.UserInterface
     {
         #region UI Rects, Controls, Textures
 
-        Rect itemListPanelRect = new Rect(9, 0, 50, 152);
         Rect[] itemButtonRects = itemButtonRects16;
 
-        Rect upArrowRect = new Rect(0, 0, 9, 16);
-        Rect downArrowRect = new Rect(0, 136, 9, 16);
-        DFSize arrowsFullSize = new DFSize(9, 152);
-
-        Texture2D redUpArrow;
-        Texture2D greenUpArrow;
-        Texture2D redDownArrow;
-        Texture2D greenDownArrow;
+        Texture2D GreenUpArrowTexture;
+        Texture2D GreenDownArrowTexture;
+        Texture2D RedUpArrowTexture;
+        Texture2D RedDownArrowTexture;
 
         Button itemListUpButton;
         Button itemListDownButton;
@@ -51,27 +47,12 @@ namespace DaggerfallWorkshop.Game.UserInterface
             new Rect(0, 114, 25, 19),   new Rect(25, 114, 25, 19),
             new Rect(0, 133, 25, 19),   new Rect(25, 133, 25, 19)
         };
-        static Rect[] itemCutoutRects16 = new Rect[]
-        {
-            new Rect(23, 72, 23, 22),   new Rect(23, 10, 23, 22),
-            new Rect(0, 41, 23, 22),    new Rect(23, 41, 23, 22),
-            new Rect(0, 72, 23, 22),    new Rect(23, 72, 23, 22),
-            new Rect(0, 103, 23, 22),   new Rect(23, 103, 23, 22),
-            new Rect(0, 134, 23, 22),   new Rect(23, 134, 23, 22),
-            new Rect(0, 165, 23, 22),   new Rect(23, 165, 23, 22),
-            new Rect(23, 72, 23, 22),   new Rect(0, 41, 23, 22),
-            new Rect(23, 41, 23, 22),   new Rect(0, 103, 23, 22)
-        };
 
         Texture2D[] itemListTextures;
 
         #endregion
 
         #region Fields
-
-        const string greenArrowsTextureName = "INVE06I0.IMG";   // Green up/down arrows when more items available
-        const string redArrowsTextureName = "INVE07I0.IMG";     // Red up/down arrows when no more items available
-        const string baseInvTextureName = "INVE00I0.IMG";       // Main inventory texture for cutting small item backgrounds
 
         int listDisplayUnits = 8;   // Number of item rows displayed in scrolling areas
         int listWidth = 2;          // Number of items on each row
@@ -167,7 +148,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
 
         #region Constructors, Public methods
 
-        public PCOItemListScroller(ToolTip toolTip)
+        public PCOItemListScroller(ToolTip toolTip, bool rightSide = true)
             : base()
         {
             this.toolTip = toolTip;
@@ -181,53 +162,96 @@ namespace DaggerfallWorkshop.Game.UserInterface
                 TextScale = textScale
             };
 
-            LoadTextures();
-            SetupScrollBar();
-            SetupScrollButtons();
-            SetupItemsList(true, miscLabelTemplate);
+            if (rightSide)
+            {
+                LoadTextures(rightSide);
+                SetupScrollBar(rightSide);
+                SetupScrollButtons(rightSide);
+                SetupItemsList(true, miscLabelTemplate, rightSide);
+            }
+            else
+            {
+                LoadTextures(rightSide);
+                SetupScrollBar(rightSide);
+                SetupScrollButtons(rightSide);
+                SetupItemsList(true, miscLabelTemplate, rightSide);
+            }
         }
 
         #endregion
 
         #region Private, Setup methods
 
-        void SetupScrollBar()
+        void SetupScrollBar(bool rightSide)
         {
-            // Item list scroll bar (e.g. items in character inventory)
-            itemListScrollBar = new VerticalScrollBar
+            if (rightSide)
             {
-                Position = new Vector2(1, 18),
-                Size = new Vector2(6, itemListPanelRect.height - 35),
-                DisplayUnits = listDisplayUnits
-            };
+                itemListScrollBar = new VerticalScrollBar
+                {
+                    Position = new Vector2(0, 17),
+                    Size = new Vector2(8, 143),
+                    DisplayUnits = listDisplayUnits
+                };
+            }
+            else
+            {
+                itemListScrollBar = new VerticalScrollBar
+                {
+                    Position = new Vector2(46, 17),
+                    Size = new Vector2(8, 143),
+                    DisplayUnits = listDisplayUnits
+                };
+            }
+
             Components.Add(itemListScrollBar);
             itemListScrollBar.OnScroll += ItemsScrollBar_OnScroll;
         }
 
-        void SetupScrollButtons()
+        void SetupScrollButtons(bool rightSide)
         {
-            // Item list scroll buttons
-            itemListUpButton = new Button
+            if (rightSide)
             {
-                Position = new Vector2(0, 0),
-                Size = new Vector2(9, 16),
-                BackgroundTexture = redUpArrow
-            };
+                itemListUpButton = new Button
+                {
+                    Position = new Vector2(0, 0),
+                    Size = new Vector2(8, 15),
+                    BackgroundTexture = RedUpArrowTexture
+                };
+                itemListDownButton = new Button
+                {
+                    Position = new Vector2(0, 161),
+                    Size = new Vector2(8, 15),
+                    BackgroundTexture = RedDownArrowTexture
+                };
+            }
+            else
+            {
+                itemListUpButton = new Button
+                {
+                    Position = new Vector2(46, 0),
+                    Size = new Vector2(8, 15),
+                    BackgroundTexture = RedUpArrowTexture
+                };
+                itemListDownButton = new Button
+                {
+                    Position = new Vector2(46, 161),
+                    Size = new Vector2(8, 15),
+                    BackgroundTexture = RedDownArrowTexture
+                };
+            }
+
             Components.Add(itemListUpButton);
             itemListUpButton.OnMouseClick += ItemsUpButton_OnMouseClick;
-
-            itemListDownButton = new Button
-            {
-                Position = new Vector2(0, itemListPanelRect.height - 16),
-                Size = new Vector2(9, 16),
-                BackgroundTexture = redDownArrow
-            };
             Components.Add(itemListDownButton);
             itemListDownButton.OnMouseClick += ItemsDownButton_OnMouseClick;
         }
 
-        void SetupItemsList(bool enhanced, TextLabel miscLabelTemplate)
+        void SetupItemsList(bool enhanced, TextLabel miscLabelTemplate, bool rightSide)
         {
+            Rect itemListPanelRect;
+            if (rightSide) { itemListPanelRect = new Rect(8, 0, 46, 176); }
+            else { itemListPanelRect = new Rect(0, 0, 46, 176); }
+
             // List panel for scrolling behaviour
             Panel itemsListPanel = DaggerfallUI.AddPanel(itemListPanelRect, this);
             itemsListPanel.OnMouseScrollUp += ItemsListPanel_OnMouseScrollUp;
@@ -245,7 +269,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
             Vector2 offsetPosition = miscLabelTemplate.Position + new Vector2(0, miscLabelOffsetDist);
             int osi = miscLabelOffsetIdx;
 
-            for (int i = 0; i < listDisplayTotal; i++)
+            for (int i = 0; i < listDisplayTotal; i++) // Guess try and start here tomorrow or next time I work on this, will see.
             {
                 // Panel - for backing button in enhanced mode
                 if (enhanced) {
@@ -311,8 +335,8 @@ namespace DaggerfallWorkshop.Game.UserInterface
             }
             if (scroller)
             {
-                itemListUpButton.BackgroundTexture = redUpArrow;
-                itemListDownButton.BackgroundTexture = redDownArrow;
+                itemListUpButton.BackgroundTexture = RedUpArrowTexture;
+                itemListDownButton.BackgroundTexture = RedDownArrowTexture;
             }
         }
 
@@ -405,35 +429,35 @@ namespace DaggerfallWorkshop.Game.UserInterface
         void UpdateListScrollerButtons(int index, int count)
         {
             // Update up button
-            itemListUpButton.BackgroundTexture = (index > 0) ? greenUpArrow : redUpArrow;
+            itemListUpButton.BackgroundTexture = (index > 0) ? GreenUpArrowTexture : RedUpArrowTexture;
 
             // Update down button
-            itemListDownButton.BackgroundTexture = (index < (count - listDisplayUnits)) ? greenDownArrow : redDownArrow;
+            itemListDownButton.BackgroundTexture = (index < (count - listDisplayUnits)) ? GreenDownArrowTexture : RedDownArrowTexture;
 
             // No items above or below
             if (count <= listDisplayUnits)
             {
-                itemListUpButton.BackgroundTexture = redUpArrow;
-                itemListDownButton.BackgroundTexture = redDownArrow;
+                itemListUpButton.BackgroundTexture = RedUpArrowTexture;
+                itemListDownButton.BackgroundTexture = RedDownArrowTexture;
             }
         }
 
-        void LoadTextures()
+        private void LoadTextures(bool rightSide)
         {
-            // Cut out red up/down arrows
-            Texture2D redArrowsTexture = ImageReader.GetTexture(redArrowsTextureName);
-            redUpArrow = ImageReader.GetSubTexture(redArrowsTexture, upArrowRect, arrowsFullSize);
-            redDownArrow = ImageReader.GetSubTexture(redArrowsTexture, downArrowRect, arrowsFullSize);
-
-            // Cut out green up/down arrows
-            Texture2D greenArrowsTexture = ImageReader.GetTexture(greenArrowsTextureName);
-            greenUpArrow = ImageReader.GetSubTexture(greenArrowsTexture, upArrowRect, arrowsFullSize);
-            greenDownArrow = ImageReader.GetSubTexture(greenArrowsTexture, downArrowRect, arrowsFullSize);
-
-            itemListTextures = new Texture2D[listDisplayTotal];
-            Texture2D baseInvTexture = ImageReader.GetTexture(baseInvTextureName);
-            for (int i = 0; i < itemCutoutRects16.Length; i++)
-                itemListTextures[i] = ImageReader.GetSubTexture(baseInvTexture, itemCutoutRects16[i], new DFSize(320, 200));
+            if (rightSide)
+            {
+                GreenUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenUpArrowTexture;
+                GreenDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenDownArrowTexture;
+                RedUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenUpArrowTexture;
+                RedDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenDownArrowTexture;
+            }
+            else
+            {
+                GreenUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenUpArrowTexture;
+                GreenDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenDownArrowTexture;
+                RedUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenUpArrowTexture;
+                RedDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenDownArrowTexture;
+            }
         }
 
         private int GetScrollIndex()

@@ -49,6 +49,10 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Texture2D slotBorderTexture;
         Texture2D rightExtraEquipTexture;
         Texture2D leftExtraEquipTexture;
+        Texture2D rightUpArrowTexture;
+        Texture2D rightDownArrowTexture;
+        Texture2D leftUpArrowTexture;
+        Texture2D leftDownArrowTexture;
 
         #endregion
 
@@ -103,6 +107,16 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel rightExtraEquipPanel;
         Panel leftExtraEquipPanel;
 
+        Panel rightItemListPanel;
+        Panel rightUpArrowPanel;
+        Panel rightDownArrowPanel;
+        Panel rightItemListScrollBarPanel;
+
+        Panel leftItemListPanel;
+        Panel leftUpArrowPanel;
+        Panel leftDownArrowPanel;
+        Panel leftItemListScrollBarPanel;
+
         protected override void Setup()
         {
             base.Setup();
@@ -130,6 +144,10 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             slotBorderTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSlotBorderTexture;
             rightExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightPanelTexture;
             leftExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftPanelTexture;
+            rightUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenUpArrowTexture;
+            rightDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenDownArrowTexture;
+            leftUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenUpArrowTexture;
+            leftDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenDownArrowTexture;
         }
 
         protected void SetupChestChoiceButtons()
@@ -277,6 +295,20 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftExtraEquipPanel.BackgroundColor = ScreenDimColor;
             leftExtraEquipPanel.BackgroundTexture = leftExtraEquipTexture;
             leftExtraEquipPanel.Enabled = false;
+
+            rightUpArrowPanel = DaggerfallUI.AddPanel(new Rect(0, 1, 8, 15), rightExtraEquipPanel); // Tomorrow, try to incorperate these into "PCOItemListScroller" as buttons and such.
+            rightUpArrowPanel.BackgroundColor = ScreenDimColor;
+            rightUpArrowPanel.BackgroundTexture = rightUpArrowTexture;
+            rightDownArrowPanel = DaggerfallUI.AddPanel(new Rect(0, 160, 8, 15), rightExtraEquipPanel);
+            rightDownArrowPanel.BackgroundColor = ScreenDimColor;
+            rightDownArrowPanel.BackgroundTexture = rightDownArrowTexture;
+
+            leftUpArrowPanel = DaggerfallUI.AddPanel(new Rect(46, 1, 8, 15), leftExtraEquipPanel);
+            leftUpArrowPanel.BackgroundColor = ScreenDimColor;
+            leftUpArrowPanel.BackgroundTexture = leftUpArrowTexture;
+            leftDownArrowPanel = DaggerfallUI.AddPanel(new Rect(46, 160, 8, 15), leftExtraEquipPanel);
+            leftDownArrowPanel.BackgroundColor = ScreenDimColor;
+            leftDownArrowPanel.BackgroundTexture = leftDownArrowTexture;
 
             // Maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
             // 1/8/2025: I'm thinking I should put a small button that is a child of the "itemIconPanel" for each equip slot, it would probably be a box looking button with a question-mark symbol
@@ -605,8 +637,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             //AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
-            //rightExtraEquipPanel.Position = new Vector2(butt1.x, butt1.y);
-            //rightExtraEquipPanel.Size = new Vector2(butt1.width, butt1.height);
+            //extraTestPanel.Position = new Vector2(butt1.x, butt1.y);
+            //extraTestPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);

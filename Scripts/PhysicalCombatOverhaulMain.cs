@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		2/4/2025, 12:00 PM
+// Last Edit:		2/6/2025, 7:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -59,6 +59,14 @@ namespace PhysicalCombatOverhaul
         public Texture2D EquipInfoSlotBorderTexture;
         public Texture2D EquipInfoExtraRightPanelTexture;
         public Texture2D EquipInfoExtraLeftPanelTexture;
+        public Texture2D EquipInfoExtraRightGreenUpArrowTexture;
+        public Texture2D EquipInfoExtraRightGreenDownArrowTexture;
+        public Texture2D EquipInfoExtraLeftGreenUpArrowTexture;
+        public Texture2D EquipInfoExtraLeftGreenDownArrowTexture;
+        public Texture2D EquipInfoExtraRightRedUpArrowTexture;
+        public Texture2D EquipInfoExtraRightRedDownArrowTexture;
+        public Texture2D EquipInfoExtraLeftRedUpArrowTexture;
+        public Texture2D EquipInfoExtraLeftRedDownArrowTexture;
 
         static Dictionary<int, Monster> monsterDict;
         public const int monsterCareerCount = 42;
@@ -3986,6 +3994,14 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Slot_Selected_Border_1", false, out EquipInfoSlotBorderTexture);
             success &= modManager.TryGetAsset("Extra_Panel_Right_1", false, out EquipInfoExtraRightPanelTexture);
             success &= modManager.TryGetAsset("Extra_Panel_Left_1", false, out EquipInfoExtraLeftPanelTexture);
+            success &= modManager.TryGetAsset("Right_Green_Arrow_Up_1", false, out EquipInfoExtraRightGreenUpArrowTexture);
+            success &= modManager.TryGetAsset("Right_Green_Arrow_Down_1", false, out EquipInfoExtraRightGreenDownArrowTexture);
+            success &= modManager.TryGetAsset("Left_Green_Arrow_Up_1", false, out EquipInfoExtraLeftGreenUpArrowTexture);
+            success &= modManager.TryGetAsset("Left_Green_Arrow_Down_1", false, out EquipInfoExtraLeftGreenDownArrowTexture);
+            success &= modManager.TryGetAsset("Right_Red_Arrow_Up_1", false, out EquipInfoExtraRightRedUpArrowTexture);
+            success &= modManager.TryGetAsset("Right_Red_Arrow_Down_1", false, out EquipInfoExtraRightRedDownArrowTexture);
+            success &= modManager.TryGetAsset("Left_Red_Arrow_Up_1", false, out EquipInfoExtraLeftRedUpArrowTexture);
+            success &= modManager.TryGetAsset("Left_Red_Arrow_Down_1", false, out EquipInfoExtraLeftRedDownArrowTexture);
 
             if (!success)
                 throw new Exception("PhysicalCombatOverhaul: Missing texture asset");
