@@ -3,6 +3,7 @@ using DaggerfallWorkshop.Game.UserInterface;
 using PhysicalCombatOverhaul;
 using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
+using System.Collections.Generic;
 
 namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 {
@@ -49,10 +50,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Texture2D slotBorderTexture;
         Texture2D rightExtraEquipTexture;
         Texture2D leftExtraEquipTexture;
-        Texture2D rightUpArrowTexture;
-        Texture2D rightDownArrowTexture;
-        Texture2D leftUpArrowTexture;
-        Texture2D leftDownArrowTexture;
 
         #endregion
 
@@ -107,15 +104,10 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel rightExtraEquipPanel;
         Panel leftExtraEquipPanel;
 
-        Panel rightItemListPanel;
-        Panel rightUpArrowPanel;
-        Panel rightDownArrowPanel;
-        Panel rightItemListScrollBarPanel;
+        PCOItemListScroller localPCOItemListScroller;
 
-        Panel leftItemListPanel;
-        Panel leftUpArrowPanel;
-        Panel leftDownArrowPanel;
-        Panel leftItemListScrollBarPanel;
+        ItemCollection localItems = null;
+        List<DaggerfallUnityItem> localItemsFiltered = new List<DaggerfallUnityItem>();
 
         protected override void Setup()
         {
@@ -135,6 +127,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
             SetupChestChoiceButtons();
 
+            localItems = Player.Items;
+
             SetupTestItemImagePanels();
         }
 
@@ -144,10 +138,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             slotBorderTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSlotBorderTexture;
             rightExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightPanelTexture;
             leftExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftPanelTexture;
-            rightUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenUpArrowTexture;
-            rightDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenDownArrowTexture;
-            leftUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenUpArrowTexture;
-            leftDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenDownArrowTexture;
         }
 
         protected void SetupChestChoiceButtons()
@@ -295,20 +285,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftExtraEquipPanel.BackgroundColor = ScreenDimColor;
             leftExtraEquipPanel.BackgroundTexture = leftExtraEquipTexture;
             leftExtraEquipPanel.Enabled = false;
-
-            rightUpArrowPanel = DaggerfallUI.AddPanel(new Rect(0, 1, 8, 15), rightExtraEquipPanel); // Tomorrow, try to incorperate these into "PCOItemListScroller" as buttons and such.
-            rightUpArrowPanel.BackgroundColor = ScreenDimColor;
-            rightUpArrowPanel.BackgroundTexture = rightUpArrowTexture;
-            rightDownArrowPanel = DaggerfallUI.AddPanel(new Rect(0, 160, 8, 15), rightExtraEquipPanel);
-            rightDownArrowPanel.BackgroundColor = ScreenDimColor;
-            rightDownArrowPanel.BackgroundTexture = rightDownArrowTexture;
-
-            leftUpArrowPanel = DaggerfallUI.AddPanel(new Rect(46, 1, 8, 15), leftExtraEquipPanel);
-            leftUpArrowPanel.BackgroundColor = ScreenDimColor;
-            leftUpArrowPanel.BackgroundTexture = leftUpArrowTexture;
-            leftDownArrowPanel = DaggerfallUI.AddPanel(new Rect(46, 160, 8, 15), leftExtraEquipPanel);
-            leftDownArrowPanel.BackgroundColor = ScreenDimColor;
-            leftDownArrowPanel.BackgroundTexture = leftDownArrowTexture;
 
             // Maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
             // 1/8/2025: I'm thinking I should put a small button that is a child of the "itemIconPanel" for each equip slot, it would probably be a box looking button with a question-mark symbol
@@ -557,8 +533,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
         private void ShowSlotSelectionBorder_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            // Tomorrow or next time I work on this, get the additional equipment panels actually working for the pop-up, that being the "PCOItemListScroller" object and such, will see.
-
             EquipSlots slot = (EquipSlots)sender.Tag;
 
             switch (slot)
@@ -575,16 +549,19 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 default: DisabledAllSlotBorderPanels(); break;
             }
 
+            localPCOItemListScroller = null;
             rightExtraEquipPanel.Enabled = false;
             leftExtraEquipPanel.Enabled = false;
 
             if (headSlotBorderPanel.Enabled || rightArmSlotBorderPanel.Enabled || chestSlotBorderPanel.Enabled || glovesSlotBorderPanel.Enabled || rightHandSlotBorderPanel.Enabled)
             {
                 leftExtraEquipPanel.Enabled = true;
+                SetupLocalPCOItemListScroller(false, slot);
             }
             else if (leftArmSlotBorderPanel.Enabled || legsSlotBorderPanel.Enabled || bootsSlotBorderPanel.Enabled || leftHandSlotBorderPanel.Enabled)
             {
                 rightExtraEquipPanel.Enabled = true;
+                SetupLocalPCOItemListScroller(true, slot);
             }
         }
 
@@ -609,6 +586,65 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             legsSlotBorderPanel.Enabled = false;
             bootsSlotBorderPanel.Enabled = false;
             leftHandSlotBorderPanel.Enabled = false;
+        }
+
+        private void SetupLocalPCOItemListScroller(bool rightSide, EquipSlots slot)
+        {
+            localPCOItemListScroller = new PCOItemListScroller(defaultToolTip, rightSide)
+            {
+                Position = new Vector2(0, 0),
+                Size = new Vector2(54, 176),
+                //BackgroundColourHandler = ItemBackgroundColourHandler,
+                //ForegroundAnimationHandler = MagicItemForegroundAnimationHander,
+                //ForegroundAnimationDelay = magicAnimationDelay
+            };
+
+            rightExtraEquipPanel.Components.Clear();
+            leftExtraEquipPanel.Components.Clear();
+
+            if (rightSide) { rightExtraEquipPanel.Components.Add(localPCOItemListScroller); }
+            else { leftExtraEquipPanel.Components.Add(localPCOItemListScroller); }
+
+            //localPCOItemListScroller.OnItemClick += LocalItemListScroller_OnItemLeftClick;
+            //localPCOItemListScroller.OnItemRightClick += LocalItemListScroller_OnItemRightClick;
+            //localPCOItemListScroller.OnItemMiddleClick += LocalItemListScroller_OnItemMiddleClick;
+            //if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
+
+            FilterLocalItems(slot);
+            localPCOItemListScroller.Items = localItemsFiltered;
+        }
+
+        private void FilterLocalItems(EquipSlots slot)
+        {
+            // Clear current references
+            localItemsFiltered.Clear();
+
+            if (localItems != null)
+            {
+                // Add items to list
+                for (int i = 0; i < localItems.Count; i++)
+                {
+                    DaggerfallUnityItem item = localItems.GetItem(i);
+                    // Add if not equipped
+                    if (!item.IsEquipped)
+                    {
+                        AddLocalItem(item, slot);
+                    }
+                }
+            }
+        }
+
+        private void AddLocalItem(DaggerfallUnityItem item, EquipSlots slot)
+        {
+            bool isWeaponOrArmor = (item.ItemGroup == ItemGroups.Weapons || item.ItemGroup == ItemGroups.Armor);
+
+            if (isWeaponOrArmor)
+            {
+                if (slot == Player.ItemEquipTable.GetEquipSlot(item))
+                {
+                    localItemsFiltered.Add(item);
+                }
+            }
         }
 
         private void ExitButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)

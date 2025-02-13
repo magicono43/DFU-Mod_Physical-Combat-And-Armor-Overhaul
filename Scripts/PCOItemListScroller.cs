@@ -38,14 +38,14 @@ namespace DaggerfallWorkshop.Game.UserInterface
 
         static Rect[] itemButtonRects16 = new Rect[]
         {
-            new Rect(0, 0, 25, 19),     new Rect(25, 0, 25, 19),
-            new Rect(0, 19, 25, 19),    new Rect(25, 19, 25, 19),
-            new Rect(0, 38, 25, 19),    new Rect(25, 38, 25, 19),
-            new Rect(0, 57, 25, 19),    new Rect(25, 57, 25, 19),
-            new Rect(0, 76, 25, 19),    new Rect(25, 76, 25, 19),
-            new Rect(0, 95, 25, 19),    new Rect(25, 95, 25, 19),
-            new Rect(0, 114, 25, 19),   new Rect(25, 114, 25, 19),
-            new Rect(0, 133, 25, 19),   new Rect(25, 133, 25, 19)
+            new Rect(0, 0, 23, 22),     new Rect(23, 0, 23, 22),
+            new Rect(0, 22, 23, 22),    new Rect(23, 22, 23, 22),
+            new Rect(0, 44, 23, 22),    new Rect(23, 44, 23, 22),
+            new Rect(0, 66, 23, 22),    new Rect(23, 66, 23, 22),
+            new Rect(0, 88, 23, 22),    new Rect(23, 88, 23, 22),
+            new Rect(0, 110, 23, 22),    new Rect(23, 110, 23, 22),
+            new Rect(0, 132, 23, 22),   new Rect(23, 132, 23, 22),
+            new Rect(0, 154, 23, 22),   new Rect(23, 154, 23, 22)
         };
 
         Texture2D[] itemListTextures;
@@ -162,25 +162,15 @@ namespace DaggerfallWorkshop.Game.UserInterface
                 TextScale = textScale
             };
 
-            if (rightSide)
-            {
-                LoadTextures(rightSide);
-                SetupScrollBar(rightSide);
-                SetupScrollButtons(rightSide);
-                SetupItemsList(true, miscLabelTemplate, rightSide);
-            }
-            else
-            {
-                LoadTextures(rightSide);
-                SetupScrollBar(rightSide);
-                SetupScrollButtons(rightSide);
-                SetupItemsList(true, miscLabelTemplate, rightSide);
-            }
+            LoadTextures(rightSide);
+            SetupScrollBar(rightSide);
+            SetupScrollButtons(rightSide);
+            SetupItemsList(true, miscLabelTemplate, rightSide);
         }
 
         #endregion
 
-        #region Private, Setup methods
+        #region Private, Setup methods}
 
         void SetupScrollBar(bool rightSide)
         {
@@ -188,8 +178,8 @@ namespace DaggerfallWorkshop.Game.UserInterface
             {
                 itemListScrollBar = new VerticalScrollBar
                 {
-                    Position = new Vector2(0, 17),
-                    Size = new Vector2(8, 143),
+                    Position = new Vector2(-1, 17),
+                    Size = new Vector2(8, 144),
                     DisplayUnits = listDisplayUnits
                 };
             }
@@ -198,7 +188,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
                 itemListScrollBar = new VerticalScrollBar
                 {
                     Position = new Vector2(46, 17),
-                    Size = new Vector2(8, 143),
+                    Size = new Vector2(8, 144),
                     DisplayUnits = listDisplayUnits
                 };
             }
@@ -213,13 +203,13 @@ namespace DaggerfallWorkshop.Game.UserInterface
             {
                 itemListUpButton = new Button
                 {
-                    Position = new Vector2(0, 0),
+                    Position = new Vector2(0, 1),
                     Size = new Vector2(8, 15),
                     BackgroundTexture = RedUpArrowTexture
                 };
                 itemListDownButton = new Button
                 {
-                    Position = new Vector2(0, 161),
+                    Position = new Vector2(0, 160),
                     Size = new Vector2(8, 15),
                     BackgroundTexture = RedDownArrowTexture
                 };
@@ -228,13 +218,13 @@ namespace DaggerfallWorkshop.Game.UserInterface
             {
                 itemListUpButton = new Button
                 {
-                    Position = new Vector2(46, 0),
+                    Position = new Vector2(46, 1),
                     Size = new Vector2(8, 15),
                     BackgroundTexture = RedUpArrowTexture
                 };
                 itemListDownButton = new Button
                 {
-                    Position = new Vector2(46, 161),
+                    Position = new Vector2(46, 160),
                     Size = new Vector2(8, 15),
                     BackgroundTexture = RedDownArrowTexture
                 };
@@ -269,13 +259,8 @@ namespace DaggerfallWorkshop.Game.UserInterface
             Vector2 offsetPosition = miscLabelTemplate.Position + new Vector2(0, miscLabelOffsetDist);
             int osi = miscLabelOffsetIdx;
 
-            for (int i = 0; i < listDisplayTotal; i++) // Guess try and start here tomorrow or next time I work on this, will see.
+            for (int i = 0; i < listDisplayTotal; i++)
             {
-                // Panel - for backing button in enhanced mode
-                if (enhanced) {
-                    Panel buttonPanel = DaggerfallUI.AddPanel(itemButtonRects[i], itemsListPanel);
-                    buttonPanel.BackgroundTexture = itemListTextures[i];
-                }
                 // Buttons (also handle highlight colours)
                 itemButtons[i] = DaggerfallUI.AddButton(itemButtonRects[i], itemsListPanel);
                 itemButtons[i].SetMargins(Margins.All, itemButtonMargin);
@@ -429,7 +414,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
         void UpdateListScrollerButtons(int index, int count)
         {
             // Update up button
-            itemListUpButton.BackgroundTexture = (index > 0) ? GreenUpArrowTexture : RedUpArrowTexture;
+            itemListUpButton.BackgroundTexture = (index > 0) ? GreenUpArrowTexture : RedUpArrowTexture; // Work on this tomorrow I suppose?
 
             // Update down button
             itemListDownButton.BackgroundTexture = (index < (count - listDisplayUnits)) ? GreenDownArrowTexture : RedDownArrowTexture;
