@@ -642,7 +642,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             {
                 if (slot == Player.ItemEquipTable.GetEquipSlot(item))
                 {
-                    localItemsFiltered.Add(item);
+                    localItemsFiltered.Add(item); // Maybe work on this tomorrow involving the filtering for the right and left hands.
                 }
             }
         }

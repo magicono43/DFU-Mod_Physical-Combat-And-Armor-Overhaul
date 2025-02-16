@@ -414,7 +414,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
         void UpdateListScrollerButtons(int index, int count)
         {
             // Update up button
-            itemListUpButton.BackgroundTexture = (index > 0) ? GreenUpArrowTexture : RedUpArrowTexture; // Work on this tomorrow I suppose?
+            itemListUpButton.BackgroundTexture = (index > 0) ? GreenUpArrowTexture : RedUpArrowTexture;
 
             // Update down button
             itemListDownButton.BackgroundTexture = (index < (count - listDisplayUnits)) ? GreenDownArrowTexture : RedDownArrowTexture;
@@ -433,15 +433,15 @@ namespace DaggerfallWorkshop.Game.UserInterface
             {
                 GreenUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenUpArrowTexture;
                 GreenDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenDownArrowTexture;
-                RedUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenUpArrowTexture;
-                RedDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightGreenDownArrowTexture;
+                RedUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightRedUpArrowTexture;
+                RedDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightRedDownArrowTexture;
             }
             else
             {
                 GreenUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenUpArrowTexture;
                 GreenDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenDownArrowTexture;
-                RedUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenUpArrowTexture;
-                RedDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftGreenDownArrowTexture;
+                RedUpArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftRedUpArrowTexture;
+                RedDownArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftRedDownArrowTexture;
             }
         }
 
