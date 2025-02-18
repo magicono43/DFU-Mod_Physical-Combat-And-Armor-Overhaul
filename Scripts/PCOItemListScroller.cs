@@ -540,6 +540,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
         void ItemsListPanel_OnMouseLeave(BaseScreenComponent sender)
         {
             UpdateItemsDisplay(false);
+            OnItemHover(null);
         }
 
         #endregion

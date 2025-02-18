@@ -426,9 +426,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             }
         }
 
-        public void UpdateItemInfoPanel(DaggerfallUnityItem item, BaseScreenComponent sender)
+        public void UpdateItemInfoPanel(DaggerfallUnityItem item)
         {
-            if (item == null || sender == null)
+            if (item == null)
             {
                 extraInfoTextPanel.Components.Clear();
                 return;
@@ -437,9 +437,9 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             int maxLineWidth = (int)extraInfoTextPanel.Size.x;
             int maxHeight = (int)extraInfoTextPanel.Size.y;
             float textScale = 0.75f;
-            EquipSlots slot = (EquipSlots)sender.Tag;
+            ItemHands whichHand = ItemEquipTable.GetItemHands(item);
 
-            if (slot == EquipSlots.RightHand || slot == EquipSlots.LeftHand)
+            if (whichHand != ItemHands.None)
             {
                 if (item.IsShield)
                 {
@@ -522,13 +522,13 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             DaggerfallUnityItem item = Player.ItemEquipTable.GetItem(slot);
 
             if (extraInfoTextPanel != null)
-                UpdateItemInfoPanel(item, sender);
+                UpdateItemInfoPanel(item);
         }
 
         public void UpdateExtraInfoPanel_OnMouseLeave(BaseScreenComponent sender)
         {
             if (extraInfoTextPanel != null)
-                UpdateItemInfoPanel(null, sender);
+                UpdateItemInfoPanel(null);
         }
 
         private void ShowSlotSelectionBorder_OnMouseClick(BaseScreenComponent sender, Vector2 position)
@@ -605,10 +605,10 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             if (rightSide) { rightExtraEquipPanel.Components.Add(localPCOItemListScroller); }
             else { leftExtraEquipPanel.Components.Add(localPCOItemListScroller); }
 
-            //localPCOItemListScroller.OnItemClick += LocalItemListScroller_OnItemLeftClick;
+            //localPCOItemListScroller.OnItemClick += LocalItemListScroller_OnItemLeftClick; // Most likely work on this tomorrow, the actually equipping/swapping of items in a slot part.
             //localPCOItemListScroller.OnItemRightClick += LocalItemListScroller_OnItemRightClick;
             //localPCOItemListScroller.OnItemMiddleClick += LocalItemListScroller_OnItemMiddleClick;
-            //if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
+            if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
 
             FilterLocalItems(slot);
             localPCOItemListScroller.Items = localItemsFiltered;
@@ -640,10 +640,45 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
             if (isWeaponOrArmor)
             {
+                ItemHands whichHand = ItemEquipTable.GetItemHands(item);
+
+                if (slot == EquipSlots.LeftHand)
+                {
+                    if (whichHand == ItemHands.Either || whichHand == ItemHands.LeftOnly)
+                    {
+                        localItemsFiltered.Add(item);
+                        return;
+                    }
+                }
+
+                if (slot == EquipSlots.RightHand)
+                {
+                    if (whichHand == ItemHands.Either || whichHand == ItemHands.Both || whichHand == ItemHands.RightOnly)
+                    {
+                        localItemsFiltered.Add(item);
+                        return;
+                    }
+                }
+
                 if (slot == Player.ItemEquipTable.GetEquipSlot(item))
                 {
-                    localItemsFiltered.Add(item); // Maybe work on this tomorrow involving the filtering for the right and left hands.
+                    localItemsFiltered.Add(item);
                 }
+            }
+        }
+
+        protected virtual void LocalItemListScroller_OnHover(DaggerfallUnityItem item)
+        {
+            ItemListScroller_OnHover(item);
+            //RaiseOnItemHoverEvent(item, ItemHoverLocation.LocalList);
+        }
+
+        protected virtual void ItemListScroller_OnHover(DaggerfallUnityItem item)
+        {
+            // Update the info panel if used
+            if (extraInfoTextPanel != null)
+            {
+                UpdateItemInfoPanel(item);
             }
         }
 
