@@ -4,6 +4,7 @@ using PhysicalCombatOverhaul;
 using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
 using System.Collections.Generic;
+using DaggerfallConnect.Arena2;
 
 namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 {
@@ -295,7 +296,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             Button slotButton = DaggerfallUI.AddButton(new Rect(panel.Position, panel.Size), NativePanel);
             slotButton.Tag = slot;
-            slotButton.OnMouseClick += ShowSlotSelectionBorder_OnMouseClick;
+            slotButton.OnMouseClick += ShowSlotSelectionBorder_OnLeftMouseClick;
+            slotButton.OnRightMouseClick += UnequipSlot_OnRightMouseClick;
             slotButton.ClickSound = DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick);
         }
 
@@ -531,7 +533,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 UpdateItemInfoPanel(null);
         }
 
-        private void ShowSlotSelectionBorder_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        private void ShowSlotSelectionBorder_OnLeftMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             EquipSlots slot = (EquipSlots)sender.Tag;
 
@@ -588,9 +590,36 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftHandSlotBorderPanel.Enabled = false;
         }
 
+        private void UnequipSlot_OnRightMouseClick(BaseScreenComponent sender, Vector2 position)
+        {
+            EquipSlots slot = (EquipSlots)sender.Tag;
+
+            if (Player.ItemEquipTable.IsSlotOpen(slot))
+            {
+                return;
+            }
+
+            List<DaggerfallUnityItem> unequippedList = new List<DaggerfallUnityItem>();
+
+            // Try to unequip the item, and update armour values accordingly
+            Player.ItemEquipTable.UnequipItem(slot, unequippedList);
+            if (unequippedList != null)
+            {
+                foreach (DaggerfallUnityItem unequippedItem in unequippedList)
+                {
+                    Player.UpdateEquippedArmorValues(unequippedItem, false);
+
+                    // Play click sound
+                    DaggerfallUI.Instance.PlayOneShot(DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick));
+                }
+            }
+
+            RefreshEquipScreen(slot);
+        }
+
         private void SetupLocalPCOItemListScroller(bool rightSide, EquipSlots slot)
         {
-            localPCOItemListScroller = new PCOItemListScroller(defaultToolTip, rightSide)
+            localPCOItemListScroller = new PCOItemListScroller(defaultToolTip, slot, rightSide)
             {
                 Position = new Vector2(0, 0),
                 Size = new Vector2(54, 176),
@@ -605,7 +634,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             if (rightSide) { rightExtraEquipPanel.Components.Add(localPCOItemListScroller); }
             else { leftExtraEquipPanel.Components.Add(localPCOItemListScroller); }
 
-            //localPCOItemListScroller.OnItemClick += LocalItemListScroller_OnItemLeftClick; // Most likely work on this tomorrow, the actually equipping/swapping of items in a slot part.
+            localPCOItemListScroller.OnItemClick += LocalItemListScroller_OnItemLeftClick;
             //localPCOItemListScroller.OnItemRightClick += LocalItemListScroller_OnItemRightClick;
             //localPCOItemListScroller.OnItemMiddleClick += LocalItemListScroller_OnItemMiddleClick;
             if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
@@ -644,7 +673,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
                 if (slot == EquipSlots.LeftHand)
                 {
-                    if (whichHand == ItemHands.Either || whichHand == ItemHands.LeftOnly)
+                    if (whichHand == ItemHands.LeftOnly)
                     {
                         localItemsFiltered.Add(item);
                         return;
@@ -665,6 +694,166 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     localItemsFiltered.Add(item);
                 }
             }
+        }
+
+        protected virtual void LocalItemListScroller_OnItemLeftClick(DaggerfallUnityItem item)
+        {
+            LocalItemListScroller_OnItemClick(item);
+        }
+
+        protected virtual void LocalItemListScroller_OnItemClick(DaggerfallUnityItem item)
+        {
+            EquipItem(item);
+        }
+
+        protected void EquipItem(DaggerfallUnityItem item)
+        {
+            const int itemBrokenTextId = 29;
+            const int forbiddenEquipmentTextId = 1068;
+
+            if (item.currentCondition < 1)
+            {
+                TextFile.Token[] tokens = DaggerfallUnity.TextProvider.GetRSCTokens(itemBrokenTextId);
+                if (tokens != null && tokens.Length > 0)
+                {
+                    DaggerfallMessageBox messageBox = new DaggerfallMessageBox(uiManager, this);
+                    messageBox.SetTextTokens(tokens, item);
+                    messageBox.ClickAnywhereToClose = true;
+                    messageBox.Show();
+                }
+                return;
+            }
+
+            bool prohibited = false;
+
+            if (item.ItemGroup == ItemGroups.Armor)
+            {
+                // Check for prohibited shield
+                if (item.IsShield && ((1 << (item.TemplateIndex - (int)Armor.Buckler) & (int)Player.Career.ForbiddenShields) != 0))
+                    prohibited = true;
+
+                // Check for prohibited armor type (leather, chain or plate)
+                else if (!item.IsShield && (1 << (item.NativeMaterialValue >> 8) & (int)Player.Career.ForbiddenArmors) != 0)
+                    prohibited = true;
+
+                // Check for prohibited material
+                else if (((item.nativeMaterialValue >> 8) == 2)
+                    && (1 << (item.NativeMaterialValue & 0xFF) & (int)Player.Career.ForbiddenMaterials) != 0)
+                    prohibited = true;
+            }
+            else if (item.ItemGroup == ItemGroups.Weapons)
+            {
+                // Check for prohibited weapon type
+                if ((item.GetWeaponSkillUsed() & (int)Player.Career.ForbiddenProficiencies) != 0)
+                    prohibited = true;
+                // Check for prohibited material
+                else if ((1 << item.NativeMaterialValue & (int)Player.Career.ForbiddenMaterials) != 0)
+                    prohibited = true;
+            }
+
+            if (prohibited)
+            {
+                TextFile.Token[] tokens = DaggerfallUnity.Instance.TextProvider.GetRSCTokens(forbiddenEquipmentTextId);
+                if (tokens != null && tokens.Length > 0)
+                {
+                    DaggerfallMessageBox messageBox = new DaggerfallMessageBox(uiManager, this);
+                    messageBox.SetTextTokens(tokens);
+                    messageBox.ClickAnywhereToClose = true;
+                    messageBox.Show();
+                }
+                return;
+            }
+
+            // Try to equip the item, and update armour values accordingly
+            List<DaggerfallUnityItem> unequippedList = Player.ItemEquipTable.EquipItem(item);
+            if (unequippedList != null)
+            {
+                foreach (DaggerfallUnityItem unequippedItem in unequippedList)
+                {
+                    Player.UpdateEquippedArmorValues(unequippedItem, false);
+                }
+                Player.UpdateEquippedArmorValues(item, true);
+            }
+
+            RefreshEquipScreen();
+        }
+
+        public void RefreshEquipScreen(EquipSlots slot = EquipSlots.None)
+        {
+            if (localPCOItemListScroller != null)
+            {
+                if (slot == EquipSlots.None)
+                {
+                    slot = localPCOItemListScroller.AssociatedSlot;
+                }
+
+                if (slot == localPCOItemListScroller.AssociatedSlot)
+                {
+                    FilterLocalItems(slot);
+                    localPCOItemListScroller.Items = localItemsFiltered;
+                }
+            }
+
+            switch (slot)
+            {
+                case EquipSlots.Head:
+                    headItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(headItemIconPanel, EquipSlots.Head);
+                    AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head);
+                    headItemTextPanel.Components.Clear();
+                    AddItemTextLabels(headItemTextPanel, EquipSlots.Head, "Head"); break;
+                case EquipSlots.RightArm:
+                    rightArmItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(rightArmItemIconPanel, EquipSlots.RightArm);
+                    AddItemDurabilityBar(rightArmItemDurabilityBarPanel, EquipSlots.RightArm);
+                    rightArmItemTextPanel.Components.Clear();
+                    AddItemTextLabels(rightArmItemTextPanel, EquipSlots.RightArm, "Right Arm"); break;
+                case EquipSlots.ChestArmor:
+                    chestItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(chestItemIconPanel, EquipSlots.ChestArmor);
+                    AddItemDurabilityBar(chestItemDurabilityBarPanel, EquipSlots.ChestArmor);
+                    chestItemTextPanel.Components.Clear();
+                    AddItemTextLabels(chestItemTextPanel, EquipSlots.ChestArmor, "Chest"); break;
+                case EquipSlots.Gloves:
+                    glovesItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(glovesItemIconPanel, EquipSlots.Gloves);
+                    AddItemDurabilityBar(glovesItemDurabilityBarPanel, EquipSlots.Gloves);
+                    glovesItemTextPanel.Components.Clear();
+                    AddItemTextLabels(glovesItemTextPanel, EquipSlots.Gloves, "Gloves"); break;
+                case EquipSlots.LeftArm:
+                    leftArmItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(leftArmItemIconPanel, EquipSlots.LeftArm);
+                    AddItemDurabilityBar(leftArmItemDurabilityBarPanel, EquipSlots.LeftArm);
+                    leftArmItemTextPanel.Components.Clear();
+                    AddItemTextLabels(leftArmItemTextPanel, EquipSlots.LeftArm, "Left Arm"); break;
+                case EquipSlots.LegsArmor:
+                    legsItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(legsItemIconPanel, EquipSlots.LegsArmor);
+                    AddItemDurabilityBar(legsItemDurabilityBarPanel, EquipSlots.LegsArmor);
+                    legsItemTextPanel.Components.Clear();
+                    AddItemTextLabels(legsItemTextPanel, EquipSlots.LegsArmor, "Legs"); break;
+                case EquipSlots.Feet:
+                    bootsItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(bootsItemIconPanel, EquipSlots.Feet);
+                    AddItemDurabilityBar(bootsItemDurabilityBarPanel, EquipSlots.Feet);
+                    bootsItemTextPanel.Components.Clear();
+                    AddItemTextLabels(bootsItemTextPanel, EquipSlots.Feet, "Feet"); break;
+                case EquipSlots.RightHand:
+                case EquipSlots.LeftHand:
+                    rightHandItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(rightHandItemIconPanel, EquipSlots.RightHand);
+                    AddItemDurabilityBar(rightHandItemDurabilityBarPanel, EquipSlots.RightHand);
+                    rightHandItemTextPanel.Components.Clear();
+                    AddItemTextLabels(rightHandItemTextPanel, EquipSlots.RightHand, "Right Hand");
+                    leftHandItemIconPanel.Components.Clear();
+                    DrawEquipItemToIconPanel(leftHandItemIconPanel, EquipSlots.LeftHand);
+                    AddItemDurabilityBar(leftHandItemDurabilityBarPanel, EquipSlots.LeftHand);
+                    leftHandItemTextPanel.Components.Clear();
+                    AddItemTextLabels(leftHandItemTextPanel, EquipSlots.LeftHand, "Left Hand"); break;
+                default: return;
+            }
+
+            UpdateItemInfoPanel(null);
         }
 
         protected virtual void LocalItemListScroller_OnHover(DaggerfallUnityItem item)

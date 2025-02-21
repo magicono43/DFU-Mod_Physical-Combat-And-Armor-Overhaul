@@ -69,6 +69,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
         List<DaggerfallUnityItem> items = new List<DaggerfallUnityItem>();
 
         ToolTip toolTip;
+        EquipSlots associatedSlot;
         ItemBackgroundColourHandler backgroundColourHandler;
         ItemBackgroundAnimationHandler backgroundAnimationHandler;
         ItemForegroundAnimationHandler foregroundAnimationHandler;
@@ -96,6 +97,13 @@ namespace DaggerfallWorkshop.Game.UserInterface
 
         public delegate void OnItemHoverHandler(DaggerfallUnityItem item);
         public event OnItemHoverHandler OnItemHover;
+
+        /// <summary>Equipment Slot This Panel Is Related To</summary>
+        public EquipSlots AssociatedSlot
+        {
+            get { return associatedSlot; }
+            set { associatedSlot = value; }
+        }
 
         /// <summary>Handler for colour highlighting</summary>
         public ItemBackgroundColourHandler BackgroundColourHandler
@@ -148,10 +156,12 @@ namespace DaggerfallWorkshop.Game.UserInterface
 
         #region Constructors, Public methods
 
-        public PCOItemListScroller(ToolTip toolTip, bool rightSide = true)
+        public PCOItemListScroller(ToolTip toolTip, EquipSlots slot, bool rightSide = true)
             : base()
         {
             this.toolTip = toolTip;
+
+            AssociatedSlot = slot;
 
             listDisplayTotal = listDisplayUnits * listWidth;
             TextLabel miscLabelTemplate = new TextLabel()
@@ -290,6 +300,8 @@ namespace DaggerfallWorkshop.Game.UserInterface
                 itemStackLabels[i].ShadowPosition = Vector2.zero;
                 itemStackLabels[i].TextScale = textScale;
                 itemStackLabels[i].TextColor = DaggerfallUI.DaggerfallUnityDefaultToolTipTextColor;
+
+                // Tomorrow, see about adding mini-condition bars at the bottom of the item panels in the item scroller windows, will see how it looks and such.
 
                 // Misc labels
                 Vector2 position = miscLabelTemplate.Position;
