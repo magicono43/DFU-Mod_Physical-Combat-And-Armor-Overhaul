@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		2/21/2025, 7:30 PM
+// Last Edit:		2/22/2025, 1:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -302,7 +302,7 @@ namespace PhysicalCombatOverhaul
                 {
                     (DaggerfallUI.Instance.UserInterfaceManager.TopWindow as PCOInfoWindow).CloseWindow();
                 }
-                else if (GameManager.Instance.PlayerObject != null && DaggerfallUI.UIManager.WindowCount <= 0)
+                else if (!GameManager.IsGamePaused && GameManager.Instance.PlayerObject != null && DaggerfallUI.UIManager.WindowCount <= 0)
                 {
                     PCOInfoWindow infoWindow = new PCOInfoWindow(DaggerfallUI.UIManager);
                     DaggerfallUI.UIManager.PushWindow(infoWindow);
