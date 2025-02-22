@@ -28,6 +28,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
 
         Button[] itemButtons;
         Panel[] itemIconPanels;
+        Panel[] durabilityBarPanels;
         Panel[] itemAnimPanels;
         TextLabel[] itemStackLabels;
         TextLabel[] itemMiscLabels;
@@ -261,6 +262,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
             // Setup buttons
             itemButtons = new Button[listDisplayTotal];
             itemIconPanels = new Panel[listDisplayTotal];
+            durabilityBarPanels = new Panel[listDisplayTotal];
             itemAnimPanels = new Panel[listDisplayTotal];
             itemStackLabels = new TextLabel[listDisplayTotal];
             itemMiscLabels = new TextLabel[listDisplayTotal];
@@ -301,7 +303,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
                 itemStackLabels[i].TextScale = textScale;
                 itemStackLabels[i].TextColor = DaggerfallUI.DaggerfallUnityDefaultToolTipTextColor;
 
-                // Tomorrow, see about adding mini-condition bars at the bottom of the item panels in the item scroller windows, will see how it looks and such.
+                durabilityBarPanels[i] = DaggerfallUI.AddPanel(new Rect(1, 18, 19, 1), itemButtons[i]);
 
                 // Misc labels
                 Vector2 position = miscLabelTemplate.Position;
@@ -317,6 +319,49 @@ namespace DaggerfallWorkshop.Game.UserInterface
             }
         }
 
+        public void AddItemMiniDurabilityBar(Panel itemDurPanel, DaggerfallUnityItem item)
+        {
+            if (item != null)
+            {
+                int maxBarWidth = 19;
+                float curDur = item.currentCondition;
+                float maxDur = item.maxCondition;
+
+                float barWidth = Mathf.Floor((curDur / maxDur) * maxBarWidth);
+                float offset = (maxBarWidth - barWidth) / 2;
+                float condPerc = (curDur / maxDur) * 100;
+
+                byte colorAlpha = 220;
+                Color32 barColor = new Color32(0, 255, 0, colorAlpha);
+
+                string itemName = item.LongName;
+                string condName;
+
+                if (condPerc >= 92) { condName = "New"; barColor = new Color32(120, 255, 0, colorAlpha); }
+                else if (condPerc <= 91 && condPerc >= 76) { condName = "Almost New"; barColor = new Color32(120, 255, 0, colorAlpha); }
+                else if (condPerc <= 75 && condPerc >= 61) { condName = "Slightly Used"; barColor = new Color32(180, 255, 0, colorAlpha); }
+                else if (condPerc <= 60 && condPerc >= 41) { condName = "Used"; barColor = new Color32(255, 255, 0, colorAlpha); }
+                else if (condPerc <= 40 && condPerc >= 16) { condName = "Worn"; barColor = new Color32(255, 150, 0, colorAlpha); }
+                else if (condPerc <= 15 && condPerc >= 6) { condName = "Battered"; barColor = new Color32(255, 0, 0, colorAlpha); }
+                else if (condPerc <= 5) { condName = "Useless"; barColor = new Color32(255, 0, 0, colorAlpha); }
+                else { condName = "New"; barColor = new Color32(120, 255, 0, colorAlpha); }
+
+                //string toolTipText = string.Format(itemName + "\r" + condName + "\r{0}%        {1} / {2}", Mathf.CeilToInt(condPerc), curDur, maxDur);
+
+                itemDurPanel.Components.Clear();
+                Panel itemDurBar = DaggerfallUI.AddPanel(new Rect(offset, 0, barWidth, 1), itemDurPanel);
+                itemDurBar.BackgroundColor = barColor;
+                itemDurBar.VerticalAlignment = VerticalAlignment.Middle;
+                //Panel itemDurBarToolTipPanel = DaggerfallUI.AddPanel(new Rect(0, 0, maxBarWidth, 2), itemDurBar);
+                //itemDurBarToolTipPanel.ToolTip = defaultToolTip;
+                //itemDurBarToolTipPanel.ToolTipText = toolTipText;
+            }
+            else
+            {
+                itemDurPanel.Components.Clear();
+            }
+        }
+
         void ClearItemsList()
         {
             for (int i = 0; i < listDisplayTotal; i++)
@@ -325,6 +370,7 @@ namespace DaggerfallWorkshop.Game.UserInterface
                 itemMiscLabels[i].Text = string.Empty;
                 itemButtons[i].ToolTipText = string.Empty;
                 itemIconPanels[i].BackgroundTexture = null;
+                durabilityBarPanels[i].Components.Clear();
                 itemButtons[i].BackgroundColor = Color.clear;
                 itemButtons[i].AnimatedBackgroundTextures = null;
                 itemIconPanels[i].AnimatedBackgroundTextures = null;
@@ -384,6 +430,9 @@ namespace DaggerfallWorkshop.Game.UserInterface
                 // Set stack count
                 if (item.stackCount > 1)
                     itemStackLabels[i].Text = item.stackCount.ToString();
+
+                // Add mini durability bars
+                AddItemMiniDurabilityBar(durabilityBarPanels[i], item);
 
                 // Handle context specific background colour, animations & label
                 if (backgroundColourHandler != null)

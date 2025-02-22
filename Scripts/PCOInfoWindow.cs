@@ -639,6 +639,11 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             //localPCOItemListScroller.OnItemMiddleClick += LocalItemListScroller_OnItemMiddleClick;
             if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
 
+            // Tomorrow, consider trying to fix that bug/oversight that allows the open when the console window is open and typing a command using the letters
+            // of the hotkey for that window, not certain how I might fix this, but will give it a try atleast.
+            // After that, see about working on an experimenting with another panel that will show a comparison between stats of the currently equipped
+            // item, and whatever item is being hovered over in the item scroller panel, similar to that stat comparions function in say World of Warcraft, etc.
+
             FilterLocalItems(slot);
             localPCOItemListScroller.Items = localItemsFiltered;
         }
