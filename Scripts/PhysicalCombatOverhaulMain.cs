@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		2/22/2025, 1:00 PM
+// Last Edit:		3/2/2025, 9:00 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -67,6 +67,8 @@ namespace PhysicalCombatOverhaul
         public Texture2D EquipInfoExtraRightRedDownArrowTexture;
         public Texture2D EquipInfoExtraLeftRedUpArrowTexture;
         public Texture2D EquipInfoExtraLeftRedDownArrowTexture;
+        public Texture2D EquipInfoRightComparisonPanelTexture;
+        public Texture2D EquipInfoLeftComparisonPanelTexture;
 
         static Dictionary<int, Monster> monsterDict;
         public const int monsterCareerCount = 42;
@@ -4002,6 +4004,8 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Right_Red_Arrow_Down_1", false, out EquipInfoExtraRightRedDownArrowTexture);
             success &= modManager.TryGetAsset("Left_Red_Arrow_Up_1", false, out EquipInfoExtraLeftRedUpArrowTexture);
             success &= modManager.TryGetAsset("Left_Red_Arrow_Down_1", false, out EquipInfoExtraLeftRedDownArrowTexture);
+            success &= modManager.TryGetAsset("Item_Comparison_Panel_Right", false, out EquipInfoRightComparisonPanelTexture);
+            success &= modManager.TryGetAsset("Item_Comparison_Panel_Left", false, out EquipInfoLeftComparisonPanelTexture);
 
             if (!success)
                 throw new Exception("PhysicalCombatOverhaul: Missing texture asset");

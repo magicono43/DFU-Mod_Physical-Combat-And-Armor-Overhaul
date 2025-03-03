@@ -51,6 +51,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Texture2D slotBorderTexture;
         Texture2D rightExtraEquipTexture;
         Texture2D leftExtraEquipTexture;
+        Texture2D rightItemComparisonTexture;
+        Texture2D leftItemComparisonTexture;
 
         #endregion
 
@@ -105,6 +107,12 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel rightExtraEquipPanel;
         Panel leftExtraEquipPanel;
 
+        Panel rightItemComparisonPanel;
+        Panel leftItemComparisonPanel;
+
+        Panel rightComparisonMainTextPanel;
+        Panel leftComparisonMainTextPanel;
+
         PCOItemListScroller localPCOItemListScroller;
 
         ItemCollection localItems = null;
@@ -139,6 +147,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             slotBorderTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSlotBorderTexture;
             rightExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraRightPanelTexture;
             leftExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftPanelTexture;
+            rightItemComparisonTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoRightComparisonPanelTexture;
+            leftItemComparisonTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoLeftComparisonPanelTexture;
         }
 
         protected void SetupChestChoiceButtons()
@@ -287,9 +297,20 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftExtraEquipPanel.BackgroundTexture = leftExtraEquipTexture;
             leftExtraEquipPanel.Enabled = false;
 
-            // Maybe see about adding a button to each slot to open a pop-out window to show relevant items that can be equipped to that slot currently in the player inventory?
-            // 1/8/2025: I'm thinking I should put a small button that is a child of the "itemIconPanel" for each equip slot, it would probably be a box looking button with a question-mark symbol
-            // in it or something. When clicked it would open a sub-window with much more details about that specific item in that equip slot, probably involving damage type and all that, etc.
+            rightItemComparisonPanel = DaggerfallUI.AddPanel(new Rect(278, 12, 42, 176), NativePanel);
+            rightItemComparisonPanel.BackgroundColor = ScreenDimColor;
+            rightItemComparisonPanel.BackgroundTexture = rightItemComparisonTexture;
+            rightItemComparisonPanel.Enabled = false;
+            SetupItemComparisonPanelComponents(true);
+
+            leftItemComparisonPanel = DaggerfallUI.AddPanel(new Rect(3, 12, 42, 176), NativePanel);
+            leftItemComparisonPanel.BackgroundColor = ScreenDimColor;
+            leftItemComparisonPanel.BackgroundTexture = leftItemComparisonTexture;
+            leftItemComparisonPanel.Enabled = false;
+            SetupItemComparisonPanelComponents(false);
+
+            // Tomorrow, now that I imported the "Item Comparison Panel" textures, see about actually implementing them and such.
+            // First thing I should do is get the size and position of the panel in the interface and get that working, then go from there, etc.
         }
 
         public void AddEquipSlotSelectionButton(Panel panel, EquipSlots slot)
@@ -488,6 +509,81 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             }
         }
 
+        public void UpdateItemComparisonPanel(DaggerfallUnityItem goingItem, bool rightSide)
+        {
+            if (goingItem == null)
+            {
+                rightComparisonMainTextPanel.Components.Clear();
+                leftComparisonMainTextPanel.Components.Clear();
+                return;
+            }
+
+            EquipSlots slot = DetermineActiveEquipSlot();
+            if (slot == EquipSlots.None)
+            {
+                rightComparisonMainTextPanel.Components.Clear();
+                leftComparisonMainTextPanel.Components.Clear();
+                return;
+            }
+
+            rightComparisonMainTextPanel.Components.Clear();
+            leftComparisonMainTextPanel.Components.Clear();
+
+            Panel usedPanel = null;
+            if (rightSide) { usedPanel = rightComparisonMainTextPanel; }
+            else { usedPanel = leftComparisonMainTextPanel; }
+
+            int maxLineWidth = (int)rightComparisonMainTextPanel.Size.x;
+            int maxHeight = (int)rightComparisonMainTextPanel.Size.y;
+            float textScale = 0.6f;
+            ItemHands whichHand = ItemEquipTable.GetItemHands(goingItem);
+
+            if (whichHand != ItemHands.None)
+            {
+                DaggerfallUnityItem currRightHandItem = Player.ItemEquipTable.GetItem(EquipSlots.RightHand);
+                DaggerfallUnityItem currLeftHandItem = Player.ItemEquipTable.GetItem(EquipSlots.LeftHand);
+
+                if (goingItem.IsShield)
+                {
+                    if (currRightHandItem != null && ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both)
+                    {
+                        // Continue work on this tomorrow, currently the logic on what and which hands to compare to for a specific item, etc.
+                        int minDamRoll = currRightHandItem.GetBaseDamageMin() + currRightHandItem.GetWeaponMaterialModifier();
+                        int maxDamRoll = currRightHandItem.GetBaseDamageMax() + currRightHandItem.GetWeaponMaterialModifier();
+
+                        CreateCenteredTextLabel("Currently Equipped", new Vector2(0, 1), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(currRightHandItem), new Vector2(0, 10), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("Base Min: " + minDamRoll, new Vector2(0, 16), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("Base Max: " + maxDamRoll, new Vector2(0, 22), maxLineWidth, usedPanel, textScale);
+
+                        float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(goingItem, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                        float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(goingItem, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                        string shieldMatType = "Plate";
+                        int shieldMat = PhysicalCombatOverhaulMain.GetArmorMaterial(goingItem);
+
+                        if (shieldMat == 0) { shieldMatType = "Leather"; }
+                        else if (shieldMat == 1) { shieldMatType = "Chain"; }
+
+                        CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("Type: " + shieldMatType, new Vector2(0, 50), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("Base DR: " + armorDR + "%", new Vector2(0, 56), maxLineWidth, usedPanel, textScale);
+                        CreateCenteredTextLabel("Base DT: " + armorDT, new Vector2(0, 62), maxLineWidth, usedPanel, textScale);
+                    }
+                }
+                else
+                {
+                    //
+                }
+            }
+            else
+            {
+                DaggerfallUnityItem currItem = Player.ItemEquipTable.GetItem(slot);
+            }
+        }
+
         public void SetupEquipSlotPanelsEventSubscriptions()
         {
             for (int i = 0; i < validEquipSlots.Length; i++)
@@ -506,6 +602,22 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
                 panel.OnMouseEnter += UpdateExtraInfoPanel_OnMouseEnter;
                 panel.OnMouseLeave += UpdateExtraInfoPanel_OnMouseLeave;
+            }
+        }
+
+        public void SetupItemComparisonPanelComponents(bool rightSide)
+        {
+            if (rightSide)
+            {
+                rightItemComparisonPanel.Components.Clear();
+                rightComparisonMainTextPanel = DaggerfallUI.AddPanel(new Rect(4, 4, 34, 168), rightItemComparisonPanel);
+                rightComparisonMainTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+            }
+            else
+            {
+                leftItemComparisonPanel.Components.Clear();
+                leftComparisonMainTextPanel = DaggerfallUI.AddPanel(new Rect(4, 4, 34, 168), leftItemComparisonPanel);
+                leftComparisonMainTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
             }
         }
 
@@ -554,15 +666,19 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             localPCOItemListScroller = null;
             rightExtraEquipPanel.Enabled = false;
             leftExtraEquipPanel.Enabled = false;
+            rightItemComparisonPanel.Enabled = false;
+            leftItemComparisonPanel.Enabled = false;
 
             if (headSlotBorderPanel.Enabled || rightArmSlotBorderPanel.Enabled || chestSlotBorderPanel.Enabled || glovesSlotBorderPanel.Enabled || rightHandSlotBorderPanel.Enabled)
             {
                 leftExtraEquipPanel.Enabled = true;
+                leftItemComparisonPanel.Enabled = true;
                 SetupLocalPCOItemListScroller(false, slot);
             }
             else if (leftArmSlotBorderPanel.Enabled || legsSlotBorderPanel.Enabled || bootsSlotBorderPanel.Enabled || leftHandSlotBorderPanel.Enabled)
             {
                 rightExtraEquipPanel.Enabled = true;
+                rightItemComparisonPanel.Enabled = true;
                 SetupLocalPCOItemListScroller(true, slot);
             }
         }
@@ -872,11 +988,42 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             {
                 UpdateItemInfoPanel(item);
             }
+
+            if (rightItemComparisonPanel.Enabled == true)
+            {
+                if (rightComparisonMainTextPanel != null)
+                {
+                    UpdateItemComparisonPanel(item, true);
+                }
+            }
+
+            if (leftItemComparisonPanel.Enabled == true)
+            {
+                if (leftComparisonMainTextPanel != null)
+                {
+                    UpdateItemComparisonPanel(item, false);
+                }
+            }
         }
 
         private void ExitButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             CloseWindow();
+        }
+
+        public EquipSlots DetermineActiveEquipSlot()
+        {
+            if (headSlotBorderPanel.Enabled == true) { return EquipSlots.Head; }
+            if (rightArmSlotBorderPanel.Enabled == true) { return EquipSlots.RightArm; }
+            if (chestSlotBorderPanel.Enabled == true) { return EquipSlots.ChestArmor; }
+            if (glovesSlotBorderPanel.Enabled == true) { return EquipSlots.Gloves; }
+            if (rightHandSlotBorderPanel.Enabled == true) { return EquipSlots.RightHand; }
+            if (leftArmSlotBorderPanel.Enabled == true) { return EquipSlots.LeftArm; }
+            if (legsSlotBorderPanel.Enabled == true) { return EquipSlots.LegsArmor; }
+            if (bootsSlotBorderPanel.Enabled == true) { return EquipSlots.Feet; }
+            if (leftHandSlotBorderPanel.Enabled == true) { return EquipSlots.LeftHand; }
+
+            return EquipSlots.None;
         }
 
         public Panel GetPanelRefFromEquipSlot(EquipSlots slot)
@@ -900,8 +1047,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             //AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
-            //extraTestPanel.Position = new Vector2(butt1.x, butt1.y);
-            //extraTestPanel.Size = new Vector2(butt1.width, butt1.height);
+            //rightItemComparisonPanel.Position = new Vector2(butt1.x, butt1.y);
+            //rightItemComparisonPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
