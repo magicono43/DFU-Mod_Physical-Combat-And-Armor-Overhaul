@@ -533,10 +533,14 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             if (rightSide) { usedPanel = rightComparisonMainTextPanel; }
             else { usedPanel = leftComparisonMainTextPanel; }
 
-            int maxLineWidth = (int)rightComparisonMainTextPanel.Size.x;
-            int maxHeight = (int)rightComparisonMainTextPanel.Size.y;
-            float textScale = 0.6f;
             ItemHands whichHand = ItemEquipTable.GetItemHands(goingItem);
+
+            // Tomorrow or next time I work on this. Make additional logic for when comparing an item that is going to cause both items currently in the hands to be unequipped.
+            // So like if you are wielding a sword and shield, but going to equip a staff or other 2-handed weapon, take the changes of both hands into consideration for the
+            // comparison gains and loses text. Same deal if you have an open left-hand and are looking at a 1-handed weapon, this would normally try to equip that in the
+            // open left-hand, rather than replace the item in the right-hand, so update the text based on that as well.
+            // Essentially make the stuff more context sensitive, I've gotten this far with this comparison text stuff, so this should go about as smoothly, hopefully.
+            // Thankfully this only concerns the right and left hand slots, rather than all slots, so will try and do that next time, so far so good on this feature.
 
             if (whichHand != ItemHands.None)
             {
@@ -547,40 +551,341 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 {
                     if (currRightHandItem != null && ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both)
                     {
-                        // Continue work on this tomorrow, currently the logic on what and which hands to compare to for a specific item, etc.
-                        int minDamRoll = currRightHandItem.GetBaseDamageMin() + currRightHandItem.GetWeaponMaterialModifier();
-                        int maxDamRoll = currRightHandItem.GetBaseDamageMax() + currRightHandItem.GetWeaponMaterialModifier();
-
-                        CreateCenteredTextLabel("Currently Equipped", new Vector2(0, 1), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(currRightHandItem), new Vector2(0, 10), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("Base Min: " + minDamRoll, new Vector2(0, 16), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("Base Max: " + maxDamRoll, new Vector2(0, 22), maxLineWidth, usedPanel, textScale);
-
-                        float armorDR = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(goingItem, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
-                        float armorDT = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(goingItem, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
-
-                        string shieldMatType = "Plate";
-                        int shieldMat = PhysicalCombatOverhaulMain.GetArmorMaterial(goingItem);
-
-                        if (shieldMat == 0) { shieldMatType = "Leather"; }
-                        else if (shieldMat == 1) { shieldMatType = "Chain"; }
-
-                        CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("Type: " + shieldMatType, new Vector2(0, 50), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("Base DR: " + armorDR + "%", new Vector2(0, 56), maxLineWidth, usedPanel, textScale);
-                        CreateCenteredTextLabel("Base DT: " + armorDT, new Vector2(0, 62), maxLineWidth, usedPanel, textScale);
+                        PopulateComparisonTextLabels(ComparisonType.WeaponToArmor, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                    }
+                    else if (currLeftHandItem != null)
+                    {
+                        if (currLeftHandItem.IsShield)
+                        {
+                            PopulateComparisonTextLabels(ComparisonType.ArmorToArmor, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                        }
+                        else
+                        {
+                            PopulateComparisonTextLabels(ComparisonType.WeaponToArmor, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                        }
+                    }
+                    else
+                    {
+                        PopulateComparisonTextLabels(ComparisonType.EmptyToArmor, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
                     }
                 }
                 else
                 {
-                    //
+                    if (currRightHandItem != null && ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both)
+                    {
+                        PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                    }
+                    else if (rightSide)
+                    {
+                        if (currLeftHandItem != null)
+                        {
+                            if (currLeftHandItem.IsShield)
+                            {
+                                PopulateComparisonTextLabels(ComparisonType.ArmorToWeapon, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                            }
+                            else
+                            {
+                                PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                            }
+                        }
+                        else
+                        {
+                            PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                        }
+                    }
+                    else
+                    {
+                        if (currRightHandItem != null)
+                        {
+                            PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                        }
+                        else
+                        {
+                            PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                        }
+                    }
                 }
             }
             else
             {
                 DaggerfallUnityItem currItem = Player.ItemEquipTable.GetItem(slot);
+
+                if (currItem != null)
+                {
+                    PopulateComparisonTextLabels(ComparisonType.ArmorToArmor, rightSide, ref usedPanel, ref goingItem, ref currItem);
+                }
+                else
+                {
+                    PopulateComparisonTextLabels(ComparisonType.EmptyToArmor, rightSide, ref usedPanel, ref goingItem, ref currItem);
+                }
+            }
+        }
+
+        public void PopulateComparisonTextLabels(ComparisonType type, bool rightSide, ref Panel panel, ref DaggerfallUnityItem goingItem, ref DaggerfallUnityItem currItem)
+        {
+            int maxLineWidth = (int)rightComparisonMainTextPanel.Size.x;
+            int maxHeight = (int)rightComparisonMainTextPanel.Size.y;
+            float textScale = 0.55f;
+            float textScaleMod = 0.25f;
+
+            int currLineYPos = 95;
+            int lineChange = 6;
+            int bigLineChange = 10;
+            List<string> gains = new List<string>();
+            List<string> loses = new List<string>();
+
+            float armorDRCurr;
+            float armorDTCurr;
+            float armorDRGoing;
+            float armorDTGoing;
+            float armorDRChange;
+            float armorDTChange;
+
+            int minDamRollCurr;
+            int maxDamRollCurr;
+            int minDamRollGoing;
+            int maxDamRollGoing;
+            int minDamRollChange;
+            int maxDamRollChange;
+
+            string armorMatTypeCurr;
+            int armorMatCurr;
+            string armorMatTypeGoing;
+            int armorMatGoing;
+
+            switch (type)
+            {
+                case ComparisonType.ArmorToArmor:
+                    armorDRCurr = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(currItem, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    armorDTCurr = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(currItem, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    armorMatTypeCurr = "Plate";
+                    armorMatCurr = PhysicalCombatOverhaulMain.GetArmorMaterial(currItem);
+
+                    if (armorMatCurr == 0) { armorMatTypeCurr = "Leather"; }
+                    else if (armorMatCurr == 1) { armorMatTypeCurr = "Chain"; }
+
+                    CreateCenteredTextLabel("Currently Equipped", new Vector2(0, 1), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + armorMatTypeCurr, new Vector2(0, 10), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DR: " + armorDRCurr + "%", new Vector2(0, 16), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DT: " + armorDTCurr, new Vector2(0, 22), maxLineWidth, panel, textScale);
+
+                    armorDRGoing = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(goingItem, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    armorDTGoing = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(goingItem, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    armorMatTypeGoing = "Plate";
+                    armorMatGoing = PhysicalCombatOverhaulMain.GetArmorMaterial(goingItem);
+
+                    if (armorMatGoing == 0) { armorMatTypeGoing = "Leather"; }
+                    else if (armorMatGoing == 1) { armorMatTypeGoing = "Chain"; }
+
+                    CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + armorMatTypeGoing, new Vector2(0, 50), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DR: " + armorDRGoing + "%", new Vector2(0, 56), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DT: " + armorDTGoing, new Vector2(0, 62), maxLineWidth, panel, textScale);
+
+                    armorDRChange = armorDRGoing - armorDRCurr;
+                    armorDTChange = (float)System.Math.Round(armorDTGoing - armorDTCurr, 1, System.MidpointRounding.AwayFromZero);
+
+                    CreateCenteredTextLabel("What Will Change", new Vector2(0, 81), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 85), maxLineWidth, panel, textScale);
+
+                    if (armorDRChange > 0) { gains.Add("DR: +" + armorDRChange + "%"); }
+                    else if (armorDRChange < 0) { loses.Add("DR: " + armorDRChange + "%"); }
+                    if (armorDTChange > 0) { gains.Add("DT: +" + armorDTChange); }
+                    else if (armorDTChange < 0) { loses.Add("DT: " + armorDTChange); }
+
+                    if (gains.Count > 0)
+                    {
+                        CreateCenteredTextLabel("Gain:", new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + textScaleMod);
+                        currLineYPos += lineChange;
+
+                        foreach (string line in gains)
+                        {
+                            CreateCenteredTextLabel(line, new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                            currLineYPos += lineChange;
+                        }
+                        currLineYPos += bigLineChange;
+                    }
+
+                    if (loses.Count > 0)
+                    {
+                        CreateCenteredTextLabel("Lose:", new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + textScaleMod);
+                        currLineYPos += lineChange;
+
+                        foreach (string line in loses)
+                        {
+                            CreateCenteredTextLabel(line, new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallUnityStatDrainedTextColor);
+                            currLineYPos += lineChange;
+                        }
+                        currLineYPos += bigLineChange;
+                    }
+                    break;
+                case ComparisonType.WeaponToWeapon:
+                    minDamRollCurr = currItem.GetBaseDamageMin() + currItem.GetWeaponMaterialModifier();
+                    maxDamRollCurr = currItem.GetBaseDamageMax() + currItem.GetWeaponMaterialModifier();
+
+                    CreateCenteredTextLabel("Currently Equipped", new Vector2(0, 1), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(currItem), new Vector2(0, 10), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Min: " + minDamRollCurr, new Vector2(0, 16), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Max: " + maxDamRollCurr, new Vector2(0, 22), maxLineWidth, panel, textScale);
+
+                    minDamRollGoing = goingItem.GetBaseDamageMin() + goingItem.GetWeaponMaterialModifier();
+                    maxDamRollGoing = goingItem.GetBaseDamageMax() + goingItem.GetWeaponMaterialModifier();
+
+                    CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(goingItem), new Vector2(0, 50), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Min: " + minDamRollGoing, new Vector2(0, 56), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Max: " + maxDamRollGoing, new Vector2(0, 62), maxLineWidth, panel, textScale);
+
+                    minDamRollChange = minDamRollGoing - minDamRollCurr;
+                    maxDamRollChange = maxDamRollGoing - maxDamRollCurr;
+
+                    CreateCenteredTextLabel("What Will Change", new Vector2(0, 81), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 85), maxLineWidth, panel, textScale);
+
+                    if (minDamRollChange > 0) { gains.Add("Base Min: +" + minDamRollChange); }
+                    else if (minDamRollChange < 0) { loses.Add("Base Min: " + minDamRollChange); }
+                    if (maxDamRollChange > 0) { gains.Add("Base Max: +" + maxDamRollChange); }
+                    else if (maxDamRollChange < 0) { loses.Add("Base Max: " + maxDamRollChange); }
+
+                    if (gains.Count > 0)
+                    {
+                        CreateCenteredTextLabel("Gain:", new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + 0.25f);
+                        currLineYPos += lineChange;
+
+                        foreach (string line in gains)
+                        {
+                            CreateCenteredTextLabel(line, new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + 0.25f, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                            currLineYPos += lineChange;
+                        }
+                        currLineYPos += bigLineChange;
+                    }
+
+                    if (loses.Count > 0)
+                    {
+                        CreateCenteredTextLabel("Lose:", new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + 0.25f);
+                        currLineYPos += lineChange;
+
+                        foreach (string line in loses)
+                        {
+                            CreateCenteredTextLabel(line, new Vector2(0, currLineYPos), maxLineWidth, panel, textScale + 0.25f, DaggerfallUI.DaggerfallUnityStatDrainedTextColor);
+                            currLineYPos += lineChange;
+                        }
+                        currLineYPos += bigLineChange;
+                    }
+                    break;
+                case ComparisonType.ArmorToWeapon:
+                    armorDRCurr = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(currItem, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    armorDTCurr = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(currItem, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    armorMatTypeCurr = "Plate";
+                    armorMatCurr = PhysicalCombatOverhaulMain.GetArmorMaterial(currItem);
+
+                    if (armorMatCurr == 0) { armorMatTypeCurr = "Leather"; }
+                    else if (armorMatCurr == 1) { armorMatTypeCurr = "Chain"; }
+
+                    CreateCenteredTextLabel("Currently Equipped", new Vector2(0, 1), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + armorMatTypeCurr, new Vector2(0, 10), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DR: " + armorDRCurr + "%", new Vector2(0, 16), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DT: " + armorDTCurr, new Vector2(0, 22), maxLineWidth, panel, textScale);
+
+                    minDamRollGoing = goingItem.GetBaseDamageMin() + goingItem.GetWeaponMaterialModifier();
+                    maxDamRollGoing = goingItem.GetBaseDamageMax() + goingItem.GetWeaponMaterialModifier();
+
+                    CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(goingItem), new Vector2(0, 50), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Min: " + minDamRollGoing, new Vector2(0, 56), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Max: " + maxDamRollGoing, new Vector2(0, 62), maxLineWidth, panel, textScale);
+
+                    CreateCenteredTextLabel("What Will Change", new Vector2(0, 81), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 85), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Gain:", new Vector2(0, 95), maxLineWidth, panel, textScale + textScaleMod);
+                    CreateCenteredTextLabel("Dam Min: +" + minDamRollGoing, new Vector2(0, 101), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    CreateCenteredTextLabel("Dam Max: +" + maxDamRollGoing, new Vector2(0, 107), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    CreateCenteredTextLabel("Lose:", new Vector2(0, 117), maxLineWidth, panel, textScale + textScaleMod);
+                    CreateCenteredTextLabel("DR: -" + armorDRCurr + "%", new Vector2(0, 123), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallUnityStatDrainedTextColor);
+                    CreateCenteredTextLabel("DT: -" + armorDTCurr, new Vector2(0, 129), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallUnityStatDrainedTextColor);
+                    break;
+                case ComparisonType.WeaponToArmor:
+                    minDamRollCurr = currItem.GetBaseDamageMin() + currItem.GetWeaponMaterialModifier();
+                    maxDamRollCurr = currItem.GetBaseDamageMax() + currItem.GetWeaponMaterialModifier();
+
+                    CreateCenteredTextLabel("Currently Equipped", new Vector2(0, 1), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 5), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(currItem), new Vector2(0, 10), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Min: " + minDamRollCurr, new Vector2(0, 16), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Max: " + maxDamRollCurr, new Vector2(0, 22), maxLineWidth, panel, textScale);
+
+                    armorDRGoing = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(goingItem, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    armorDTGoing = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(goingItem, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    armorMatTypeGoing = "Plate";
+                    armorMatGoing = PhysicalCombatOverhaulMain.GetArmorMaterial(goingItem);
+
+                    if (armorMatGoing == 0) { armorMatTypeGoing = "Leather"; }
+                    else if (armorMatGoing == 1) { armorMatTypeGoing = "Chain"; }
+
+                    CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + armorMatTypeGoing, new Vector2(0, 50), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DR: " + armorDRGoing + "%", new Vector2(0, 56), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DT: " + armorDTGoing, new Vector2(0, 62), maxLineWidth, panel, textScale);
+
+                    CreateCenteredTextLabel("What Will Change", new Vector2(0, 81), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 85), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Gain:", new Vector2(0, 95), maxLineWidth, panel, textScale + textScaleMod);
+                    CreateCenteredTextLabel("DR: +" + armorDRGoing + "%", new Vector2(0, 101), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    CreateCenteredTextLabel("DT: +" + armorDTGoing, new Vector2(0, 107), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    CreateCenteredTextLabel("Lose:", new Vector2(0, 117), maxLineWidth, panel, textScale + textScaleMod);
+                    CreateCenteredTextLabel("Dam Min: -" + minDamRollCurr, new Vector2(0, 123), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallUnityStatDrainedTextColor);
+                    CreateCenteredTextLabel("Dam Max: -" + maxDamRollCurr, new Vector2(0, 129), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallUnityStatDrainedTextColor);
+                    break;
+                case ComparisonType.EmptyToArmor:
+                    armorDRGoing = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(goingItem, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
+                    armorDTGoing = (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDTAmount(goingItem, player, true, ref holder), 1, System.MidpointRounding.AwayFromZero);
+
+                    armorMatTypeGoing = "Plate";
+                    armorMatGoing = PhysicalCombatOverhaulMain.GetArmorMaterial(goingItem);
+
+                    if (armorMatGoing == 0) { armorMatTypeGoing = "Leather"; }
+                    else if (armorMatGoing == 1) { armorMatTypeGoing = "Chain"; }
+
+                    CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + armorMatTypeGoing, new Vector2(0, 50), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DR: " + armorDRGoing + "%", new Vector2(0, 56), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base DT: " + armorDTGoing, new Vector2(0, 62), maxLineWidth, panel, textScale);
+
+                    CreateCenteredTextLabel("What Will Change", new Vector2(0, 81), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 85), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Gain:", new Vector2(0, 95), maxLineWidth, panel, textScale + textScaleMod);
+                    CreateCenteredTextLabel("DR: +" + armorDRGoing + "%", new Vector2(0, 101), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    CreateCenteredTextLabel("DT: +" + armorDTGoing, new Vector2(0, 107), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    break;
+                case ComparisonType.EmptyToWeapon:
+                    minDamRollGoing = goingItem.GetBaseDamageMin() + goingItem.GetWeaponMaterialModifier();
+                    maxDamRollGoing = goingItem.GetBaseDamageMax() + goingItem.GetWeaponMaterialModifier();
+
+                    CreateCenteredTextLabel("To Be Equipped", new Vector2(0, 41), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 45), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Type: " + PhysicalCombatOverhaulMain.GetWeaponAttackTypeName(goingItem), new Vector2(0, 50), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Min: " + minDamRollGoing, new Vector2(0, 56), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Base Max: " + maxDamRollGoing, new Vector2(0, 62), maxLineWidth, panel, textScale);
+
+                    CreateCenteredTextLabel("What Will Change", new Vector2(0, 81), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("-------------", new Vector2(0, 85), maxLineWidth, panel, textScale);
+                    CreateCenteredTextLabel("Gain:", new Vector2(0, 95), maxLineWidth, panel, textScale + textScaleMod);
+                    CreateCenteredTextLabel("Dam Min: +" + minDamRollGoing, new Vector2(0, 101), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    CreateCenteredTextLabel("Dam Max: +" + maxDamRollGoing, new Vector2(0, 107), maxLineWidth, panel, textScale + textScaleMod, DaggerfallUI.DaggerfallForcedEnchantmentTextColor);
+                    break;
+                default: break;
             }
         }
 
@@ -611,19 +916,22 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             {
                 rightItemComparisonPanel.Components.Clear();
                 rightComparisonMainTextPanel = DaggerfallUI.AddPanel(new Rect(4, 4, 34, 168), rightItemComparisonPanel);
-                rightComparisonMainTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+                //rightComparisonMainTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
             }
             else
             {
                 leftItemComparisonPanel.Components.Clear();
                 leftComparisonMainTextPanel = DaggerfallUI.AddPanel(new Rect(4, 4, 34, 168), leftItemComparisonPanel);
-                leftComparisonMainTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
+                //leftComparisonMainTextPanel.BackgroundColor = new Color32(255, 0, 0, 120);
             }
         }
 
-        public static TextLabel CreateCenteredTextLabel(string text, Vector2 position, int maxWidth, Panel parentPanel, float textScale = 1)
+        public static TextLabel CreateCenteredTextLabel(string text, Vector2 position, int maxWidth, Panel parentPanel, float textScale = 1, Color32? color = null)
         {
+            if (color == null) { color = DaggerfallUI.DaggerfallDefaultTextColor; }
+
             TextLabel label = DaggerfallUI.AddTextLabel(DaggerfallUI.DefaultFont, position, text, parentPanel);
+            label.TextColor = (Color)color;
             label.MaxWidth = maxWidth;
             label.TextScale = textScale;
             label.HorizontalAlignment = HorizontalAlignment.Center;
@@ -1041,6 +1349,17 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 case EquipSlots.LeftHand: return leftHandItemIconPanel;
                 default: return null;
             }
+        }
+
+        public enum ComparisonType
+        {
+            None = -1,
+            ArmorToArmor = 0,
+            WeaponToWeapon = 1,
+            ArmorToWeapon = 2,
+            WeaponToArmor = 3,
+            EmptyToArmor = 4,
+            EmptyToWeapon = 5,
         }
 
         public void UpdatePanels()
