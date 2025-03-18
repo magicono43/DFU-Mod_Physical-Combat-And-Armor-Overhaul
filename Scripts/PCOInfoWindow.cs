@@ -533,95 +533,142 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             if (rightSide) { usedPanel = rightComparisonMainTextPanel; }
             else { usedPanel = leftComparisonMainTextPanel; }
 
+            bool compareBoth = false;
+
             ItemHands whichHand = ItemEquipTable.GetItemHands(goingItem);
 
-            // Tomorrow or next time I work on this. Make additional logic for when comparing an item that is going to cause both items currently in the hands to be unequipped.
-            // So like if you are wielding a sword and shield, but going to equip a staff or other 2-handed weapon, take the changes of both hands into consideration for the
-            // comparison gains and loses text. Same deal if you have an open left-hand and are looking at a 1-handed weapon, this would normally try to equip that in the
-            // open left-hand, rather than replace the item in the right-hand, so update the text based on that as well.
-            // Essentially make the stuff more context sensitive, I've gotten this far with this comparison text stuff, so this should go about as smoothly, hopefully.
-            // Thankfully this only concerns the right and left hand slots, rather than all slots, so will try and do that next time, so far so good on this feature.
-
-            if (whichHand != ItemHands.None)
+            if (whichHand != ItemHands.None) // For any items that go in the right or left hand slots
             {
                 DaggerfallUnityItem currRightHandItem = Player.ItemEquipTable.GetItem(EquipSlots.RightHand);
                 DaggerfallUnityItem currLeftHandItem = Player.ItemEquipTable.GetItem(EquipSlots.LeftHand);
 
-                if (goingItem.IsShield)
+                if (goingItem.IsShield) // If trying to equip a shield item
                 {
-                    if (currRightHandItem != null && ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both)
+                    if (currRightHandItem != null && ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both) // If current weapon occupies both hands (2-handed)
                     {
-                        PopulateComparisonTextLabels(ComparisonType.WeaponToArmor, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                        PopulateComparisonTextLabels(ComparisonType.WeaponToArmor, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                     }
-                    else if (currLeftHandItem != null)
+                    else if (currLeftHandItem != null) // If left hand is occupied by an item
                     {
-                        if (currLeftHandItem.IsShield)
+                        if (currLeftHandItem.IsShield) // If that currently equipped item is a shield
                         {
-                            PopulateComparisonTextLabels(ComparisonType.ArmorToArmor, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                            PopulateComparisonTextLabels(ComparisonType.ArmorToArmor, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                         }
-                        else
+                        else // If that currently equipped item is something other than a shield, most likely a weapon
                         {
-                            PopulateComparisonTextLabels(ComparisonType.WeaponToArmor, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                            PopulateComparisonTextLabels(ComparisonType.WeaponToArmor, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                         }
                     }
-                    else
+                    else // If left hand is empty
                     {
-                        PopulateComparisonTextLabels(ComparisonType.EmptyToArmor, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                        PopulateComparisonTextLabels(ComparisonType.EmptyToArmor, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                     }
                 }
-                else
+                else // If trying to equip any weapon item
                 {
-                    if (currRightHandItem != null && ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both)
+                    if (currRightHandItem != null && ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both) // If current weapon occupies both hands (2-handed)
                     {
-                        PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                        PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                     }
-                    else if (rightSide)
+                    else if (rightSide) // If the equip menu that corresponds for the left hand slot is currently open
                     {
-                        if (currLeftHandItem != null)
+                        if (currLeftHandItem != null) // If left hand is occupied by an item
                         {
-                            if (currLeftHandItem.IsShield)
+                            if (currLeftHandItem.IsShield) // If that currently equipped item is a shield
                             {
-                                PopulateComparisonTextLabels(ComparisonType.ArmorToWeapon, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                                PopulateComparisonTextLabels(ComparisonType.ArmorToWeapon, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                             }
-                            else
+                            else // If that currently equipped item is something other than a shield, most likely a weapon
                             {
-                                PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                                PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                             }
                         }
-                        else
+                        else // If left hand is empty
                         {
-                            PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, ref usedPanel, ref goingItem, ref currLeftHandItem);
+                            PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                         }
                     }
-                    else
+                    else // If the equip menu that corresponds for the right hand slot is currently open
                     {
-                        if (currRightHandItem != null)
+                        if (currRightHandItem == null && currLeftHandItem == null) // Both hands currently empty
                         {
-                            PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                            PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
                         }
-                        else
+                        else if (currRightHandItem != null && currLeftHandItem == null) // Right hand occupied by something, left hand empty
                         {
-                            PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, ref usedPanel, ref goingItem, ref currRightHandItem);
+                            if (ItemEquipTable.GetItemHands(currRightHandItem) == ItemHands.Both) // Right hand currently occupied by a 2-handed weapon
+                            {
+                                PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                            }
+                            else // Right hand currently occupied by a 1-handed weapon
+                            {
+                                if (ItemEquipTable.GetItemHands(goingItem) == ItemHands.Both) // Item being equipped is a 2-handed weapon
+                                {
+                                    PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                                }
+                                else // Item being equipped is a 1-handed weapon
+                                {
+                                    PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                                }
+                            }
+                        }
+                        else if (currRightHandItem == null && currLeftHandItem != null) // Right hand empty, left hand occupied by something
+                        {
+                            if (ItemEquipTable.GetItemHands(goingItem) == ItemHands.Both) // Item being equipped is a 2-handed weapon
+                            {
+                                if (currLeftHandItem.IsShield) // If item in left hand is currently a shield
+                                {
+                                    PopulateComparisonTextLabels(ComparisonType.ArmorToWeapon, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                                }
+                                else // If item in left hand is currently a weapon
+                                {
+                                    PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                                }
+                            }
+                            else // Item being equipped is a 1-handed weapon
+                            {
+                                PopulateComparisonTextLabels(ComparisonType.EmptyToWeapon, rightSide, false, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                            }
+                        }
+                        else // Both right and left hands occupied by something
+                        {
+                            if (ItemEquipTable.GetItemHands(goingItem) == ItemHands.Both) // Item being equipped is a 2-handed weapon
+                            {
+                                compareBoth = true;
+                                if (currLeftHandItem.IsShield) // If item in left hand is currently a shield
+                                {
+                                    PopulateComparisonTextLabels(ComparisonType.WeaponToArmor, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                                }
+                                else // If item in left hand is currently a weapon
+                                {
+                                    PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                                }
+                            }
+                            else // Item being equipped is a 1-handed weapon
+                            {
+                                PopulateComparisonTextLabels(ComparisonType.WeaponToWeapon, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currRightHandItem, ref currLeftHandItem);
+                            }
                         }
                     }
                 }
             }
-            else
+            else // For any items that go in the various body armor slots
             {
                 DaggerfallUnityItem currItem = Player.ItemEquipTable.GetItem(slot);
+                DaggerfallUnityItem emptyItem = null;
 
-                if (currItem != null)
+                if (currItem != null) // If current armor slot is occupied
                 {
-                    PopulateComparisonTextLabels(ComparisonType.ArmorToArmor, rightSide, ref usedPanel, ref goingItem, ref currItem);
+                    PopulateComparisonTextLabels(ComparisonType.ArmorToArmor, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currItem, ref emptyItem);
                 }
-                else
+                else // If current armor slot is empty
                 {
-                    PopulateComparisonTextLabels(ComparisonType.EmptyToArmor, rightSide, ref usedPanel, ref goingItem, ref currItem);
+                    PopulateComparisonTextLabels(ComparisonType.EmptyToArmor, rightSide, true, compareBoth, ref usedPanel, ref goingItem, ref currItem, ref emptyItem);
                 }
             }
         }
 
-        public void PopulateComparisonTextLabels(ComparisonType type, bool rightSide, ref Panel panel, ref DaggerfallUnityItem goingItem, ref DaggerfallUnityItem currItem)
+        public void PopulateComparisonTextLabels(ComparisonType type, bool rightSide, bool compareRight, bool compareBoth, ref Panel panel, ref DaggerfallUnityItem goingItem, ref DaggerfallUnityItem currRightItem, ref DaggerfallUnityItem currLeftItem)
         {
             int maxLineWidth = (int)rightComparisonMainTextPanel.Size.x;
             int maxHeight = (int)rightComparisonMainTextPanel.Size.y;
@@ -652,6 +699,28 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             int armorMatCurr;
             string armorMatTypeGoing;
             int armorMatGoing;
+
+            DaggerfallUnityItem currItem;
+            if (compareRight) { currItem = currRightItem; }
+            else { currItem = currLeftItem; }
+
+            if (currItem == null) { return; }
+
+            if (compareBoth)
+            {
+                if (currRightItem == null || currLeftItem == null) { return; }
+
+                if (type == ComparisonType.WeaponToArmor)
+                {
+                    // Work on the actual text construction part for these "compare 1 item against 2, thing. Next time or tomorrow, etc.
+                    // comparing 2-hander to one 1-handed weapon and a shield
+                }
+                else
+                {
+                    // comparing 2-hander to two 1-handed weapons
+                }
+                return;
+            }
 
             switch (type)
             {
