@@ -161,7 +161,16 @@
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Left_Red_Arrow_Up_1.png",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Slot_Selected_Border_1.png",
         "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Item_Comparison_Panel_Left.png",
-        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Item_Comparison_Panel_Right.png"
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Item_Comparison_Panel_Right.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Icon_Sword_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Icon_Checkmark_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Icon_Descending_Arrow_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Icon_Shield_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Active_Border_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Icon_Ascending_Arrow_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Icon_Percent_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Icon_X_Mark_1.png",
+        "Assets/Game/Mods/DFU-Mod_Physical-Combat-And-Armor-Overhaul/Textures/Sort_Button_Background_And_Border_1.png"
     ],
     "Dependencies": []
 }
