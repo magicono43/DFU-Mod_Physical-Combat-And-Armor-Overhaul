@@ -3,7 +3,7 @@
 // License:         MIT License (http://www.opensource.org/licenses/mit-license.php)
 // Author:          Kirk.O
 // Created On: 	    2/13/2024, 9:00 PM
-// Last Edit:		3/23/2025, 6:00 PM
+// Last Edit:		3/23/2025, 9:50 PM
 // Version:			1.50
 // Special Thanks:  Hazelnut, Ralzar, and Kab
 // Modifier:		
@@ -69,6 +69,15 @@ namespace PhysicalCombatOverhaul
         public Texture2D EquipInfoExtraLeftRedDownArrowTexture;
         public Texture2D EquipInfoRightComparisonPanelTexture;
         public Texture2D EquipInfoLeftComparisonPanelTexture;
+        public Texture2D EquipInfoSortButtonBackgroundTexture;
+        public Texture2D EquipInfoSortButtonActiveBorderTexture;
+        public Texture2D EquipInfoSortIconCheckmarkTexture;
+        public Texture2D EquipInfoSortIconXmarkTexture;
+        public Texture2D EquipInfoSortIconPercentTexture;
+        public Texture2D EquipInfoSortIconSwordTexture;
+        public Texture2D EquipInfoSortIconShieldTexture;
+        public Texture2D EquipInfoSortIconAscendingTexture;
+        public Texture2D EquipInfoSortIconDescendingTexture;
 
         static Dictionary<int, Monster> monsterDict;
         public const int monsterCareerCount = 42;
@@ -4006,6 +4015,15 @@ namespace PhysicalCombatOverhaul
             success &= modManager.TryGetAsset("Left_Red_Arrow_Down_1", false, out EquipInfoExtraLeftRedDownArrowTexture);
             success &= modManager.TryGetAsset("Item_Comparison_Panel_Right", false, out EquipInfoRightComparisonPanelTexture);
             success &= modManager.TryGetAsset("Item_Comparison_Panel_Left", false, out EquipInfoLeftComparisonPanelTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Background_And_Border_1", false, out EquipInfoSortButtonBackgroundTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Active_Border_1", false, out EquipInfoSortButtonActiveBorderTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Icon_Checkmark_1", false, out EquipInfoSortIconCheckmarkTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Icon_X_Mark_1", false, out EquipInfoSortIconXmarkTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Icon_Percent_1", false, out EquipInfoSortIconPercentTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Icon_Sword_1", false, out EquipInfoSortIconSwordTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Icon_Shield_1", false, out EquipInfoSortIconShieldTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Icon_Ascending_Arrow_1", false, out EquipInfoSortIconAscendingTexture);
+            success &= modManager.TryGetAsset("Sort_Button_Icon_Descending_Arrow_1", false, out EquipInfoSortIconDescendingTexture);
 
             if (!success)
                 throw new Exception("PhysicalCombatOverhaul: Missing texture asset");

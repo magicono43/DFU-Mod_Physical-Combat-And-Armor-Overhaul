@@ -53,6 +53,15 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Texture2D leftExtraEquipTexture;
         Texture2D rightItemComparisonTexture;
         Texture2D leftItemComparisonTexture;
+        Texture2D sortButtonBackgroundTexture;
+        Texture2D sortButtonActiveBorderTexture;
+        Texture2D sortIconCheckmarkTexture;
+        Texture2D sortIconXmarkTexture;
+        Texture2D sortIconPercentTexture;
+        Texture2D sortIconSwordTexture;
+        Texture2D sortIconShieldTexture;
+        Texture2D sortIconAscendArrowTexture;
+        Texture2D sortIconDescendArrowTexture;
 
         #endregion
 
@@ -113,6 +122,17 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel rightComparisonMainTextPanel;
         Panel leftComparisonMainTextPanel;
 
+        Panel rightSortButtonsPanel;
+        Panel leftSortButtonsPanel;
+
+        Panel rightFilterRestrictedItemsButtonPanel;
+        Panel rightSortItemsByConditionButtonPanel;
+        Panel rightSortItemsByEffectivenessButtonPanel;
+
+        Panel leftFilterRestrictedItemsButtonPanel;
+        Panel leftSortItemsByConditionButtonPanel;
+        Panel leftSortItemsByEffectivenessButtonPanel;
+
         PCOItemListScroller localPCOItemListScroller;
 
         ItemCollection localItems = null;
@@ -149,6 +169,15 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftExtraEquipTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoExtraLeftPanelTexture;
             rightItemComparisonTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoRightComparisonPanelTexture;
             leftItemComparisonTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoLeftComparisonPanelTexture;
+            sortButtonBackgroundTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortButtonBackgroundTexture;
+            sortButtonActiveBorderTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortButtonActiveBorderTexture;
+            sortIconCheckmarkTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortIconCheckmarkTexture;
+            sortIconXmarkTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortIconXmarkTexture;
+            sortIconPercentTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortIconPercentTexture;
+            sortIconSwordTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortIconSwordTexture;
+            sortIconShieldTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortIconShieldTexture;
+            sortIconAscendArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortIconAscendingTexture;
+            sortIconDescendArrowTexture = PhysicalCombatOverhaulMain.Instance.EquipInfoSortIconDescendingTexture;
         }
 
         protected void SetupChestChoiceButtons()
@@ -309,8 +338,13 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftItemComparisonPanel.Enabled = false;
             SetupItemComparisonPanelComponents(false);
 
-            // Tomorrow, now that I imported the "Item Comparison Panel" textures, see about actually implementing them and such.
-            // First thing I should do is get the size and position of the panel in the interface and get that working, then go from there, etc.
+            rightSortButtonsPanel = DaggerfallUI.AddPanel(new Rect(233, 0, 46, 12), NativePanel);
+            rightSortButtonsPanel.Enabled = false;
+            SetupSortButtonPanelComponents(true);
+
+            leftSortButtonsPanel = DaggerfallUI.AddPanel(new Rect(44, 0, 46, 12), NativePanel);
+            leftSortButtonsPanel.Enabled = false;
+            SetupSortButtonPanelComponents(false);
         }
 
         public void AddEquipSlotSelectionButton(Panel panel, EquipSlots slot)
@@ -723,7 +757,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
                 if (type == ComparisonType.WeaponToArmor)
                 {
-                    // Work on the actual text construction part for these "compare 1 item against 2, thing. Next time or tomorrow, etc. Do testing of what I currently have here.
                     // comparing 2-hander to one 1-handed weapon and a shield
                     int minDamRollCurrR = currRightItem.GetBaseDamageMin() + currRightItem.GetWeaponMaterialModifier();
                     int maxDamRollCurrR = currRightItem.GetBaseDamageMax() + currRightItem.GetWeaponMaterialModifier();
@@ -1149,6 +1182,37 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             }
         }
 
+        public void SetupSortButtonPanelComponents(bool rightSide)
+        {
+            if (rightSide)
+            {
+                rightSortButtonsPanel.Components.Clear();
+                rightFilterRestrictedItemsButtonPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 15, 12), rightSortButtonsPanel);
+                rightFilterRestrictedItemsButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                Panel checkMark = DaggerfallUI.AddPanel(new Rect(0, 0, 11, 8), rightFilterRestrictedItemsButtonPanel);
+                checkMark.BackgroundTexture = sortIconCheckmarkTexture;
+                checkMark.VerticalAlignment = VerticalAlignment.Middle;
+                checkMark.HorizontalAlignment = HorizontalAlignment.Center;
+                // Going to have to think of a solution to how to do the icon images and how to update them and such. I'm thinking I will just clear all the
+                // components from the parent panel and recreate the icon panels each time they get updated from clicking and such, I've done that with a
+                // fair amount of other things so far, so I feel like that should work alright, will see. Either way, will work on this more tomorrow, etc.
+                rightSortItemsByConditionButtonPanel = DaggerfallUI.AddPanel(new Rect(15.5f, 0, 15, 12), rightSortButtonsPanel);
+                rightSortItemsByConditionButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                rightSortItemsByEffectivenessButtonPanel = DaggerfallUI.AddPanel(new Rect(31, 0, 15, 12), rightSortButtonsPanel);
+                rightSortItemsByEffectivenessButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+            }
+            else
+            {
+                leftSortButtonsPanel.Components.Clear();
+                leftSortItemsByEffectivenessButtonPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 15, 12), leftSortButtonsPanel);
+                leftSortItemsByEffectivenessButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                leftSortItemsByConditionButtonPanel = DaggerfallUI.AddPanel(new Rect(15.5f, 0, 15, 12), leftSortButtonsPanel);
+                leftSortItemsByConditionButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                leftFilterRestrictedItemsButtonPanel = DaggerfallUI.AddPanel(new Rect(31, 0, 15, 12), leftSortButtonsPanel);
+                leftFilterRestrictedItemsButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+            }
+        }
+
         public static TextLabel CreateCenteredTextLabel(string text, Vector2 position, int maxWidth, Panel parentPanel, float textScale = 1, Color32? color = null)
         {
             if (color == null) { color = DaggerfallUI.DaggerfallDefaultTextColor; }
@@ -1199,17 +1263,21 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             leftExtraEquipPanel.Enabled = false;
             rightItemComparisonPanel.Enabled = false;
             leftItemComparisonPanel.Enabled = false;
+            rightSortButtonsPanel.Enabled = false;
+            leftSortButtonsPanel.Enabled = false;
 
             if (headSlotBorderPanel.Enabled || rightArmSlotBorderPanel.Enabled || chestSlotBorderPanel.Enabled || glovesSlotBorderPanel.Enabled || rightHandSlotBorderPanel.Enabled)
             {
                 leftExtraEquipPanel.Enabled = true;
                 leftItemComparisonPanel.Enabled = true;
+                leftSortButtonsPanel.Enabled = true;
                 SetupLocalPCOItemListScroller(false, slot);
             }
             else if (leftArmSlotBorderPanel.Enabled || legsSlotBorderPanel.Enabled || bootsSlotBorderPanel.Enabled || leftHandSlotBorderPanel.Enabled)
             {
                 rightExtraEquipPanel.Enabled = true;
                 rightItemComparisonPanel.Enabled = true;
+                rightSortButtonsPanel.Enabled = true;
                 SetupLocalPCOItemListScroller(true, slot);
             }
         }
@@ -1285,9 +1353,6 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             //localPCOItemListScroller.OnItemRightClick += LocalItemListScroller_OnItemRightClick;
             //localPCOItemListScroller.OnItemMiddleClick += LocalItemListScroller_OnItemMiddleClick;
             if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
-
-            // Tomorrow, see about working on and experimenting with another panel that will show a comparison between stats of the currently equipped
-            // item, and whatever item is being hovered over in the item scroller panel, similar to that stat comparions function in say World of Warcraft, etc.
 
             FilterLocalItems(slot);
             localPCOItemListScroller.Items = localItemsFiltered;
@@ -1589,8 +1654,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         {
             //AddItemDurabilityBar(headItemDurabilityBarPanel, EquipSlots.Head, 0);
 
-            //rightItemComparisonPanel.Position = new Vector2(butt1.x, butt1.y);
-            //rightItemComparisonPanel.Size = new Vector2(butt1.width, butt1.height);
+            //rightSortButtonsPanel.Position = new Vector2(butt1.x, butt1.y);
+            //rightSortButtonsPanel.Size = new Vector2(butt1.width, butt1.height);
 
             //secondCategoryPanel.Position = new Vector2(butt2.x, butt2.y);
             //secondCategoryPanel.Size = new Vector2(butt2.width, butt2.height);
