@@ -1189,27 +1189,65 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 rightSortButtonsPanel.Components.Clear();
                 rightFilterRestrictedItemsButtonPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 15, 12), rightSortButtonsPanel);
                 rightFilterRestrictedItemsButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
-                Panel checkMark = DaggerfallUI.AddPanel(new Rect(0, 0, 11, 8), rightFilterRestrictedItemsButtonPanel);
-                checkMark.BackgroundTexture = sortIconCheckmarkTexture;
-                checkMark.VerticalAlignment = VerticalAlignment.Middle;
-                checkMark.HorizontalAlignment = HorizontalAlignment.Center;
-                // Going to have to think of a solution to how to do the icon images and how to update them and such. I'm thinking I will just clear all the
-                // components from the parent panel and recreate the icon panels each time they get updated from clicking and such, I've done that with a
-                // fair amount of other things so far, so I feel like that should work alright, will see. Either way, will work on this more tomorrow, etc.
+                rightFilterRestrictedItemsButtonPanel.OnMouseClick += TestButton_OnMouseClick;
+                AddSortButtonIconComponent(SortIconType.CheckMark, rightFilterRestrictedItemsButtonPanel);
+                rightFilterRestrictedItemsButtonPanel.Components.Clear(); // This Clear just for testing, tomorrow continue implementing the actual logic and subscriptions for the sort buttons, etc.
                 rightSortItemsByConditionButtonPanel = DaggerfallUI.AddPanel(new Rect(15.5f, 0, 15, 12), rightSortButtonsPanel);
                 rightSortItemsByConditionButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                AddSortButtonIconComponent(SortIconType.PercentSign, rightSortItemsByConditionButtonPanel);
                 rightSortItemsByEffectivenessButtonPanel = DaggerfallUI.AddPanel(new Rect(31, 0, 15, 12), rightSortButtonsPanel);
                 rightSortItemsByEffectivenessButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                AddSortButtonIconComponent(SortIconType.ShieldSign, rightSortItemsByEffectivenessButtonPanel);
             }
             else
             {
                 leftSortButtonsPanel.Components.Clear();
                 leftSortItemsByEffectivenessButtonPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 15, 12), leftSortButtonsPanel);
                 leftSortItemsByEffectivenessButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                AddSortButtonIconComponent(SortIconType.ShieldSign, leftSortItemsByEffectivenessButtonPanel);
                 leftSortItemsByConditionButtonPanel = DaggerfallUI.AddPanel(new Rect(15.5f, 0, 15, 12), leftSortButtonsPanel);
                 leftSortItemsByConditionButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                AddSortButtonIconComponent(SortIconType.PercentSign, leftSortItemsByConditionButtonPanel);
                 leftFilterRestrictedItemsButtonPanel = DaggerfallUI.AddPanel(new Rect(31, 0, 15, 12), leftSortButtonsPanel);
                 leftFilterRestrictedItemsButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                AddSortButtonIconComponent(SortIconType.CheckMark, leftFilterRestrictedItemsButtonPanel);
+            }
+        }
+
+        public enum SortIconType
+        {
+            None = -1,
+            ActiveBorder = 0,
+            AscendingArrow = 1,
+            DescendingArrow = 2,
+            CheckMark = 3,
+            XMark = 4,
+            PercentSign = 5,
+            SwordSign = 6,
+            ShieldSign = 7,
+        }
+
+        public void AddSortButtonIconComponent(SortIconType iconType, Panel parent)
+        {
+            Panel panel = null;
+
+            switch (iconType)
+            {
+                case SortIconType.ActiveBorder: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 15, 12), parent); panel.BackgroundTexture = sortButtonActiveBorderTexture; break;
+                case SortIconType.AscendingArrow: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 9, 8), parent); panel.BackgroundTexture = sortIconAscendArrowTexture; break;
+                case SortIconType.DescendingArrow: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 9, 8), parent); panel.BackgroundTexture = sortIconDescendArrowTexture; break;
+                case SortIconType.CheckMark: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 11, 8), parent); panel.BackgroundTexture = sortIconCheckmarkTexture; break;
+                case SortIconType.XMark: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 7, 7), parent); panel.BackgroundTexture = sortIconXmarkTexture; break;
+                case SortIconType.PercentSign: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 9, 8), parent); panel.BackgroundTexture = sortIconPercentTexture; break;
+                case SortIconType.SwordSign: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 8, 8), parent); panel.BackgroundTexture = sortIconSwordTexture; break;
+                case SortIconType.ShieldSign: panel = DaggerfallUI.AddPanel(new Rect(0, 0, 9, 8), parent); panel.BackgroundTexture = sortIconShieldTexture; break;
+                default: break;
+            }
+
+            if (panel != null)
+            {
+                panel.VerticalAlignment = VerticalAlignment.Middle;
+                panel.HorizontalAlignment = HorizontalAlignment.Center;
             }
         }
 
@@ -1600,6 +1638,12 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     UpdateItemComparisonPanel(item, false);
                 }
             }
+        }
+
+        private void TestButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        {
+            // Play click sound
+            DaggerfallUI.Instance.PlayOneShot(DaggerfallUI.Instance.GetAudioClip(SoundClips.AnimalDog));
         }
 
         private void ExitButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
