@@ -133,6 +133,12 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel leftSortItemsByConditionButtonPanel;
         Panel leftSortItemsByEffectivenessButtonPanel;
 
+        bool restrictedItemFilterState = false;
+        byte percentItemConditionSortState = 0;
+        byte itemEffectivenessSortState = 0;
+
+        EquipSlots currentlyActiveEquipSlot = EquipSlots.None;
+
         PCOItemListScroller localPCOItemListScroller;
 
         ItemCollection localItems = null;
@@ -1189,14 +1195,15 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 rightSortButtonsPanel.Components.Clear();
                 rightFilterRestrictedItemsButtonPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 15, 12), rightSortButtonsPanel);
                 rightFilterRestrictedItemsButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
-                rightFilterRestrictedItemsButtonPanel.OnMouseClick += TestButton_OnMouseClick;
+                rightFilterRestrictedItemsButtonPanel.OnMouseClick += ToggleRestrictedItemFilter_OnMouseClick;
                 AddSortButtonIconComponent(SortIconType.CheckMark, rightFilterRestrictedItemsButtonPanel);
-                rightFilterRestrictedItemsButtonPanel.Components.Clear(); // This Clear just for testing, tomorrow continue implementing the actual logic and subscriptions for the sort buttons, etc.
                 rightSortItemsByConditionButtonPanel = DaggerfallUI.AddPanel(new Rect(15.5f, 0, 15, 12), rightSortButtonsPanel);
                 rightSortItemsByConditionButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                rightSortItemsByConditionButtonPanel.OnMouseClick += TogglePercentItemSortState_OnMouseClick;
                 AddSortButtonIconComponent(SortIconType.PercentSign, rightSortItemsByConditionButtonPanel);
                 rightSortItemsByEffectivenessButtonPanel = DaggerfallUI.AddPanel(new Rect(31, 0, 15, 12), rightSortButtonsPanel);
                 rightSortItemsByEffectivenessButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                rightSortItemsByEffectivenessButtonPanel.OnMouseClick += ToggleItemEffectivenessSortState_OnMouseClick;
                 AddSortButtonIconComponent(SortIconType.ShieldSign, rightSortItemsByEffectivenessButtonPanel);
             }
             else
@@ -1204,13 +1211,93 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 leftSortButtonsPanel.Components.Clear();
                 leftSortItemsByEffectivenessButtonPanel = DaggerfallUI.AddPanel(new Rect(0, 0, 15, 12), leftSortButtonsPanel);
                 leftSortItemsByEffectivenessButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
-                AddSortButtonIconComponent(SortIconType.ShieldSign, leftSortItemsByEffectivenessButtonPanel);
+                leftSortItemsByEffectivenessButtonPanel.OnMouseClick += ToggleItemEffectivenessSortState_OnMouseClick;
+                if (currentlyActiveEquipSlot == EquipSlots.RightHand) { AddSortButtonIconComponent(SortIconType.SwordSign, leftSortItemsByEffectivenessButtonPanel); }
+                else { AddSortButtonIconComponent(SortIconType.ShieldSign, leftSortItemsByEffectivenessButtonPanel); }
                 leftSortItemsByConditionButtonPanel = DaggerfallUI.AddPanel(new Rect(15.5f, 0, 15, 12), leftSortButtonsPanel);
                 leftSortItemsByConditionButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                leftSortItemsByConditionButtonPanel.OnMouseClick += TogglePercentItemSortState_OnMouseClick;
                 AddSortButtonIconComponent(SortIconType.PercentSign, leftSortItemsByConditionButtonPanel);
                 leftFilterRestrictedItemsButtonPanel = DaggerfallUI.AddPanel(new Rect(31, 0, 15, 12), leftSortButtonsPanel);
                 leftFilterRestrictedItemsButtonPanel.BackgroundTexture = sortButtonBackgroundTexture;
+                leftFilterRestrictedItemsButtonPanel.OnMouseClick += ToggleRestrictedItemFilter_OnMouseClick;
                 AddSortButtonIconComponent(SortIconType.CheckMark, leftFilterRestrictedItemsButtonPanel);
+            }
+
+            UpdateSortButtonPanel();
+        }
+
+        public void UpdateSortButtonPanel()
+        {
+            if (rightSortButtonsPanel != null)
+            {
+                rightFilterRestrictedItemsButtonPanel.Components.Clear();
+                rightSortItemsByConditionButtonPanel.Components.Clear();
+                rightSortItemsByEffectivenessButtonPanel.Components.Clear();
+
+                if (restrictedItemFilterState) { AddSortButtonIconComponent(SortIconType.XMark, rightFilterRestrictedItemsButtonPanel); }
+                else { AddSortButtonIconComponent(SortIconType.CheckMark, rightFilterRestrictedItemsButtonPanel); }
+
+                AddSortButtonIconComponent(SortIconType.PercentSign, rightSortItemsByConditionButtonPanel);
+                AddSortButtonIconComponent(SortIconType.ShieldSign, rightSortItemsByEffectivenessButtonPanel);
+
+                if (percentItemConditionSortState == 1)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, rightSortItemsByConditionButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.DescendingArrow, rightSortItemsByConditionButtonPanel);
+                }
+                else if (percentItemConditionSortState == 2)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, rightSortItemsByConditionButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.AscendingArrow, rightSortItemsByConditionButtonPanel);
+                }
+
+                if (itemEffectivenessSortState == 1)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, rightSortItemsByEffectivenessButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.DescendingArrow, rightSortItemsByEffectivenessButtonPanel);
+                }
+                else if (itemEffectivenessSortState == 2)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, rightSortItemsByEffectivenessButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.AscendingArrow, rightSortItemsByEffectivenessButtonPanel);
+                }
+            }
+
+            if (leftSortButtonsPanel != null)
+            {
+                leftSortItemsByEffectivenessButtonPanel.Components.Clear();
+                leftSortItemsByConditionButtonPanel.Components.Clear();
+                leftFilterRestrictedItemsButtonPanel.Components.Clear();
+
+                if (restrictedItemFilterState) { AddSortButtonIconComponent(SortIconType.XMark, leftFilterRestrictedItemsButtonPanel); }
+                else { AddSortButtonIconComponent(SortIconType.CheckMark, leftFilterRestrictedItemsButtonPanel); }
+
+                AddSortButtonIconComponent(SortIconType.PercentSign, leftSortItemsByConditionButtonPanel);
+                if (currentlyActiveEquipSlot == EquipSlots.RightHand) { AddSortButtonIconComponent(SortIconType.SwordSign, leftSortItemsByEffectivenessButtonPanel); }
+                else { AddSortButtonIconComponent(SortIconType.ShieldSign, leftSortItemsByEffectivenessButtonPanel); }
+
+                if (percentItemConditionSortState == 1)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, leftSortItemsByConditionButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.DescendingArrow, leftSortItemsByConditionButtonPanel);
+                }
+                else if (percentItemConditionSortState == 2)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, leftSortItemsByConditionButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.AscendingArrow, leftSortItemsByConditionButtonPanel);
+                }
+
+                if (itemEffectivenessSortState == 1)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, leftSortItemsByEffectivenessButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.DescendingArrow, leftSortItemsByEffectivenessButtonPanel);
+                }
+                else if (itemEffectivenessSortState == 2)
+                {
+                    AddSortButtonIconComponent(SortIconType.ActiveBorder, leftSortItemsByEffectivenessButtonPanel);
+                    AddSortButtonIconComponent(SortIconType.AscendingArrow, leftSortItemsByEffectivenessButtonPanel);
+                }
             }
         }
 
@@ -1281,6 +1368,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         private void ShowSlotSelectionBorder_OnLeftMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             EquipSlots slot = (EquipSlots)sender.Tag;
+            currentlyActiveEquipSlot = EquipSlots.None;
 
             switch (slot)
             {
@@ -1304,8 +1392,13 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightSortButtonsPanel.Enabled = false;
             leftSortButtonsPanel.Enabled = false;
 
+            restrictedItemFilterState = false;
+            percentItemConditionSortState = 0;
+            itemEffectivenessSortState = 0;
+
             if (headSlotBorderPanel.Enabled || rightArmSlotBorderPanel.Enabled || chestSlotBorderPanel.Enabled || glovesSlotBorderPanel.Enabled || rightHandSlotBorderPanel.Enabled)
             {
+                currentlyActiveEquipSlot = (EquipSlots)sender.Tag;
                 leftExtraEquipPanel.Enabled = true;
                 leftItemComparisonPanel.Enabled = true;
                 leftSortButtonsPanel.Enabled = true;
@@ -1313,11 +1406,14 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             }
             else if (leftArmSlotBorderPanel.Enabled || legsSlotBorderPanel.Enabled || bootsSlotBorderPanel.Enabled || leftHandSlotBorderPanel.Enabled)
             {
+                currentlyActiveEquipSlot = (EquipSlots)sender.Tag;
                 rightExtraEquipPanel.Enabled = true;
                 rightItemComparisonPanel.Enabled = true;
                 rightSortButtonsPanel.Enabled = true;
                 SetupLocalPCOItemListScroller(true, slot);
             }
+
+            UpdateSortButtonPanel();
         }
 
         private void ToggleSlotBorderPanels(bool currentlyEnabled, ref Panel panel)
@@ -1394,6 +1490,10 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 
             FilterLocalItems(slot);
             localPCOItemListScroller.Items = localItemsFiltered;
+            // Tomorrow, or next time I work on this. Make a method that updates the ListScroller with a new list of items based on the current state of the
+            // new sort and filter button panel. Likely use the existing "RefreshEquipScreen" method. But obviously have to make the logic and stuff to actually
+            // sort and filter the items based on the active sort parameters and such. Also, add some hover tooltip text for the sort and filter buttons to
+            // actually say the current state of the button and what it means or does, etc.
         }
 
         private void FilterLocalItems(EquipSlots slot)
@@ -1640,10 +1740,39 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             }
         }
 
-        private void TestButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        private void ToggleRestrictedItemFilter_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
+            if (restrictedItemFilterState) { restrictedItemFilterState = false; }
+            else { restrictedItemFilterState = true; }
+
             // Play click sound
-            DaggerfallUI.Instance.PlayOneShot(DaggerfallUI.Instance.GetAudioClip(SoundClips.AnimalDog));
+            DaggerfallUI.Instance.PlayOneShot(DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick));
+
+            UpdateSortButtonPanel();
+        }
+
+        private void TogglePercentItemSortState_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        {
+            if (percentItemConditionSortState == 0) { percentItemConditionSortState = 1; itemEffectivenessSortState = 0; }
+            else if (percentItemConditionSortState == 1) { percentItemConditionSortState = 2; itemEffectivenessSortState = 0; }
+            else { percentItemConditionSortState = 0; }
+
+            // Play click sound
+            DaggerfallUI.Instance.PlayOneShot(DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick));
+
+            UpdateSortButtonPanel();
+        }
+
+        private void ToggleItemEffectivenessSortState_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        {
+            if (itemEffectivenessSortState == 0) { itemEffectivenessSortState = 1; percentItemConditionSortState = 0; }
+            else if (itemEffectivenessSortState == 1) { itemEffectivenessSortState = 2; percentItemConditionSortState = 0; }
+            else { itemEffectivenessSortState = 0; }
+
+            // Play click sound
+            DaggerfallUI.Instance.PlayOneShot(DaggerfallUI.Instance.GetAudioClip(SoundClips.ButtonClick));
+
+            UpdateSortButtonPanel();
         }
 
         private void ExitButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
