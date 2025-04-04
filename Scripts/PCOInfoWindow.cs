@@ -5,6 +5,7 @@ using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
 using System.Collections.Generic;
 using DaggerfallConnect.Arena2;
+using System;
 
 namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 {
@@ -133,7 +134,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
         Panel leftSortItemsByConditionButtonPanel;
         Panel leftSortItemsByEffectivenessButtonPanel;
 
-        bool restrictedItemFilterState = false;
+        bool restrictedItemFilterState = true;
         byte percentItemConditionSortState = 0;
         byte itemEffectivenessSortState = 0;
 
@@ -1299,6 +1300,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     AddSortButtonIconComponent(SortIconType.AscendingArrow, leftSortItemsByEffectivenessButtonPanel);
                 }
             }
+
+            RefreshEquipScreen();
         }
 
         public enum SortIconType
@@ -1392,7 +1395,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             rightSortButtonsPanel.Enabled = false;
             leftSortButtonsPanel.Enabled = false;
 
-            restrictedItemFilterState = false;
+            restrictedItemFilterState = true;
             percentItemConditionSortState = 0;
             itemEffectivenessSortState = 0;
 
@@ -1489,11 +1492,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
 
             FilterLocalItems(slot);
+            // Tomorrow, maybe this will be where I will do the actual "sorting" part of the items list? Will see I suppose.
             localPCOItemListScroller.Items = localItemsFiltered;
-            // Tomorrow, or next time I work on this. Make a method that updates the ListScroller with a new list of items based on the current state of the
-            // new sort and filter button panel. Likely use the existing "RefreshEquipScreen" method. But obviously have to make the logic and stuff to actually
-            // sort and filter the items based on the active sort parameters and such. Also, add some hover tooltip text for the sort and filter buttons to
-            // actually say the current state of the button and what it means or does, etc.
         }
 
         private void FilterLocalItems(EquipSlots slot)
@@ -1510,6 +1510,11 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     // Add if not equipped
                     if (!item.IsEquipped)
                     {
+                        if (restrictedItemFilterState)
+                        {
+                            if (ProhibitedItemCheck(item)) { continue; }
+                        }
+
                         AddLocalItem(item, slot);
                     }
                 }
@@ -1577,6 +1582,37 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 return;
             }
 
+            bool prohibited = ProhibitedItemCheck(item);
+
+            if (prohibited)
+            {
+                TextFile.Token[] tokens = DaggerfallUnity.Instance.TextProvider.GetRSCTokens(forbiddenEquipmentTextId);
+                if (tokens != null && tokens.Length > 0)
+                {
+                    DaggerfallMessageBox messageBox = new DaggerfallMessageBox(uiManager, this);
+                    messageBox.SetTextTokens(tokens);
+                    messageBox.ClickAnywhereToClose = true;
+                    messageBox.Show();
+                }
+                return;
+            }
+
+            // Try to equip the item, and update armour values accordingly
+            List<DaggerfallUnityItem> unequippedList = Player.ItemEquipTable.EquipItem(item);
+            if (unequippedList != null)
+            {
+                foreach (DaggerfallUnityItem unequippedItem in unequippedList)
+                {
+                    Player.UpdateEquippedArmorValues(unequippedItem, false);
+                }
+                Player.UpdateEquippedArmorValues(item, true);
+            }
+
+            RefreshEquipScreen();
+        }
+
+        public bool ProhibitedItemCheck(DaggerfallUnityItem item)
+        {
             bool prohibited = false;
 
             if (item.ItemGroup == ItemGroups.Armor)
@@ -1604,31 +1640,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     prohibited = true;
             }
 
-            if (prohibited)
-            {
-                TextFile.Token[] tokens = DaggerfallUnity.Instance.TextProvider.GetRSCTokens(forbiddenEquipmentTextId);
-                if (tokens != null && tokens.Length > 0)
-                {
-                    DaggerfallMessageBox messageBox = new DaggerfallMessageBox(uiManager, this);
-                    messageBox.SetTextTokens(tokens);
-                    messageBox.ClickAnywhereToClose = true;
-                    messageBox.Show();
-                }
-                return;
-            }
-
-            // Try to equip the item, and update armour values accordingly
-            List<DaggerfallUnityItem> unequippedList = Player.ItemEquipTable.EquipItem(item);
-            if (unequippedList != null)
-            {
-                foreach (DaggerfallUnityItem unequippedItem in unequippedList)
-                {
-                    Player.UpdateEquippedArmorValues(unequippedItem, false);
-                }
-                Player.UpdateEquippedArmorValues(item, true);
-            }
-
-            RefreshEquipScreen();
+            return prohibited;
         }
 
         public void RefreshEquipScreen(EquipSlots slot = EquipSlots.None)
