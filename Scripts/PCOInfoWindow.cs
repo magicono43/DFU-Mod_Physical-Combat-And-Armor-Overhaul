@@ -6,6 +6,7 @@ using DaggerfallWorkshop.Game.Items;
 using System.Collections.Generic;
 using DaggerfallConnect.Arena2;
 using System;
+using System.Linq;
 
 namespace DaggerfallWorkshop.Game.UserInterfaceWindows
 {
@@ -1225,6 +1226,8 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 AddSortButtonIconComponent(SortIconType.CheckMark, leftFilterRestrictedItemsButtonPanel);
             }
 
+            // Tomorrow, see about getting hovering tool-tip text for the sort buttons panels and such.
+
             UpdateSortButtonPanel();
         }
 
@@ -1492,7 +1495,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
             if (extraInfoTextPanel != null) { localPCOItemListScroller.OnItemHover += LocalItemListScroller_OnHover; }
 
             FilterLocalItems(slot);
-            // Tomorrow, maybe this will be where I will do the actual "sorting" part of the items list? Will see I suppose.
+            SortBasedOnButtonStates();
             localPCOItemListScroller.Items = localItemsFiltered;
         }
 
@@ -1552,6 +1555,74 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                     localItemsFiltered.Add(item);
                 }
             }
+        }
+
+        private void SortBasedOnButtonStates()
+        {
+            if (percentItemConditionSortState == 1)
+            {
+                localItemsFiltered.Sort((a, b) =>
+                {
+                    int aPercent = a.ConditionPercentage;
+                    int bPercent = b.ConditionPercentage;
+                    return bPercent.CompareTo(aPercent); // descending i.e. highest to lowest
+                });
+            }
+            else if (percentItemConditionSortState == 2)
+            {
+                localItemsFiltered.Sort((a, b) =>
+                {
+                    int aPercent = a.ConditionPercentage;
+                    int bPercent = b.ConditionPercentage;
+                    return aPercent.CompareTo(bPercent); // ascending i.e. lowest to highest
+                });
+            }
+
+            if (itemEffectivenessSortState == 1)
+            {
+                localItemsFiltered.Sort((item1, item2) => CompareItemsByEffectiveness(item1, item2, true)); // descending
+            }
+            else if (itemEffectivenessSortState == 2)
+            {
+                localItemsFiltered.Sort((item1, item2) => CompareItemsByEffectiveness(item1, item2, false)); // ascending
+            }
+        }
+
+        private int CompareItemsByEffectiveness(DaggerfallUnityItem item1, DaggerfallUnityItem item2, bool descending)
+        {
+            // Ensure armor comes before weapons
+            bool isArmor1 = !(item1.ItemGroup == ItemGroups.Weapons);
+            bool isArmor2 = !(item2.ItemGroup == ItemGroups.Weapons);
+
+            if (isArmor1 && !isArmor2)
+                return -1;
+            if (!isArmor1 && isArmor2)
+                return 1;
+
+            // Sort by effectiveness (damage for weapons, armor value for armor)
+            float effectiveness1 = isArmor1 ? GetBaseArmorValue(item1) : GetAverageWeaponDamage(item1);
+            float effectiveness2 = isArmor2 ? GetBaseArmorValue(item2) : GetAverageWeaponDamage(item2);
+
+            // Return comparison result based on effectiveness
+            if (effectiveness1 > effectiveness2)
+                return descending ? -1 : 1;  // item1 is more effective, so it comes first in descending or last in ascending
+            if (effectiveness1 < effectiveness2)
+                return descending ? 1 : -1;   // item2 is more effective, so it comes first in descending or last in ascending
+
+            // Tie-break
+            return string.Compare(item1.LongName, item2.LongName);
+        }
+
+        private int GetAverageWeaponDamage(DaggerfallUnityItem item)
+        {
+            int minDamRoll = item.GetBaseDamageMin() + item.GetWeaponMaterialModifier();
+            int maxDamRoll = item.GetBaseDamageMax() + item.GetWeaponMaterialModifier();
+            return Mathf.FloorToInt((minDamRoll + maxDamRoll) / 2);
+        }
+
+        private float GetBaseArmorValue(DaggerfallUnityItem item)
+        {
+            return (float)System.Math.Round(PhysicalCombatOverhaulMain.GetBaseDRAmount(item, player, true, ref holder) * 100, 1, System.MidpointRounding.AwayFromZero);
         }
 
         protected virtual void LocalItemListScroller_OnItemLeftClick(DaggerfallUnityItem item)
@@ -1655,6 +1726,7 @@ namespace DaggerfallWorkshop.Game.UserInterfaceWindows
                 if (slot == localPCOItemListScroller.AssociatedSlot)
                 {
                     FilterLocalItems(slot);
+                    SortBasedOnButtonStates();
                     localPCOItemListScroller.Items = localItemsFiltered;
                 }
             }
